@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant Client
+    participant APIGateway
+    participant AuthMiddleware
+    participant Controller
+    participant Request
+    participant Resource
+    participant Service
+    participant Repository
+    participant Model
+    
+    Client->>APIGateway: HTTP Request + JWT Token
+    APIGateway->>AuthMiddleware: Forward Request
+    AuthMiddleware->>AuthMiddleware: Validate JWT Token
+    AuthMiddleware->>Controller: Pass Authenticated Request
+    
+    Controller->>Request: Validate Input Data
+    Request-->>Controller: Validation Result
+    
+    alt Validation Failed
+        Controller-->>Client: 422 Validation Error
+    else Validation Passed
+        Controller->>Service: Call Business Logic
+        Service->>Repository: Data Operation
+        Repository->>Model: Query / Update
+        Model-->>Repository: Result
+        Repository-->>Service: Data
+        Service-->>Controller: Result
+        Controller->>Resource: Transform Data
+        Resource-->>Controller: Formatted JSON
+        Controller-->>Client: 200 OK + JSON Response
+    end

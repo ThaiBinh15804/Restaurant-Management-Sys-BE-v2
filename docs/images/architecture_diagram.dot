@@ -1,0 +1,126 @@
+digraph restaurant_management_system {
+    // Graph settings
+    rankdir = TB;
+    fontname = "Helvetica,Arial,sans-serif";
+    fontsize = 14;
+    
+    // Node styles
+    node [
+        fontname = "Helvetica,Arial,sans-serif",
+        fontsize = 10,
+        shape = "record",
+        style = "filled",
+        fillcolor = "lightblue",
+        penwidth = 1
+    ];
+    
+    // Edge styles
+    edge [
+        fontname = "Helvetica,Arial,sans-serif",
+        fontsize = 10
+    ];
+    
+    // Client Applications
+    subgraph cluster_clients {
+        label = "Client Applications";
+        style = "filled";
+        fillcolor = "lightyellow";
+        
+        MobileApp [label = "Mobile App"];
+        WebAdmin [label = "Web Admin"];
+        POSApp [label = "POS App"];
+    }
+    
+    // API Gateway
+    APIGateway [label = "API Gateway / Load Balancer", fillcolor = "lightgreen"];
+    
+    // Laravel Backend
+    subgraph cluster_backend {
+        label = "Laravel Backend API";
+        style = "filled";
+        fillcolor = "lightcyan";
+        
+        // API Layer
+        subgraph cluster_api {
+            label = "API Layer";
+            style = "filled";
+            fillcolor = "azure";
+            
+            Controllers [label = "API Controllers"];
+            Resources [label = "API Resources"];
+            Requests [label = "Form Requests\n(Validation)"];
+        }
+        
+        // Business Layer
+        subgraph cluster_business {
+            label = "Business Layer";
+            style = "filled";
+            fillcolor = "azure";
+            
+            Services [label = "Services"];
+            Events [label = "Events & Listeners"];
+            Jobs [label = "Jobs & Queues"];
+        }
+        
+        // Data Layer
+        subgraph cluster_data {
+            label = "Data Layer";
+            style = "filled";
+            fillcolor = "azure";
+            
+            Repositories [label = "Repositories"];
+            Models [label = "Models"];
+        }
+        
+        // Support Components
+        subgraph cluster_support {
+            label = "Support Components";
+            style = "filled";
+            fillcolor = "azure";
+            
+            Helpers [label = "Helpers"];
+            Exceptions [label = "Exception Handling"];
+            Cache [label = "Cache"];
+        }
+    }
+    
+    // Database Layer
+    subgraph cluster_database {
+        label = "Database Layer";
+        style = "filled";
+        fillcolor = "lightpink";
+        
+        MySQL [label = "MySQL Database"];
+        Redis [label = "Redis Cache"];
+        Storage [label = "File Storage"];
+    }
+    
+    // Connections
+    MobileApp -> APIGateway [label = "HTTPS/REST"];
+    WebAdmin -> APIGateway [label = "HTTPS/REST"];
+    POSApp -> APIGateway [label = "HTTPS/REST"];
+    
+    APIGateway -> Controllers [label = "JSON/REST"];
+    
+    Controllers -> Requests [label = "Validate Input"];
+    Controllers -> Services [label = "Delegate Logic"];
+    Controllers -> Resources [label = "Format Response"];
+    
+    Services -> Repositories [label = "Data Operations"];
+    Services -> Events [label = "Dispatch Events"];
+    Services -> Jobs [label = "Queue Jobs"];
+    Services -> Cache [label = "Cache Results"];
+    
+    Events -> Jobs [label = "Trigger Jobs"];
+    
+    Repositories -> Models [label = "ORM"];
+    
+    Models -> MySQL [label = "CRUD Operations"];
+    Cache -> Redis [label = "Store/Retrieve"];
+    Storage -> Redis [label = "Session"];
+    
+    // Invisible edges for layout
+    {rank = same; MobileApp; WebAdmin; POSApp;}
+    {rank = same; Controllers; Resources; Requests;}
+    {rank = same; MySQL; Redis; Storage;}
+}
