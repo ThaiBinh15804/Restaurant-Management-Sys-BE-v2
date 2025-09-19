@@ -4,51 +4,30 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HealthController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
-// Health check endpoint
+// Health check endpoint - for monitoring and load balancer health checks
 Route::get('/health', [HealthController::class, 'check']);
 
-// Version 1 API routes
-Route::prefix('v1')->group(function () {
-    
-    // Public routes (no authentication required)
-    Route::prefix('auth')->group(function () {
-        // Authentication endpoints will be added here
-        // Route::post('login', [AuthController::class, 'login']);
-        // Route::post('register', [AuthController::class, 'register']);
-        // Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-    });
-    
-    // Protected routes (authentication required)
-    Route::middleware('auth:sanctum')->group(function () {
-        
-        // User endpoints
-        Route::get('/user', function (Request $request) {
-            return response()->json([
-                'status' => 'success',
-                'data' => $request->user()
-            ]);
-        });
-        
-        // Restaurant Management endpoints will be added here
-        // Route::apiResource('categories', CategoryController::class);
-        // Route::apiResource('products', ProductController::class);
-        // Route::apiResource('orders', OrderController::class);
-        // Route::apiResource('tables', TableController::class);
-        // Route::apiResource('reservations', ReservationController::class);
-        // Route::apiResource('employees', EmployeeController::class);
-        // Route::apiResource('inventory', InventoryController::class);
-        
-    });
-    
-});
+// =============================================================================
+// ROUTE ATTRIBUTES REGISTRATION
+// =============================================================================
+// All API routes are now automatically registered using Route Attributes.
+// Routes are defined directly in the Controller classes using PHP attributes:
+//
+// - AuthController: /api/v1/auth/* routes (login, logout, me, refresh, sessions, revoke-token)
+// - UserController: /api/v1/users/* routes (CRUD operations)
+// - RoleController: /api/v1/roles/* routes (CRUD + permission management)
+// - PermissionController: /api/v1/permissions/* routes (CRUD + role relationships)
+//
+// Route attributes are configured in config/route-attributes.php
+// To see all registered routes, run: php artisan route:list
+// =============================================================================
+
+// Future Restaurant Management Modules (when implemented, add route attributes to controllers)
+// - CategoryController: /api/v1/categories/*
+// - ProductController: /api/v1/products/*  
+// - OrderController: /api/v1/orders/*
+// - TableController: /api/v1/tables/*
+// - ReservationController: /api/v1/reservations/*
+// - EmployeeController: /api/v1/employees/*
+// - InventoryController: /api/v1/inventory/*
+// - ReportController: /api/v1/reports/*
