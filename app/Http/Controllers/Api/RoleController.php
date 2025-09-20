@@ -51,7 +51,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Get('/', middleware: 'permission:users.view')]
+    #[Get('/', middleware: 'permission:roles.view')]
     public function index(): JsonResponse
     {
         $roles = Role::with('permissions')
@@ -109,7 +109,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}')]
+    #[Get('/{id}', middleware: 'permission:roles.view')]
     public function show(string $id): JsonResponse
     {
         $role = Role::with('permissions')->find($id);
@@ -172,7 +172,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Post('/')]
+    #[Post('/', middleware: 'permission:roles.create')]
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -248,7 +248,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Put('/{id}')]
+    #[Put('/{id}', middleware: 'permission:roles.edit')]
     public function update(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -318,7 +318,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Delete('/{id}')]
+    #[Delete('/{id}', middleware: 'permission:roles.delete')]
     public function destroy(string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -377,7 +377,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}/permissions')]
+    #[Get('/{id}/permissions', middleware: 'permission:roles.view')]
     public function permissions(string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -435,7 +435,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Post('/{id}/permissions')]
+    #[Post('/{id}/permissions', middleware: 'permission:roles.edit')]
     public function assignPermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -507,7 +507,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Delete('/{id}/permissions')]
+    #[Delete('/{id}/permissions', middleware: 'permission:roles.edit')]
     public function removePermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -579,7 +579,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Put('/{id}/permissions')]
+    #[Put('/{id}/permissions', middleware: 'permission:roles.edit')]
     public function syncPermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -643,7 +643,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}/users')]
+    #[Get('/{id}/users', middleware: 'permission:roles.view')]
     public function users(string $id): JsonResponse
     {
         $role = Role::find($id);

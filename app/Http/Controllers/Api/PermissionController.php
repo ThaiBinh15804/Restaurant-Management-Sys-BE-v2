@@ -77,7 +77,7 @@ class PermissionController extends Controller
      *     )
      * )
      */
-    #[Get('/')]
+    #[Get('/', name: 'permissions.view')]
     public function index(Request $request): JsonResponse
     {
         $perPage = min($request->get('per_page', 15), 100);
@@ -140,7 +140,7 @@ class PermissionController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}')]
+    #[Get('/{id}', name: 'permissions.view')]
     public function show(string $id): JsonResponse
     {
         $permission = Permission::find($id);
@@ -159,207 +159,207 @@ class PermissionController extends Controller
         );
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/permissions",
-     *     tags={"Permissions"},
-     *     summary="Create new permission",
-     *     description="Create a new permission",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","code","description"},
-     *             @OA\Property(property="name", type="string", example="manage_products"),
-     *             @OA\Property(property="code", type="string", example="manage_products"),
-     *             @OA\Property(property="description", type="string", example="Can manage products"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Permission created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Permission created successfully"),
-     *             @OA\Property(property="data", type="object",
-     *               @OA\Property(property="id", type="string", example="P001"),
-     *               @OA\Property(property="name", type="string", example="Manage Users"),
-     *               @OA\Property(property="code", type="string", example="users.manage"),
-     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
-     *               @OA\Property(property="is_active", type="boolean", example=true))
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="error"),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
-     */
-    #[Post('/')]
-    public function store(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
-            'code' => 'required|string|max:100|unique:permissions,code',
-            'description' => 'required|string|max:255',
-            'is_active' => 'sometimes|boolean'
-        ]);
+    // /**
+    //  * @OA\Post(
+    //  *     path="/api/permissions",
+    //  *     tags={"Permissions"},
+    //  *     summary="Create new permission",
+    //  *     description="Create a new permission",
+    //  *     security={{"bearerAuth":{}}},
+    //  *     @OA\RequestBody(
+    //  *         required=true,
+    //  *         @OA\JsonContent(
+    //  *             required={"name","code","description"},
+    //  *             @OA\Property(property="name", type="string", example="manage_products"),
+    //  *             @OA\Property(property="code", type="string", example="manage_products"),
+    //  *             @OA\Property(property="description", type="string", example="Can manage products"),
+    //  *             @OA\Property(property="is_active", type="boolean", example=true)
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=201,
+    //  *         description="Permission created successfully",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="success"),
+    //  *             @OA\Property(property="message", type="string", example="Permission created successfully"),
+    //  *             @OA\Property(property="data", type="object",
+    //  *               @OA\Property(property="id", type="string", example="P001"),
+    //  *               @OA\Property(property="name", type="string", example="Manage Users"),
+    //  *               @OA\Property(property="code", type="string", example="users.manage"),
+    //  *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+    //  *               @OA\Property(property="is_active", type="boolean", example=true))
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=422,
+    //  *         description="Validation error",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="error"),
+    //  *             @OA\Property(property="message", type="string", example="Validation failed"),
+    //  *             @OA\Property(property="errors", type="object")
+    //  *         )
+    //  *     )
+    //  * )
+    //  */
+    // #[Post('/', name: 'permissions.create')]
+    // public function store(Request $request): JsonResponse
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:100',
+    //         'code' => 'required|string|max:100|unique:permissions,code',
+    //         'description' => 'required|string|max:255',
+    //         'is_active' => 'sometimes|boolean'
+    //     ]);
 
-        if ($validator->fails()) {
-            return $this->errorResponse(
-                'Validation failed',
-                $validator->errors(),
-                422
-            );
-        }
+    //     if ($validator->fails()) {
+    //         return $this->errorResponse(
+    //             'Validation failed',
+    //             $validator->errors(),
+    //             422
+    //         );
+    //     }
 
-        $permissionData = $request->all();
-        $permissionData['is_active'] = $permissionData['is_active'] ?? true;
+    //     $permissionData = $request->all();
+    //     $permissionData['is_active'] = $permissionData['is_active'] ?? true;
 
-        $permission = Permission::create($permissionData);
+    //     $permission = Permission::create($permissionData);
 
-        return $this->successResponse(
-            $permission,
-            'Permission created successfully',
-            201
-        );
-    }
+    //     return $this->successResponse(
+    //         $permission,
+    //         'Permission created successfully',
+    //         201
+    //     );
+    // }
 
-    /**
-     * @OA\Put(
-     *     path="/api/permissions/{id}",
-     *     tags={"Permissions"},
-     *     summary="Update permission",
-     *     description="Update an existing permission",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Permission ID",
-     *         required=true,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="manage_products"),
-     *             @OA\Property(property="code", type="string", example="manage_products"),
-     *             @OA\Property(property="description", type="string", example="Can manage products"),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Permission updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Permission updated successfully"),
-     *             @OA\Property(property="data", type="object",
-     *               @OA\Property(property="id", type="string", example="P001"),
-     *               @OA\Property(property="name", type="string", example="Manage Users"),
-     *               @OA\Property(property="code", type="string", example="users.manage"),
-     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
-     *               @OA\Property(property="is_active", type="boolean", example=true))
-     *         )
-     *     )
-     * )
-     */
-    #[Put('/{id}')]
-    public function update(Request $request, string $id): JsonResponse
-    {
-        $permission = Permission::find($id);
+    // /**
+    //  * @OA\Put(
+    //  *     path="/api/permissions/{id}",
+    //  *     tags={"Permissions"},
+    //  *     summary="Update permission",
+    //  *     description="Update an existing permission",
+    //  *     security={{"bearerAuth":{}}},
+    //  *     @OA\Parameter(
+    //  *         name="id",
+    //  *         in="path",
+    //  *         description="Permission ID",
+    //  *         required=true,
+    //  *         @OA\Schema(type="string")
+    //  *     ),
+    //  *     @OA\RequestBody(
+    //  *         required=true,
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="name", type="string", example="manage_products"),
+    //  *             @OA\Property(property="code", type="string", example="manage_products"),
+    //  *             @OA\Property(property="description", type="string", example="Can manage products"),
+    //  *             @OA\Property(property="is_active", type="boolean", example=true)
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=200,
+    //  *         description="Permission updated successfully",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="success"),
+    //  *             @OA\Property(property="message", type="string", example="Permission updated successfully"),
+    //  *             @OA\Property(property="data", type="object",
+    //  *               @OA\Property(property="id", type="string", example="P001"),
+    //  *               @OA\Property(property="name", type="string", example="Manage Users"),
+    //  *               @OA\Property(property="code", type="string", example="users.manage"),
+    //  *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+    //  *               @OA\Property(property="is_active", type="boolean", example=true))
+    //  *         )
+    //  *     )
+    //  * )
+    //  */
+    // #[Put('/{id}', name: 'permissions.edit')]
+    // public function update(Request $request, string $id): JsonResponse
+    // {
+    //     $permission = Permission::find($id);
 
-        if (!$permission) {
-            return $this->errorResponse(
-                'Permission not found',
-                [],
-                404
-            );
-        }
+    //     if (!$permission) {
+    //         return $this->errorResponse(
+    //             'Permission not found',
+    //             [],
+    //             404
+    //         );
+    //     }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:100',
-            'code' => 'sometimes|string|max:100|unique:permissions,code,' . $id,
-            'description' => 'sometimes|string|max:255',
-            'is_active' => 'sometimes|boolean'
-        ]);
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'sometimes|string|max:100',
+    //         'code' => 'sometimes|string|max:100|unique:permissions,code,' . $id,
+    //         'description' => 'sometimes|string|max:255',
+    //         'is_active' => 'sometimes|boolean'
+    //     ]);
 
-        if ($validator->fails()) {
-            return $this->errorResponse(
-                'Validation failed',
-                $validator->errors(),
-                422
-            );
-        }
+    //     if ($validator->fails()) {
+    //         return $this->errorResponse(
+    //             'Validation failed',
+    //             $validator->errors(),
+    //             422
+    //         );
+    //     }
 
-        $permission->update($request->all());
+    //     $permission->update($request->all());
 
-        return $this->successResponse(
-            $permission,
-            'Permission updated successfully'
-        );
-    }
+    //     return $this->successResponse(
+    //         $permission,
+    //         'Permission updated successfully'
+    //     );
+    // }
 
-    /**
-     * @OA\Delete(
-     *     path="/api/permissions/{id}",
-     *     tags={"Permissions"},
-     *     summary="Delete permission",
-     *     description="Delete a permission",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Permission ID",
-     *         required=true,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Permission deleted successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Permission deleted successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items())
-     *         )
-     *     )
-     * )
-     */
-    #[Delete('/{id}')]
-    public function destroy(string $id): JsonResponse
-    {
-        $permission = Permission::find($id);
+    // /**
+    //  * @OA\Delete(
+    //  *     path="/api/permissions/{id}",
+    //  *     tags={"Permissions"},
+    //  *     summary="Delete permission",
+    //  *     description="Delete a permission",
+    //  *     security={{"bearerAuth":{}}},
+    //  *     @OA\Parameter(
+    //  *         name="id",
+    //  *         in="path",
+    //  *         description="Permission ID",
+    //  *         required=true,
+    //  *         @OA\Schema(type="string")
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=200,
+    //  *         description="Permission deleted successfully",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="success"),
+    //  *             @OA\Property(property="message", type="string", example="Permission deleted successfully"),
+    //  *             @OA\Property(property="data", type="array", @OA\Items())
+    //  *         )
+    //  *     )
+    //  * )
+    //  */
+    // #[Delete('/{id}', name: 'permissions.delete')]
+    // public function destroy(string $id): JsonResponse
+    // {
+    //     $permission = Permission::find($id);
 
-        if (!$permission) {
-            return $this->errorResponse(
-                'Permission not found',
-                [],
-                404
-            );
-        }
+    //     if (!$permission) {
+    //         return $this->errorResponse(
+    //             'Permission not found',
+    //             [],
+    //             404
+    //         );
+    //     }
 
-        // Check if permission is being used by any roles
-        if ($permission->roles()->count() > 0) {
-            return $this->errorResponse(
-                'Permission cannot be deleted as it is assigned to one or more roles',
-                [],
-                400
-            );
-        }
+    //     // Check if permission is being used by any roles
+    //     if ($permission->roles()->count() > 0) {
+    //         return $this->errorResponse(
+    //             'Permission cannot be deleted as it is assigned to one or more roles',
+    //             [],
+    //             400
+    //         );
+    //     }
 
-        $permission->delete();
+    //     $permission->delete();
 
-        return $this->successResponse(
-            [],
-            'Permission deleted successfully'
-        );
-    }
+    //     return $this->successResponse(
+    //         [],
+    //         'Permission deleted successfully'
+    //     );
+    // }
 
     /**
      * @OA\Get(
@@ -390,7 +390,7 @@ class PermissionController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}/roles')]
+    #[Get('/{id}/roles', name: 'permissions.view')]
     public function roles(string $id): JsonResponse
     {
         $permission = Permission::find($id);
