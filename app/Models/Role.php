@@ -54,7 +54,8 @@ class Role extends BaseModel
             'role_permission',
             'role_id',
             'permission_id'
-        );
+        )->using(RolePermission::class)
+         ->withTimestamps();
     }
 
     /**
@@ -73,10 +74,48 @@ class Role extends BaseModel
      */
     public function hasPermission(string $permissionCode): bool
     {
-        return $this->permissions()
-            ->where('code', $permissionCode)
-            ->where('is_active', true)
-            ->exists();
+        $cacheKey = "role_permissions_{$this->id}";
+        
+        $permissionCodes = cache()->remember($cacheKey, 3600, function () {
+            return $this->permissions()
+                ->where('is_active', true)
+                ->pluck('code')
+                ->toArray();
+        });
+
+        return in_array($permissionCode, $permissionCodes);
+    }
+
+    /**
+     * Check if role has any of the given permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if ($this->hasPermission($permission)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Check if role has all of the given permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -88,6 +127,41 @@ class Role extends BaseModel
     public function syncPermissions(array $permissionIds): void
     {
         $this->permissions()->sync($permissionIds);
+        $this->clearPermissionCache();
+    }
+
+    /**
+     * Add permissions to role.
+     *
+     * @param array $permissionIds
+     * @return void
+     */
+    public function addPermissions(array $permissionIds): void
+    {
+        $this->permissions()->attach($permissionIds);
+        $this->clearPermissionCache();
+    }
+
+    /**
+     * Remove permissions from role.
+     *
+     * @param array $permissionIds
+     * @return void
+     */
+    public function removePermissions(array $permissionIds): void
+    {
+        $this->permissions()->detach($permissionIds);
+        $this->clearPermissionCache();
+    }
+
+    /**
+     * Clear permission cache for this role.
+     *
+     * @return void
+     */
+    public function clearPermissionCache(): void
+    {
+        cache()->forget("role_permissions_{$this->id}");
     }
 
     /**

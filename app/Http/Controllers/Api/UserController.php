@@ -21,13 +21,13 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for User Management"
  * )
  */
-#[Prefix('v1/users')]
+#[Prefix('users')]
 #[Middleware('auth:api')]
 class UserController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/v1/users",
+     *     path="/api/users",
      *     tags={"Users"},
      *     summary="Get all users",
      *     description="Retrieve all users with pagination",
@@ -55,34 +55,31 @@ class UserController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="U001"),
-                     @OA\Property(property="username", type="string", example="john_doe"),
-                     @OA\Property(property="email", type="string", example="john@example.com"),
-                     @OA\Property(property="status", type="integer", example=1))),
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", example="U001"),
+     *                         @OA\Property(property="username", type="string", example="john_doe"),
+     *                         @OA\Property(property="email", type="string", example="john@example.com"),
+     *                         @OA\Property(property="status", type="integer", example=1)
+     *                     )
+     *                 ),
      *                 @OA\Property(property="current_page", type="integer"),
      *                 @OA\Property(property="last_page", type="integer"),
      *                 @OA\Property(property="per_page", type="integer"),
      *                 @OA\Property(property="total", type="integer")
      *             )
      *         )
-     *     ),
-     *     @OA\Response(
-     *         response=401,
-     *         description="Unauthorized",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="error"),
-     *             @OA\Property(property="message", type="string", example="Unauthorized"),
-     *             @OA\Property(property="errors", type="array", @OA\Items())
-     *         )
      *     )
      * )
      */
-    #[Get('/')]
+    #[Get('/', middleware: ['permission:users.view'])]
     public function index(Request $request): JsonResponse
     {
         $perPage = min($request->get('per_page', 15), 100);
-        
+
         $users = User::with('role')
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
@@ -95,7 +92,7 @@ class UserController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/users/{id}",
+     *     path="/api/users/{id}",
      *     tags={"Users"},
      *     summary="Get user by ID",
      *     description="Retrieve a specific user by ID",
@@ -114,10 +111,10 @@ class UserController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="User retrieved successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="U001"),
-                     @OA\Property(property="username", type="string", example="john_doe"),
-                     @OA\Property(property="email", type="string", example="john@example.com"),
-                     @OA\Property(property="status", type="integer", example=1))
+     *               @OA\Property(property="id", type="string", example="U001"),
+     *               @OA\Property(property="username", type="string", example="john_doe"),
+     *               @OA\Property(property="email", type="string", example="john@example.com"),
+     *               @OA\Property(property="status", type="integer", example=1))
      *         )
      *     ),
      *     @OA\Response(
@@ -131,7 +128,7 @@ class UserController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}')]
+    #[Get('/{id}', middleware: ['permission:users.view'])]
     public function show(string $id): JsonResponse
     {
         $user = User::with('role')->find($id);
@@ -152,7 +149,7 @@ class UserController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/users",
+     *     path="/api/users",
      *     tags={"Users"},
      *     summary="Create new user",
      *     description="Create a new user",
@@ -175,10 +172,10 @@ class UserController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="User created successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="U001"),
-                     @OA\Property(property="username", type="string", example="john_doe"),
-                     @OA\Property(property="email", type="string", example="john@example.com"),
-                     @OA\Property(property="status", type="integer", example=1))
+     *               @OA\Property(property="id", type="string", example="U001"),
+     *               @OA\Property(property="username", type="string", example="john_doe"),
+     *               @OA\Property(property="email", type="string", example="john@example.com"),
+     *               @OA\Property(property="status", type="integer", example=1))
      *         )
      *     ),
      *     @OA\Response(
@@ -192,7 +189,7 @@ class UserController extends Controller
      *     )
      * )
      */
-    #[Post('/')]
+    #[Post('/', middleware: ['permission:users.create'])]
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -227,7 +224,7 @@ class UserController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/v1/users/{id}",
+     *     path="/api/users/{id}",
      *     tags={"Users"},
      *     summary="Update user",
      *     description="Update an existing user",
@@ -256,15 +253,15 @@ class UserController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="User updated successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="U001"),
-                     @OA\Property(property="username", type="string", example="john_doe"),
-                     @OA\Property(property="email", type="string", example="john@example.com"),
-                     @OA\Property(property="status", type="integer", example=1))
+     *               @OA\Property(property="id", type="string", example="U001"),
+     *               @OA\Property(property="username", type="string", example="john_doe"),
+     *               @OA\Property(property="email", type="string", example="john@example.com"),
+     *               @OA\Property(property="status", type="integer", example=1))
      *         )
      *     )
      * )
      */
-    #[Put('/{id}')]
+    #[Put('/{id}', middleware: ['permission:users.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
         $user = User::find($id);
@@ -294,7 +291,7 @@ class UserController extends Controller
         }
 
         $userData = $request->all();
-        
+
         if (isset($userData['password'])) {
             $userData['password'] = bcrypt($userData['password']);
         }
@@ -310,7 +307,7 @@ class UserController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/v1/users/{id}",
+     *     path="/api/users/{id}",
      *     tags={"Users"},
      *     summary="Delete user",
      *     description="Delete a user",
@@ -333,7 +330,7 @@ class UserController extends Controller
      *     )
      * )
      */
-    #[Delete('/{id}')]
+    #[Delete('/{id}', middleware: ['permission:users.delete'])]
     public function destroy(string $id): JsonResponse
     {
         $user = User::find($id);

@@ -21,13 +21,13 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for Permission Management"
  * )
  */
-#[Prefix('v1/permissions')]
+#[Prefix('permissions')]
 #[Middleware('auth:api')]
 class PermissionController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/v1/permissions",
+     *     path="/api/permissions",
      *     tags={"Permissions"},
      *     summary="Get all permissions",
      *     description="Retrieve all permissions with pagination",
@@ -63,11 +63,11 @@ class PermissionController extends Controller
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true))),
+     *               @OA\Property(property="id", type="string", example="P001"),
+     *               @OA\Property(property="name", type="string", example="Manage Users"),
+     *               @OA\Property(property="code", type="string", example="users.manage"),
+     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+     *               @OA\Property(property="is_active", type="boolean", example=true))),
      *                 @OA\Property(property="current_page", type="integer"),
      *                 @OA\Property(property="last_page", type="integer"),
      *                 @OA\Property(property="per_page", type="integer"),
@@ -103,7 +103,7 @@ class PermissionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/permissions/{id}",
+     *     path="/api/permissions/{id}",
      *     tags={"Permissions"},
      *     summary="Get permission by ID",
      *     description="Retrieve a specific permission by ID",
@@ -122,11 +122,11 @@ class PermissionController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permission retrieved successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *               @OA\Property(property="id", type="string", example="P001"),
+     *               @OA\Property(property="name", type="string", example="Manage Users"),
+     *               @OA\Property(property="code", type="string", example="users.manage"),
+     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+     *               @OA\Property(property="is_active", type="boolean", example=true))
      *         )
      *     ),
      *     @OA\Response(
@@ -161,7 +161,7 @@ class PermissionController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/permissions",
+     *     path="/api/permissions",
      *     tags={"Permissions"},
      *     summary="Create new permission",
      *     description="Create a new permission",
@@ -183,11 +183,11 @@ class PermissionController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permission created successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *               @OA\Property(property="id", type="string", example="P001"),
+     *               @OA\Property(property="name", type="string", example="Manage Users"),
+     *               @OA\Property(property="code", type="string", example="users.manage"),
+     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+     *               @OA\Property(property="is_active", type="boolean", example=true))
      *         )
      *     ),
      *     @OA\Response(
@@ -233,7 +233,7 @@ class PermissionController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/v1/permissions/{id}",
+     *     path="/api/permissions/{id}",
      *     tags={"Permissions"},
      *     summary="Update permission",
      *     description="Update an existing permission",
@@ -261,11 +261,11 @@ class PermissionController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permission updated successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *               @OA\Property(property="id", type="string", example="P001"),
+     *               @OA\Property(property="name", type="string", example="Manage Users"),
+     *               @OA\Property(property="code", type="string", example="users.manage"),
+     *               @OA\Property(property="description", type="string", example="Can manage user accounts"),
+     *               @OA\Property(property="is_active", type="boolean", example=true))
      *         )
      *     )
      * )
@@ -308,7 +308,7 @@ class PermissionController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/v1/permissions/{id}",
+     *     path="/api/permissions/{id}",
      *     tags={"Permissions"},
      *     summary="Delete permission",
      *     description="Delete a permission",
@@ -363,7 +363,7 @@ class PermissionController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/permissions/{id}/roles",
+     *     path="/api/permissions/{id}/roles",
      *     tags={"Permissions"},
      *     summary="Get roles assigned to permission",
      *     description="Get all roles that have this permission",
@@ -382,10 +382,10 @@ class PermissionController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Roles retrieved successfully"),
      *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="R001"),
-                     @OA\Property(property="name", type="string", example="Admin"),
-                     @OA\Property(property="description", type="string", example="System administrator"),
-                     @OA\Property(property="is_active", type="boolean", example=true)))
+     *               @OA\Property(property="id", type="string", example="R001"),
+     *               @OA\Property(property="name", type="string", example="Admin"),
+     *               @OA\Property(property="description", type="string", example="System administrator"),
+     *               @OA\Property(property="is_active", type="boolean", example=true)))
      *         )
      *     )
      * )

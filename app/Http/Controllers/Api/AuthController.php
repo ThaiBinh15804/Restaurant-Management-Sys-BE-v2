@@ -21,7 +21,7 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for Authentication"
  * )
  */
-#[Prefix('v1/auth')]
+#[Prefix('auth')]
 class AuthController extends BaseController
 {
     use ApiResponseTrait;
@@ -293,12 +293,19 @@ class AuthController extends BaseController
     }
 
     /**
-     * @OA\Post(
-     *     path="/api/auth/revoke-token",
+     * @OA\Delete(
+     *     path="/api/auth/revoke-token/{token_id}",
      *     tags={"Authentication"},
      *     summary="Revoke specific refresh token",
      *     description="Revoke a specific refresh token",
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="token_id",
+     *         in="path",
+     *         description="Token ID to revoke",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(

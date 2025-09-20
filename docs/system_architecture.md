@@ -202,7 +202,7 @@ flowchart TB
 ### 4.2 Example Data Flow: Creating an Order
 
 ```
-1. Client gửi POST request đến /api/v1/orders với order details
+1. Client gửi POST request đến /orders với order details
    ↓
 2. AuthMiddleware xác thực JWT token và lấy user information
    ↓

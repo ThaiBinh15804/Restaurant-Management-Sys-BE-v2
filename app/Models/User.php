@@ -146,6 +146,56 @@ class User extends BaseAuthenticatable implements JWTSubject
     }
 
     /**
+     * Check if user has all of the given permissions.
+     *
+     * @param array $permissions
+     * @return bool
+     */
+    public function hasAllPermissions(array $permissions): bool
+    {
+        foreach ($permissions as $permission) {
+            if (!$this->hasPermission($permission)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Get all permissions for the user.
+     *
+     * @return array
+     */
+    public function getAllPermissions(): array
+    {
+        if (!$this->role) {
+            return [];
+        }
+
+        return $this->role->permissions()
+            ->where('is_active', true)
+            ->pluck('code')
+            ->toArray();
+    }
+
+    /**
+     * Get all permission objects for the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getPermissions()
+    {
+        if (!$this->role) {
+            return collect();
+        }
+
+        return $this->role->permissions()
+            ->where('is_active', true)
+            ->get();
+    }
+
+    /**
      * Check if user is active.
      *
      * @return bool

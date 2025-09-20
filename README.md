@@ -83,7 +83,7 @@ Sau khi chạy ứng dụng, truy cập Swagger UI tại:
 
 ### Health Check
 ```http
-GET /api/health
+GET /health
 ```
 
 Kiểm tra trạng thái API và kết nối database.
@@ -92,7 +92,7 @@ Kiểm tra trạng thái API và kết nối database.
 
 Tất cả API endpoints được tổ chức theo cấu trúc:
 ```
-/api/v1/{resource}
+/{resource}
 ```
 
 ### Authentication

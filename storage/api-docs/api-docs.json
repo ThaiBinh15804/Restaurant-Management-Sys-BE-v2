@@ -384,14 +384,25 @@
                 ]
             }
         },
-        "/api/auth/revoke-token": {
-            "post": {
+        "/api/auth/revoke-token/{token_id}": {
+            "delete": {
                 "tags": [
                     "Authentication"
                 ],
                 "summary": "Revoke specific refresh token",
                 "description": "Revoke a specific refresh token",
-                "operationId": "0f87f464993a9da198d470cfb5ec145b",
+                "operationId": "bafd63ae7523c6a91e9c40da4823db1f",
+                "parameters": [
+                    {
+                        "name": "token_id",
+                        "in": "path",
+                        "description": "Token ID to revoke",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -480,14 +491,14 @@
                 }
             }
         },
-        "/api/v1/permissions": {
+        "/api/permissions": {
             "get": {
                 "tags": [
                     "Permissions"
                 ],
                 "summary": "Get all permissions",
                 "description": "Retrieve all permissions with pagination",
-                "operationId": "92174e83c707809850676c48ddcf726d",
+                "operationId": "a49af5d462a91e9996aa5342b6de4ddd",
                 "parameters": [
                     {
                         "name": "page",
@@ -599,7 +610,7 @@
                 ],
                 "summary": "Create new permission",
                 "description": "Create a new permission",
-                "operationId": "05ed0cdb4abfced8a5e7dfa615768823",
+                "operationId": "6ef531e33f8fca9c42d3e8fcaf30d5b4",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -710,14 +721,14 @@
                 ]
             }
         },
-        "/api/v1/permissions/{id}": {
+        "/api/permissions/{id}": {
             "get": {
                 "tags": [
                     "Permissions"
                 ],
                 "summary": "Get permission by ID",
                 "description": "Retrieve a specific permission by ID",
-                "operationId": "89e4d6bc05d76b9667eb6b0c1d86c1fc",
+                "operationId": "16db55c19d22dca89994e416d7dd28be",
                 "parameters": [
                     {
                         "name": "id",
@@ -812,7 +823,7 @@
                 ],
                 "summary": "Update permission",
                 "description": "Update an existing permission",
-                "operationId": "32db2489ce28e57dd00a6f3324efc828",
+                "operationId": "c5094a50888fb3f3f1254fea3140241a",
                 "parameters": [
                     {
                         "name": "id",
@@ -911,7 +922,7 @@
                 ],
                 "summary": "Delete permission",
                 "description": "Delete a permission",
-                "operationId": "214c1a8a52aa98374e65be8c9f26005e",
+                "operationId": "d0a14d107d6e379b9b3b5207f5c76e8e",
                 "parameters": [
                     {
                         "name": "id",
@@ -956,14 +967,14 @@
                 ]
             }
         },
-        "/api/v1/permissions/{id}/roles": {
+        "/api/permissions/{id}/roles": {
             "get": {
                 "tags": [
                     "Permissions"
                 ],
                 "summary": "Get roles assigned to permission",
                 "description": "Get all roles that have this permission",
-                "operationId": "d0fdd87019de2171859e516560a85b5d",
+                "operationId": "03f46c7ef4b7421346f803280ca4ea0e",
                 "parameters": [
                     {
                         "name": "id",
@@ -1028,14 +1039,14 @@
                 ]
             }
         },
-        "/api/v1/roles": {
+        "/api/roles": {
             "get": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Get all roles",
                 "description": "Retrieve all roles with their permissions",
-                "operationId": "ba50ce69f980ab35a9463c42e4b4b932",
+                "operationId": "ca86f0a206144dfbd695b749b4b28f9d",
                 "responses": {
                     "200": {
                         "description": "Roles retrieved successfully",
@@ -1094,7 +1105,7 @@
                 ],
                 "summary": "Create new role",
                 "description": "Create a new role",
-                "operationId": "295391adbd51895625231808e6fc9ed8",
+                "operationId": "341b8b162b61267c7bd187500aea5bc4",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1157,15 +1168,35 @@
                                                 },
                                                 "name": {
                                                     "type": "string",
-                                                    "example": "Admin"
+                                                    "example": "Manager"
                                                 },
                                                 "description": {
                                                     "type": "string",
-                                                    "example": "System administrator"
+                                                    "example": "Restaurant Manager Role"
                                                 },
                                                 "is_active": {
                                                     "type": "boolean",
                                                     "example": true
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "P001"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Manage Users"
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "users.manage"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1184,14 +1215,14 @@
                 ]
             }
         },
-        "/api/v1/roles/{id}": {
+        "/api/roles/{id}": {
             "get": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Get role by ID",
                 "description": "Retrieve a specific role with permissions",
-                "operationId": "c15c14a048e8031f79144b0a83716491",
+                "operationId": "15c404caf238f1861c81f68205d328e5",
                 "parameters": [
                     {
                         "name": "id",
@@ -1235,6 +1266,26 @@
                                                 "is_active": {
                                                     "type": "boolean",
                                                     "example": true
+                                                },
+                                                "permissions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "P001"
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Manage Users"
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "users.manage"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
                                                 }
                                             },
                                             "type": "object"
@@ -1282,7 +1333,7 @@
                 ],
                 "summary": "Update role",
                 "description": "Update an existing role",
-                "operationId": "7812777d71ad530db91b8b163d93b9a0",
+                "operationId": "c73ab816ae8fb7c34a995d37ba577082",
                 "parameters": [
                     {
                         "name": "id",
@@ -1344,24 +1395,6 @@
                                             "example": "Role updated successfully"
                                         },
                                         "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "example": "R001"
-                                                },
-                                                "name": {
-                                                    "type": "string",
-                                                    "example": "Admin"
-                                                },
-                                                "description": {
-                                                    "type": "string",
-                                                    "example": "System administrator"
-                                                },
-                                                "is_active": {
-                                                    "type": "boolean",
-                                                    "example": true
-                                                }
-                                            },
                                             "type": "object"
                                         }
                                     },
@@ -1383,7 +1416,7 @@
                 ],
                 "summary": "Delete role",
                 "description": "Delete a role",
-                "operationId": "cfd8457158ec77a99b27b425d3d99515",
+                "operationId": "ffa6ef115d86b00cc6c54a6210019f9c",
                 "parameters": [
                     {
                         "name": "id",
@@ -1428,14 +1461,14 @@
                 ]
             }
         },
-        "/api/v1/roles/{id}/permissions": {
+        "/api/roles/{id}/permissions": {
             "get": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Get role permissions",
                 "description": "Get all permissions assigned to a role",
-                "operationId": "8c3e0e4fbf530b2b91fe2511ffd2b3f5",
+                "operationId": "544e49067ea1110731ca7892b976db7d",
                 "parameters": [
                     {
                         "name": "id",
@@ -1465,28 +1498,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "P001"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Manage Users"
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "users.manage"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Can manage user accounts"
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -1509,7 +1520,7 @@
                 ],
                 "summary": "Assign permissions to role",
                 "description": "Assign specific permissions to a role",
-                "operationId": "92aecdf26cb41a90031c765591737ee5",
+                "operationId": "849c3c1071e3590a96bdbae84f270ad8",
                 "parameters": [
                     {
                         "name": "id",
@@ -1564,28 +1575,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "P001"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Manage Users"
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "users.manage"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Can manage user accounts"
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -1608,7 +1597,7 @@
                 ],
                 "summary": "Remove permissions from role",
                 "description": "Remove specific permissions from a role",
-                "operationId": "e3a0ddd91135805b812bca190cd370dd",
+                "operationId": "561b6573b056efff67165c59238b0a4e",
                 "parameters": [
                     {
                         "name": "id",
@@ -1663,28 +1652,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "P001"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Manage Users"
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "users.manage"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Can manage user accounts"
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -1702,14 +1669,14 @@
                 ]
             }
         },
-        "/api/v1/roles/{id}/permissions/sync": {
+        "/api/roles/{id}/permissions/sync": {
             "put": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Sync role permissions",
                 "description": "Replace all role permissions with the provided list",
-                "operationId": "18b3a6fc536ad92be79866acd535f1ff",
+                "operationId": "b734c9c22a988864de993b49bb9396fe",
                 "parameters": [
                     {
                         "name": "id",
@@ -1764,28 +1731,6 @@
                                         "data": {
                                             "type": "array",
                                             "items": {
-                                                "properties": {
-                                                    "id": {
-                                                        "type": "string",
-                                                        "example": "P001"
-                                                    },
-                                                    "name": {
-                                                        "type": "string",
-                                                        "example": "Manage Users"
-                                                    },
-                                                    "code": {
-                                                        "type": "string",
-                                                        "example": "users.manage"
-                                                    },
-                                                    "description": {
-                                                        "type": "string",
-                                                        "example": "Can manage user accounts"
-                                                    },
-                                                    "is_active": {
-                                                        "type": "boolean",
-                                                        "example": true
-                                                    }
-                                                },
                                                 "type": "object"
                                             }
                                         }
@@ -1803,14 +1748,14 @@
                 ]
             }
         },
-        "/api/v1/roles/{id}/users": {
+        "/api/roles/{id}/users": {
             "get": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Get role users",
                 "description": "Get all users assigned to a role",
-                "operationId": "baebb4344b15f624706888e63c3a0f23",
+                "operationId": "41a42086ba46616ab51b1f58e6b3b531",
                 "parameters": [
                     {
                         "name": "id",
@@ -1875,14 +1820,14 @@
                 ]
             }
         },
-        "/api/v1/users": {
+        "/api/users": {
             "get": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Get all users",
                 "description": "Retrieve all users with pagination",
-                "operationId": "b343fe695d1beaa03b7deb8449dd1b7c",
+                "operationId": "566aed8efb436ca506e0ef51a032ecd9",
                 "parameters": [
                     {
                         "name": "page",
@@ -1967,30 +1912,6 @@
                                 }
                             }
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Unauthorized"
-                                        },
-                                        "errors": {
-                                            "type": "array",
-                                            "items": {}
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
                     }
                 },
                 "security": [
@@ -2005,7 +1926,7 @@
                 ],
                 "summary": "Create new user",
                 "description": "Create a new user",
-                "operationId": "71d86dd873f9e567415d5da5929a0dea",
+                "operationId": "be551c1d694a01c164966f58bfa77013",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2120,14 +2041,14 @@
                 ]
             }
         },
-        "/api/v1/users/{id}": {
+        "/api/users/{id}": {
             "get": {
                 "tags": [
                     "Users"
                 ],
                 "summary": "Get user by ID",
                 "description": "Retrieve a specific user by ID",
-                "operationId": "0197efcfd303b59ccdaad3e01097a0e0",
+                "operationId": "6f51bd5fa2dddcd25e44cfa53dcbd10a",
                 "parameters": [
                     {
                         "name": "id",
@@ -2218,7 +2139,7 @@
                 ],
                 "summary": "Update user",
                 "description": "Update an existing user",
-                "operationId": "e27513375b71e3b3dcc043da6f62129c",
+                "operationId": "070e37fc9aff78ae73860751bc990ed3",
                 "parameters": [
                     {
                         "name": "id",
@@ -2319,7 +2240,7 @@
                 ],
                 "summary": "Delete user",
                 "description": "Delete a user",
-                "operationId": "ae967f8cf847f7d2ad9eba19833f58cd",
+                "operationId": "0b4133ed462528a5e648b88ead11e929",
                 "parameters": [
                     {
                         "name": "id",

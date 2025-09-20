@@ -21,13 +21,13 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for Role Management"
  * )
  */
-#[Prefix('v1/roles')]
+#[Prefix('roles')]
 #[Middleware('auth:api')]
 class RoleController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/v1/roles",
+     *     path="/api/roles",
      *     tags={"Roles"},
      *     summary="Get all roles",
      *     description="Retrieve all roles with their permissions",
@@ -42,16 +42,16 @@ class RoleController extends Controller
      *                 property="data",
      *                 type="array",
      *                 @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="R001"),
-                     @OA\Property(property="name", type="string", example="Admin"),
-                     @OA\Property(property="description", type="string", example="System administrator"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *               @OA\Property(property="id", type="string", example="R001"),
+     *               @OA\Property(property="name", type="string", example="Admin"),
+     *               @OA\Property(property="description", type="string", example="System administrator"),
+     *               @OA\Property(property="is_active", type="boolean", example=true))
      *             )
      *         )
      *     )
      * )
      */
-    #[Get('/')]
+    #[Get('/', middleware: 'permission:users.view')]
     public function index(): JsonResponse
     {
         $roles = Role::with('permissions')
@@ -67,7 +67,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/roles/{id}",
+     *     path="/api/roles/{id}",
      *     tags={"Roles"},
      *     summary="Get role by ID",
      *     description="Retrieve a specific role with permissions",
@@ -86,10 +86,16 @@ class RoleController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Role retrieved successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="R001"),
-                     @OA\Property(property="name", type="string", example="Admin"),
-                     @OA\Property(property="description", type="string", example="System administrator"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *                 @OA\Property(property="id", type="string", example="R001"),
+     *                 @OA\Property(property="name", type="string", example="Admin"),
+     *                 @OA\Property(property="description", type="string", example="System administrator"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="permissions", type="array", @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="string", example="P001"),
+     *                     @OA\Property(property="name", type="string", example="Manage Users"),
+     *                     @OA\Property(property="code", type="string", example="users.manage")
+     *                 ))
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -124,7 +130,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/roles",
+     *     path="/api/roles",
      *     tags={"Roles"},
      *     summary="Create new role",
      *     description="Create a new role",
@@ -152,10 +158,16 @@ class RoleController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Role created successfully"),
      *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="R001"),
-                     @OA\Property(property="name", type="string", example="Admin"),
-                     @OA\Property(property="description", type="string", example="System administrator"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *                 @OA\Property(property="id", type="string", example="R001"),
+     *                 @OA\Property(property="name", type="string", example="Manager"),
+     *                 @OA\Property(property="description", type="string", example="Restaurant Manager Role"),
+     *                 @OA\Property(property="is_active", type="boolean", example=true),
+     *                 @OA\Property(property="permissions", type="array", @OA\Items(type="object",
+     *                     @OA\Property(property="id", type="string", example="P001"),
+     *                     @OA\Property(property="name", type="string", example="Manage Users"),
+     *                     @OA\Property(property="code", type="string", example="users.manage")
+     *                 ))
+     *             )
      *         )
      *     )
      * )
@@ -199,7 +211,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/v1/roles/{id}",
+     *     path="/api/roles/{id}",
      *     tags={"Roles"},
      *     summary="Update role",
      *     description="Update an existing role",
@@ -231,11 +243,7 @@ class RoleController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Role updated successfully"),
-     *             @OA\Property(property="data", type="object",
-                     @OA\Property(property="id", type="string", example="R001"),
-                     @OA\Property(property="name", type="string", example="Admin"),
-                     @OA\Property(property="description", type="string", example="System administrator"),
-                     @OA\Property(property="is_active", type="boolean", example=true))
+     *             @OA\Property(property="data", type="object",)
      *         )
      *     )
      * )
@@ -287,7 +295,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/v1/roles/{id}",
+     *     path="/api/roles/{id}",
      *     tags={"Roles"},
      *     summary="Delete role",
      *     description="Delete a role",
@@ -342,7 +350,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/roles/{id}/permissions",
+     *     path="/api/roles/{id}/permissions",
      *     tags={"Roles"},
      *     summary="Get role permissions",
      *     description="Get all permissions assigned to a role",
@@ -360,12 +368,11 @@ class RoleController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permissions retrieved successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true)))
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(type="object")
+     *             )
      *         )
      *     )
      * )
@@ -393,7 +400,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/v1/roles/{id}/permissions",
+     *     path="/api/roles/{id}/permissions",
      *     tags={"Roles"},
      *     summary="Assign permissions to role",
      *     description="Assign specific permissions to a role",
@@ -423,12 +430,7 @@ class RoleController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permissions assigned successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true)))
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
      *         )
      *     )
      * )
@@ -470,7 +472,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/v1/roles/{id}/permissions",
+     *     path="/api/roles/{id}/permissions",
      *     tags={"Roles"},
      *     summary="Remove permissions from role",
      *     description="Remove specific permissions from a role",
@@ -500,12 +502,7 @@ class RoleController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permissions removed successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true)))
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
      *         )
      *     )
      * )
@@ -547,7 +544,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/v1/roles/{id}/permissions/sync",
+     *     path="/api/roles/{id}/permissions/sync",
      *     tags={"Roles"},
      *     summary="Sync role permissions",
      *     description="Replace all role permissions with the provided list",
@@ -577,12 +574,7 @@ class RoleController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Permissions synced successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="P001"),
-                     @OA\Property(property="name", type="string", example="Manage Users"),
-                     @OA\Property(property="code", type="string", example="users.manage"),
-                     @OA\Property(property="description", type="string", example="Can manage user accounts"),
-                     @OA\Property(property="is_active", type="boolean", example=true)))
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object",))
      *         )
      *     )
      * )
@@ -624,7 +616,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/v1/roles/{id}/users",
+     *     path="/api/roles/{id}/users",
      *     tags={"Roles"},
      *     summary="Get role users",
      *     description="Get all users assigned to a role",
@@ -643,10 +635,10 @@ class RoleController extends Controller
      *             @OA\Property(property="status", type="string", example="success"),
      *             @OA\Property(property="message", type="string", example="Users retrieved successfully"),
      *             @OA\Property(property="data", type="array", @OA\Items(type="object",
-                     @OA\Property(property="id", type="string", example="U001"),
-                     @OA\Property(property="username", type="string", example="john_doe"),
-                     @OA\Property(property="email", type="string", example="john@example.com"),
-                     @OA\Property(property="status", type="integer", example=1)))
+     *               @OA\Property(property="id", type="string", example="U001"),
+     *               @OA\Property(property="username", type="string", example="john_doe"),
+     *               @OA\Property(property="email", type="string", example="john@example.com"),
+     *               @OA\Property(property="status", type="integer", example=1)))
      *         )
      *     )
      * )

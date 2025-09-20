@@ -54,7 +54,8 @@ class Permission extends BaseModel
             'role_permission',
             'permission_id',
             'role_id'
-        );
+        )->using(RolePermission::class)
+         ->withTimestamps();
     }
 
     /**

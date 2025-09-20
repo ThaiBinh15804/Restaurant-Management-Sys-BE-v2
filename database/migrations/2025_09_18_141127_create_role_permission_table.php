@@ -12,6 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('role_permission', function (Blueprint $table) {
+            $table->charset = 'utf8mb4';
+            $table->collation = 'utf8mb4_unicode_ci';
+            
             $table->string('id', 10)->primary();
             $table->string('role_id', 10);
             $table->string('permission_id', 10);
@@ -26,8 +29,10 @@ return new class extends Migration
             $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
             $table->foreign('permission_id')->references('id')->on('permissions')->onDelete('cascade');
             
-            // Unique constraint
-            $table->unique(['role_id', 'permission_id']);
+            $table->unique(['role_id', 'permission_id'], 'unique_role_permission');
+            
+            $table->index(['role_id'], 'idx_role_permission_role');
+            $table->index(['permission_id'], 'idx_role_permission_permission');
         });
     }
 
