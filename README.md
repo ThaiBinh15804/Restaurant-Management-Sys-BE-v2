@@ -2,15 +2,7 @@
 
 Hệ thống quản lý nhà hàng với kiến trúc Backend-only, cung cấp RESTful API để các ứng dụng client tích hợp.
 
-## Yêu cầu hệ thống
-
-- **PHP**: 8.2+
-- **Laravel**: 12.0
-- **MySQL**: 8.0+
-- **Composer**: 2.0+
-- **Laragon**: Môi trường phát triển PHP/MySQL
-
-## Cài đặt và cấu hình
+## 🚀 Cài đặt và cấu hình
 
 ### 1. Clone dự án
 
@@ -47,15 +39,27 @@ DB_PASSWORD=
 php artisan key:generate
 ```
 
-### 4. Thiết lập database
+### 4. Thiết lập database và dữ liệu mẫu
 
-1. Tạo database `restaurant_management` trong MySQL
-2. Chạy migrations:
+1. Tạo database `restaurant_db` trong MySQL
+2. Chạy migrations và seed dữ liệu mẫu:
 ```bash
-php artisan migrate
+php artisan migrate:fresh --seed
 ```
 
-### 5. Generate Swagger Documentation
+**Lưu ý**: Lệnh này sẽ:
+- Tạo tất cả bảng trong database
+- Tạo 7 roles mặc định (Super Admin, Admin, Manager, Staff, Cashier, Kitchen, Waiter)
+- Tạo permissions base cho các modules
+- Tạo sample users data với roles tương ứng
+
+### 5. Cấu hình JWT Authentication
+
+```bash
+php artisan jwt:secret
+```
+
+### 6. Generate Swagger Documentation
 
 ```bash
 php artisan l5-swagger:generate
@@ -77,54 +81,117 @@ php artisan serve
 
 Sau khi chạy ứng dụng, truy cập Swagger UI tại:
 - **Local**: `http://localhost:8000/swagger`
-- **Laragon**: `http://restaurant-management-sys-be-v2.test/api/documentation`
+- **Laragon**: `http://restaurant-management-sys-be-v2.test/swagger`
+
+## Tài khoản mặc định
+
+Sau khi chạy seeder, hệ thống sẽ tạo các tài khoản mặc định:
+
+### Users mẫu
+- **Super Admin**: `superadmin@restaurant.local` (password: `password123`)
+- **Admin**: `admin@restaurant.local` (password: `password123`)
+- **Manager**: `manager@restaurant.local` (password: `password123`)
+- **Staff**: `staff@restaurant.local` (password: `password123`)
+
+### Roles và Permissions
+- **Base roles**: Super Administrator, Administrator, Manager, Staff, Cashier, Kitchen Staff, Waiter/Server
+- **Base permissions**: Bao gồm tất cả modules (users, roles, permissions, categories, products, orders, tables, reservations, inventory, reports, system)
+
+## Authentication & Authorization
+
+### JWT Authentication
+Hệ thống sử dụng JWT (JSON Web Token) cho authentication:
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+    "email": "admin@restaurant.com",
+    "password": "password123"
+}
+```
+
+### RBAC (Role-Based Access Control)
+- Hệ thống phân quyền dựa trên Role và Permission
+- Mỗi user có 1 role
+- Mỗi role có nhiều permissions
+- Chi tiết xem: [RBAC_GUIDE.md](RBAC_GUIDE.md)
 
 ## API Endpoints
 
+### Authentication Endpoints
+```http
+POST /api/auth/login     # Đăng nhập
+POST /api/auth/logout    # Đăng xuất  
+POST /api/auth/refresh   # Refresh token
+GET  /api/auth/me        # Thông tin user hiện tại
+```
+
+### Core Resources
+```http
+# Users Management
+GET    /api/users        # Danh sách users
+POST   /api/users        # Tạo user mới
+GET    /api/users/{id}   # Chi tiết user
+PUT    /api/users/{id}   # Cập nhật user
+DELETE /api/users/{id}   # Xóa user
+
+# Roles & Permissions
+GET    /api/roles        # Danh sách roles
+POST   /api/roles        # Tạo role mới
+GET    /api/permissions  # Danh sách permissions
+
+# Restaurant Management
+GET    /api/categories   # Danh mục sản phẩm
+GET    /api/products     # Sản phẩm
+GET    /api/orders       # Đơn hàng
+GET    /api/tables       # Bàn ăn
+GET    /api/reservations # Đặt bàn
+GET    /api/inventory    # Kho hàng
+```
+
 ### Health Check
 ```http
-GET /health
+GET /health             # Kiểm tra trạng thái API
 ```
-
-Kiểm tra trạng thái API và kết nối database.
 
 ### API Structure
-
-Tất cả API endpoints được tổ chức theo cấu trúc:
-```
-/{resource}
-```
+- **Base URL**: `/api`
+- **Authentication**: Required cho tất cả endpoints (trừ login, health)
+- **Response Format**: JSON
+- **Error Handling**: Standardized error responses
+- **Pagination**: Laravel standard pagination
 
 ### Authentication
 
-API sử dụng Laravel Sanctum cho authentication:
+API sử dụng JWT Authentication:
 - Bearer token trong Authorization header
-- Format: `Authorization: Bearer {token}`
+- Format: `Authorization: Bearer {access_token}`
+
+### Refresh Token
+- Hệ thống hỗ trợ refresh token để gia hạn access token
+- Endpoint: `POST /api/auth/refresh`
 
 ## Development
 
-### Tạo Controller mới
+### RBAC Management
+
+Quản lý hệ thống phân quyền:
 
 ```bash
-php artisan make:controller Api/ResourceController --api
-```
+# Xem help cho tất cả commands
+php artisan rbac help
 
-### Tạo Model với Migration
+# Đồng bộ permissions từ config
+php artisan rbac sync --dry-run  # Preview
+php artisan rbac sync            # Apply
 
-```bash
-php artisan make:model ResourceName -m
-```
-
-### Chạy tests
-
-```bash
-php artisan test
-```
-
-### Code Style
-
-```bash
-vendor/bin/pint
+# Quản lý roles và users
+php artisan rbac list-roles
+php artisan rbac list-permissions
+php artisan rbac assign-role --user=admin@restaurant.local --role="Manager"
+php artisan rbac check-permission --user=admin@restaurant.local --permission=users.create
 ```
 
 ## Kiến trúc hệ thống
@@ -132,32 +199,18 @@ vendor/bin/pint
 Hệ thống sử dụng kiến trúc API-only với các layer sau:
 
 1. **API Controllers** - Xử lý HTTP requests/responses
-2. **Services** - Business logic
-3. **Repositories** - Data access layer
-4. **Models** - Eloquent ORM models
-5. **Resources** - API response transformation
-6. **Requests** - Input validation
+2. **Services** - Business logic (JWT Authentication Service)
+2.1. **RBAC System** - Role-Based Access Control
+3. **Middleware** - Authentication, authorization, CORS
+4. **Models** - Eloquent ORM models với relationships
+5. **Requests** - Input validation và form requests
+6. **Resources** - API response transformation
 
-## Các lệnh hữu ích
 
-```bash
-# Chạy development server
-composer run dev
-
-# Generate Swagger docs
-composer run swagger
-
-# Chạy tests
-composer run test
-
-# Xem logs
-php artisan pail
-
-# Clear cache
-php artisan cache:clear
-php artisan config:clear
-php artisan route:clear
-```
+### Key Dependencies
+- **tymon/jwt-auth**: JWT Authentication
+- **darkaonline/l5-swagger**: API Documentation
+- **spatie/laravel-route-attributes**: Route attributes support
 
 ## Contributing
 
@@ -174,56 +227,3 @@ Dự án này được cấp phép dưới [MIT License](LICENSE).
 ## Support
 
 Nếu gặp vấn đề, vui lòng tạo issue trong repository hoặc liên hệ team phát triển.
-
-## About Laravel
-
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
-
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-## Laravel Sponsors
-
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
-
-### Premium Partners
-
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
-
-## Contributing
-
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
