@@ -1,8 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\HealthController;
+
+Route::middleware(['web'])->group(function () {
+    Route::get('/auth/google', [AuthController::class, 'googleRedirect']);
+    Route::get('/auth/google/callback', [AuthController::class, 'googleCallback']);
+});
 
 // Health check endpoint - for monitoring and load balancer health checks
 Route::get('/health', [HealthController::class, 'check']);

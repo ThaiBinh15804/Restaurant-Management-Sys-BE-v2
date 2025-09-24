@@ -44,6 +44,33 @@ return [
             ],
         ],
 
+        'auth' => [
+            'name' => 'Authentication',
+            'description' => 'Permissions related to authentication and registration',
+            'permissions' => [
+                'auth.register' => [
+                    'name' => 'Register Account',
+                    'description' => 'Permission to register new user account',
+                ],
+                'auth.verify_email' => [
+                    'name' => 'Verify Email',
+                    'description' => 'Permission to verify email address during registration',
+                ],
+                'auth.resend_verification' => [
+                    'name' => 'Resend Verification Email',
+                    'description' => 'Permission to resend email verification',
+                ],
+                'auth.google_login' => [
+                    'name' => 'Google Login',
+                    'description' => 'Permission to login with Google OAuth',
+                ],
+                'auth.google_register' => [
+                    'name' => 'Google Register',
+                    'description' => 'Permission to register new account via Google OAuth',
+                ],
+            ],
+        ],
+
         'roles' => [
             'name' => 'Role Management',
             'description' => 'Permissions related to role management',
@@ -419,6 +446,17 @@ return [
                 'orders.view', 'orders.create', 'orders.edit',
                 'tables.view', 'tables.manage_status',
                 'reservations.view', 'reservations.create', 'reservations.edit',
+            ],
+        ],
+
+        'guest' => [
+            'name' => 'Guest User',
+            'description' => 'Limited access for guest users',
+            'permissions' => [
+                'products.view',
+                'reservations.view', 'reservations.create',
+                'auth.register', 'auth.verify_email', 'auth.resend_verification',
+                'auth.google_login', 'auth.google_register',
             ],
         ],
     ],
