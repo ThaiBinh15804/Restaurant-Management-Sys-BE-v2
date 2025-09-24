@@ -42,6 +42,7 @@ class RefreshToken extends BaseModel
         'revoked_by',
         'ip_address',
         'user_agent',
+        'device_fingerprint',
         'created_by',
         'updated_by',
     ];

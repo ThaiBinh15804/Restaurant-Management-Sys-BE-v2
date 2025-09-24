@@ -130,14 +130,7 @@ class AuthController extends BaseController
      *     path="/api/auth/refresh",
      *     tags={"Authentication"},
      *     summary="Refresh access token",
-     *     description="Get new access token using refresh token",
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"refresh_token"},
-     *             @OA\Property(property="refresh_token", type="string", description="Refresh token")
-     *         )
-     *     ),
+     *     description="Get new access token using refresh token from cookie",
      *     @OA\Response(
      *         response=200,
      *         description="Token refreshed successfully",
@@ -148,7 +141,6 @@ class AuthController extends BaseController
      *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="access_token", type="string"),
-     *                 @OA\Property(property="refresh_token", type="string"),
      *                 @OA\Property(property="token_type", type="string", example="Bearer"),
      *                 @OA\Property(property="expires_in", type="integer", example=3600),
      *             )
@@ -167,19 +159,7 @@ class AuthController extends BaseController
     #[Post('/refresh')]
     public function refresh(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return $this->errorResponse(
-                'Validation failed',
-                $validator->errors(),
-                422
-            );
-        }
-
-        $authData = $this->authService->refreshToken($request->refresh_token, $request);
+        $authData = $this->authService->refreshToken(null, $request);
 
         if (!$authData) {
             return $this->errorResponse(
