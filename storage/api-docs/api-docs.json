@@ -14,7 +14,7 @@
     },
     "servers": [
         {
-            "url": "http://127.0.0.1:8000",
+            "url": "http://localhost:8000",
             "description": "Restaurant Management API Server"
         }
     ],
@@ -830,14 +830,14 @@
                 "tags": [
                     "Authentication"
                 ],
-                "summary": "Google OAuth callback with state validation",
-                "description": "Handle Google OAuth callback with Laravel Socialite state validation",
+                "summary": "Handle Google OAuth callback",
+                "description": "Process Google OAuth callback and login/register user",
                 "operationId": "5512a59fa3748eecf450d0a730224ec2",
                 "parameters": [
                     {
                         "name": "code",
                         "in": "query",
-                        "description": "Authorization code from Google",
+                        "description": "OAuth authorization code from Google",
                         "required": true,
                         "schema": {
                             "type": "string"
@@ -866,7 +866,7 @@
                                         },
                                         "message": {
                                             "type": "string",
-                                            "example": "Login successful"
+                                            "example": "Login successful via Google"
                                         },
                                         "data": {
                                             "properties": {
@@ -876,12 +876,21 @@
                                                 "refresh_token": {
                                                     "type": "string"
                                                 },
+                                                "token_type": {
+                                                    "type": "string",
+                                                    "example": "Bearer"
+                                                },
                                                 "expires_in": {
                                                     "type": "integer",
                                                     "example": 3600
                                                 },
-                                                "user": {
-                                                    "type": "object"
+                                                "provider": {
+                                                    "type": "string",
+                                                    "example": "google"
+                                                },
+                                                "is_new_user": {
+                                                    "type": "boolean",
+                                                    "example": false
                                                 }
                                             },
                                             "type": "object"
@@ -931,93 +940,6 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Account is inactive"
-                                        },
-                                        "errors": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/api/auth/google/manual": {
-            "get": {
-                "tags": [
-                    "Authentication"
-                ],
-                "summary": "Google OAuth callback without state validation",
-                "description": "Handle Google OAuth callback manually without Laravel Socialite state validation for debugging",
-                "operationId": "5f83dd649bac9d17bb383a6442e9bb72",
-                "parameters": [
-                    {
-                        "name": "code",
-                        "in": "query",
-                        "description": "Authorization code from Google",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Google OAuth authentication successful",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Login successful"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "access_token": {
-                                                    "type": "string"
-                                                },
-                                                "refresh_token": {
-                                                    "type": "string"
-                                                },
-                                                "expires_in": {
-                                                    "type": "integer",
-                                                    "example": 3600
-                                                },
-                                                "user": {
-                                                    "type": "object"
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Google OAuth authentication failed",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "OAuth authentication failed"
                                         },
                                         "errors": {
                                             "type": "array",
