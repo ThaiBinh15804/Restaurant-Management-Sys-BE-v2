@@ -152,7 +152,6 @@ class SocialAuthService
                 'data' => [
                     'user' => $user->load('role'),
                     'access_token' => $tokenData['data']['access_token'],
-                    'refresh_token' => $tokenData['data']['refresh_token'],
                     'token_type' => 'Bearer',
                     'expires_in' => $tokenData['data']['expires_in'],
                     'provider' => 'google'
@@ -214,7 +213,6 @@ class SocialAuthService
                 'data' => [
                     'user' => $user->load('role'),
                     'access_token' => $tokenData['data']['access_token'],
-                    'refresh_token' => $tokenData['data']['refresh_token'],
                     'token_type' => 'Bearer',
                     'expires_in' => $tokenData['data']['expires_in'],
                     'provider' => 'google',

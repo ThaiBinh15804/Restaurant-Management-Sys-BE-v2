@@ -307,7 +307,7 @@ class JWTAuthService
             $minutes,
             '/', // path
             null, // domain
-            config('app.env') === 'production', // secure (HTTPS only in production)
+            false, // secure
             true, // httpOnly
             false, // raw
             'Lax' // sameSite
@@ -316,7 +316,11 @@ class JWTAuthService
         Log::info("Refresh token cookie set", [
             'token_preview' => substr($token, 0, 8) . '...',
             'expires_minutes' => $minutes,
-            'secure' => config('app.env') === 'production'
+            'secure' => false,
+            'domain' => null,
+            'path' => '/',
+            'httpOnly' => true,
+            'sameSite' => 'Lax'
         ]);
     }
 
