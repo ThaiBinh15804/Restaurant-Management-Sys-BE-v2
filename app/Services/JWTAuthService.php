@@ -114,11 +114,11 @@ class JWTAuthService
         }
     }
 
-    private function createRefreshToken(User $user, Request $request): RefreshToken
+    private function createRefreshToken(User $user, Request $request, ?Carbon $expireAt = null): RefreshToken
     {
         $deviceFingerprint = $this->getDeviceFingerprint($request);
         $this->revokeUserDeviceTokens($user->id, $deviceFingerprint);
-        
+    
         $refreshToken = RefreshToken::create([
             'user_id' => $user->id,
             'token' => bin2hex(random_bytes(32)),
@@ -128,13 +128,14 @@ class JWTAuthService
             'user_agent' => $request->header('User-Agent'),
             'ip_address' => $request->ip(),
         ]);
-        
+    
         Log::info("Created refresh token", [
             'user_id' => $user->id,
             'token_id' => $refreshToken->id,
-            'device_fingerprint' => $deviceFingerprint
+            'device_fingerprint' => $deviceFingerprint,
+            'expire_at' => $refreshToken->expire_at
         ]);
-        
+    
         return $refreshToken;
     }
 
@@ -221,7 +222,11 @@ class JWTAuthService
             return null;
         }
 
-        $newRefreshToken = $this->createRefreshToken($refreshToken->user, $request);
+        $newRefreshToken = $this->createRefreshToken(
+            $refreshToken->user,
+            $request,
+            $refreshToken->expire_at // 👈 dùng lại expire_at cũ
+        );
         $this->setRefreshTokenCookie($newRefreshToken->token);
         
         $refreshToken->revoke();
