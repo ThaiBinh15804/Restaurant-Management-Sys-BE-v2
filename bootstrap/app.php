@@ -14,6 +14,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         // Add API-specific middleware here
         $middleware->statefulApi();
+        
+        $middleware->encryptCookies(except: [
+            'refresh_token'
+        ]);
+        
+        $middleware->api(append: [
+            \App\Http\Middleware\EnableCookieQueue::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

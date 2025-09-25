@@ -149,27 +149,8 @@
                     "Authentication"
                 ],
                 "summary": "Refresh access token",
-                "description": "Get new access token using refresh token",
+                "description": "Get new access token using refresh token from cookie",
                 "operationId": "30c20c52f5f72828d8c531fd7c9ea3e7",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "refresh_token"
-                                ],
-                                "properties": {
-                                    "refresh_token": {
-                                        "description": "Refresh token",
-                                        "type": "string"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
                 "responses": {
                     "200": {
                         "description": "Token refreshed successfully",
@@ -188,9 +169,6 @@
                                         "data": {
                                             "properties": {
                                                 "access_token": {
-                                                    "type": "string"
-                                                },
-                                                "refresh_token": {
                                                     "type": "string"
                                                 },
                                                 "token_type": {
