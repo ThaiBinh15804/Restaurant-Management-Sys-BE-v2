@@ -36,7 +36,7 @@ return new class extends Migration
             $table->index(['user_id']);
             $table->index(['status']);
             $table->index(['expire_at']);
-            $table->index(['token']); // For quick token lookup
+            $table->index(['token']); 
         });
     }
 

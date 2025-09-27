@@ -11,17 +11,18 @@ use Illuminate\Support\Facades\Log;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Carbon\Carbon;
+use DateTime;
 
 class JWTAuthService
 {
-    const ACCESS_TOKEN_TTL = 60;
-    const REFRESH_TOKEN_TTL = 30;
+    const ACCESS_TOKEN_TTL = 0.08;
+    const REFRESH_TOKEN_TTL = 2; 
     const REFRESH_COOKIE_NAME = 'refresh_token';
 
     public function authenticate(array $credentials, Request $request): ?array
     {
         $user = User::where('email', $credentials['email'])->first();
-        
+
         if (!$user || !$user->isActive()) {
             return null;
         }
@@ -31,22 +32,22 @@ class JWTAuthService
         }
 
         $accessToken = JWTAuth::fromUser($user);
-        
+
         if (!$accessToken) {
             return null;
         }
 
         $this->revokeUserDeviceTokens($user->id, $this->getDeviceFingerprint($request));
-        
+
         $refreshToken = $this->createRefreshToken($user, $request);
-        
+
         $this->setRefreshTokenCookie($refreshToken->token);
 
         return [
             'user' => $user->load('role'),
             'access_token' => $accessToken,
-            'token_type' => 'Bearer', 
-            'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+            'token_type' => 'Bearer',
+            'expires_in' => self::ACCESS_TOKEN_TTL,
         ];
     }
 
@@ -54,9 +55,9 @@ class JWTAuthService
     {
         try {
             Log::info("Generating token for user", ['user_id' => $user->id, 'email' => $user->email]);
-            
+
             $accessToken = JWTAuth::fromUser($user);
-            
+
             if (!$accessToken) {
                 Log::error("Failed to generate JWT access token for user", ['user_id' => $user->id]);
                 return [
@@ -73,7 +74,7 @@ class JWTAuthService
             $refreshToken = RefreshToken::create([
                 'user_id' => $user->id,
                 'token' => bin2hex(random_bytes(32)),
-                'expire_at' => Carbon::now()->addDays(self::REFRESH_TOKEN_TTL),
+                'expire_at' => Carbon::now()->addMinutes(self::REFRESH_TOKEN_TTL),
                 'status' => RefreshToken::STATUS_ACTIVE,
                 'device_fingerprint' => $this->getDeviceFingerprint(request()),
                 'user_agent' => request()->header('User-Agent'),
@@ -81,7 +82,7 @@ class JWTAuthService
             ]);
 
             Log::info("Refresh token created successfully", [
-                'user_id' => $user->id, 
+                'user_id' => $user->id,
                 'token_id' => $refreshToken->id
             ]);
 
@@ -93,10 +94,9 @@ class JWTAuthService
                 'data' => [
                     'access_token' => $accessToken,
                     'token_type' => 'Bearer',
-                    'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+                    'expires_in' => self::ACCESS_TOKEN_TTL,
                 ]
             ];
-
         } catch (\Exception $e) {
             Log::error("Exception in generateTokenForUser", [
                 'user_id' => $user->id,
@@ -105,7 +105,7 @@ class JWTAuthService
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return [
                 'success' => false,
                 'message' => 'Failed to generate tokens',
@@ -114,27 +114,27 @@ class JWTAuthService
         }
     }
 
-    private function createRefreshToken(User $user, Request $request): RefreshToken
+    private function createRefreshToken(User $user, Request $request, ?DateTime $oldExpried = null): RefreshToken
     {
         $deviceFingerprint = $this->getDeviceFingerprint($request);
         $this->revokeUserDeviceTokens($user->id, $deviceFingerprint);
-        
+
         $refreshToken = RefreshToken::create([
             'user_id' => $user->id,
             'token' => bin2hex(random_bytes(32)),
-            'expire_at' => Carbon::now()->addDays(self::REFRESH_TOKEN_TTL),
+            'expire_at' => $oldExpried ?? Carbon::now()->addMinutes(self::REFRESH_TOKEN_TTL),
             'status' => RefreshToken::STATUS_ACTIVE,
             'device_fingerprint' => $deviceFingerprint,
             'user_agent' => $request->header('User-Agent'),
             'ip_address' => $request->ip(),
         ]);
-        
+
         Log::info("Created refresh token", [
             'user_id' => $user->id,
             'token_id' => $refreshToken->id,
             'device_fingerprint' => $deviceFingerprint
         ]);
-        
+
         return $refreshToken;
     }
 
@@ -142,7 +142,7 @@ class JWTAuthService
     {
         try {
             $user = Auth::user();
-            
+
             if ($user) {
                 $deviceFingerprint = $this->getDeviceFingerprint($request);
                 $this->revokeUserDeviceTokens($user->id, $deviceFingerprint);
@@ -151,11 +151,11 @@ class JWTAuthService
             $this->clearRefreshTokenCookie();
 
             JWTAuth::invalidate(JWTAuth::getToken());
-            
+
             Log::info("User logged out successfully", [
                 'user_id' => $user ? $user->id : null
             ]);
-            
+
             return true;
         } catch (JWTException $e) {
             Log::error("JWT logout error", ['error' => $e->getMessage()]);
@@ -185,7 +185,7 @@ class JWTAuthService
         if (!$refreshTokenString) {
             $refreshTokenString = $this->getRefreshTokenFromCookie($request);
         }
-        
+
         if (!$refreshTokenString) {
             Log::warning("No refresh token provided", ['has_cookie' => $request->hasCookie(self::REFRESH_COOKIE_NAME)]);
             return null;
@@ -204,6 +204,13 @@ class JWTAuthService
             return null;
         }
 
+        $expiredOldRefreshToken = $refreshToken->expire_at;
+        Log::info("1Old Refreshing token", [
+            'user_id' => $refreshToken->user_id,
+            'token_id' => $refreshToken->id,
+            'expired_at' => $expiredOldRefreshToken->toDateTimeString()
+        ]);
+
         $currentFingerprint = $this->getDeviceFingerprint($request);
         if ($refreshToken->device_fingerprint !== $currentFingerprint) {
             Log::warning("Device fingerprint mismatch", [
@@ -216,14 +223,21 @@ class JWTAuthService
         }
 
         $newAccessToken = JWTAuth::fromUser($refreshToken->user);
-        
+
         if (!$newAccessToken) {
             return null;
         }
 
-        $newRefreshToken = $this->createRefreshToken($refreshToken->user, $request);
+        $newRefreshToken = $this->createRefreshToken($refreshToken->user, $request, $expiredOldRefreshToken);
+        $this->clearRefreshTokenCookie();
         $this->setRefreshTokenCookie($newRefreshToken->token);
-        
+
+        Log::info("2Old Refreshing token", [
+            'user_id' => $refreshToken->user_id,
+            'token_id' => $refreshToken->id,
+            'expired_at' => $expiredOldRefreshToken->toDateTimeString()
+        ]);
+
         $refreshToken->revoke();
 
         Log::info("Token refreshed successfully", [
@@ -236,7 +250,7 @@ class JWTAuthService
             'user' => $refreshToken->user->load('role'),
             'access_token' => $newAccessToken,
             'token_type' => 'Bearer',
-            'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+            'expires_in' => self::ACCESS_TOKEN_TTL,
         ];
     }
 
@@ -251,7 +265,7 @@ class JWTAuthService
     public function revokeToken(string $refreshTokenString, ?string $revokedBy = null): bool
     {
         $refreshToken = RefreshToken::where('token', $refreshTokenString)->first();
-        
+
         if (!$refreshToken) {
             return false;
         }
@@ -268,9 +282,9 @@ class JWTAuthService
         $acceptLanguage = $request->header('Accept-Language', '');
         $acceptEncoding = $request->header('Accept-Encoding', '');
         $ipAddress = $request->ip();
-        
+
         $fingerprint = md5($userAgent . $acceptLanguage . $acceptEncoding . $ipAddress);
-        
+
         return $fingerprint;
     }
 
@@ -285,9 +299,9 @@ class JWTAuthService
             ->update([
                 'status' => RefreshToken::STATUS_REVOKED,
                 'revoked_at' => Carbon::now(),
-                'revoked_by' => $userId, 
+                'revoked_by' => $userId,
             ]);
-            
+
         Log::info("Revoked existing tokens for user device", [
             'user_id' => $userId,
             'device_fingerprint' => $deviceFingerprint
@@ -299,8 +313,8 @@ class JWTAuthService
      */
     private function setRefreshTokenCookie(string $token): void
     {
-        $minutes = self::REFRESH_TOKEN_TTL * 24 * 60; // Convert days to minutes
-        
+        $minutes = self::REFRESH_TOKEN_TTL; // Convert days to minutes
+
         cookie()->queue(
             self::REFRESH_COOKIE_NAME,
             $token,
@@ -312,7 +326,7 @@ class JWTAuthService
             false, // raw
             'Lax' // sameSite
         );
-        
+
         Log::info("Refresh token cookie set", [
             'token_preview' => substr($token, 0, 8) . '...',
             'expires_minutes' => $minutes,
@@ -347,21 +361,21 @@ class JWTAuthService
     public function cleanupExpiredTokens(int $daysOld = 7): int
     {
         $cutoffDate = Carbon::now()->subDays($daysOld);
-        
-        $deletedCount = RefreshToken::where(function($query) use ($cutoffDate) {
+
+        $deletedCount = RefreshToken::where(function ($query) use ($cutoffDate) {
             $query->where('expire_at', '<', Carbon::now())
-                  ->orWhere('status', RefreshToken::STATUS_EXPIRED)
-                  ->orWhere(function($q) use ($cutoffDate) {
-                      $q->where('status', RefreshToken::STATUS_REVOKED)
+                ->orWhere('status', RefreshToken::STATUS_EXPIRED)
+                ->orWhere(function ($q) use ($cutoffDate) {
+                    $q->where('status', RefreshToken::STATUS_REVOKED)
                         ->where('revoked_at', '<', $cutoffDate);
-                  });
+                });
         })->delete();
-        
+
         Log::info("Automatic token cleanup completed", [
             'deleted_count' => $deletedCount,
             'cutoff_date' => $cutoffDate->toDateTimeString()
         ]);
-        
+
         return $deletedCount;
     }
 }
