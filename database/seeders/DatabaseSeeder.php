@@ -16,9 +16,10 @@ class DatabaseSeeder extends Seeder
     {
         // First create roles and permissions
         $this->call(RolePermissionSeeder::class);
-        
-        // Then create default users
         $this->createDefaultUsers();
+        $this->call(EmployeeCustomer::class);
+
+        // Then create default users
     }
 
     /**
@@ -60,7 +61,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'staff@restaurant.com',
             'password' => 'password123',
             'status' => User::STATUS_ACTIVE,
-            'role_id' => $staffRole?->id, 
+            'role_id' => $staffRole?->id,
         ]);
 
         User::factory()->create([
