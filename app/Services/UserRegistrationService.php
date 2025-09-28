@@ -107,15 +107,18 @@ class UserRegistrationService
                 ];
             }
 
-            $defaultRole = Role::where('name', 'Guest User')->where('is_active', true)->first();
+            $defaultRole = Role::where('name', 'Customer')->where('is_active', true)->first();
 
             $user = User::create([
-                'name' => $verificationToken->temp_name,
                 'email' => $verificationToken->email,
                 'password' => $verificationToken->temp_password,
                 'status' => User::STATUS_ACTIVE,
                 'role_id' => $defaultRole?->id,
                 'email_verified_at' => Carbon::now(),
+            ]);
+
+            $customer = $user->customerProfile()->create([
+                'full_name' => $verificationToken->temp_name,
             ]);
 
             $verificationToken->markAsUsed();

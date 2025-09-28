@@ -8,37 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Customer
-        Schema::create('customers', function (Blueprint $table) {
-            $table->string('id', 10)->primary();
-            $table->string('full_name', 100);
-            $table->string('phone', 15);
-            $table->string('gender', 20);
-            $table->string('address', 200)->nullable();
-            $table->integer('membership_level')->default(0); // 0-All,1-Bronze,...
-            $table->string('user_id', 10)->nullable();
-            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
-            $table->timestamps();
-        });
-
-        // Employee
-        Schema::create('employees', function (Blueprint $table) {
-            $table->string('id', 10)->primary();
-            $table->string('full_name', 100);
-            $table->string('phone', 15);
-            $table->string('gender', 20);
-            $table->string('address', 200)->nullable();
-            $table->string('bank_account', 100)->nullable();
-            $table->integer('contract_type')->default(0); // 0-Fulltime,1-Parttime
-            $table->string('position', 50);
-            $table->decimal('base_salary', 18, 2)->default(0);
-            $table->date('hire_date');
-            $table->boolean('is_active')->default(true);
-            $table->string('user_id', 10)->nullable();
-            $table->foreign('user_id')->references('id')->on('users')->nullOnDelete();
-            $table->timestamps();
-        });
-
         // Dining Table
         Schema::create('dining_tables', function (Blueprint $table) {
             $table->string('id', 10)->primary();

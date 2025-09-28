@@ -36,7 +36,6 @@ try {
 
     // Test User creation with custom ID
     $user = User::create([
-        'name' => 'Admin User',
         'email' => 'admin@restaurant.com',
         'password' => bcrypt('password123'),
         'status' => User::STATUS_ACTIVE,
