@@ -14,7 +14,11 @@ return new class extends Migration
             $table->integer('table_number');
             $table->integer('capacity');
             $table->boolean('is_active')->default(true);
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Reservation
@@ -26,7 +30,11 @@ return new class extends Migration
             $table->integer('status')->default(0); // 0=Pending,1=Confirmed...
             $table->string('notes', 200)->nullable();
             $table->foreign('customer_id')->references('id')->on('customers')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Table Session
@@ -44,7 +52,11 @@ return new class extends Migration
             $table->foreign('merged_into_session_id')->references('id')->on('table_sessions')->nullOnDelete();
             $table->foreign('customer_id')->references('id')->on('customers')->nullOnDelete();
             $table->foreign('employee_id')->references('id')->on('employees')->nullOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Pivot: session - reservation
@@ -54,7 +66,11 @@ return new class extends Migration
             $table->string('reservation_id', 10);
             $table->foreign('table_session_id')->references('id')->on('table_sessions')->cascadeOnDelete();
             $table->foreign('reservation_id')->references('id')->on('reservations')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Pivot: session - dining table
@@ -64,7 +80,11 @@ return new class extends Migration
             $table->string('table_session_id', 10);
             $table->foreign('dining_table_id')->references('id')->on('dining_tables')->cascadeOnDelete();
             $table->foreign('table_session_id')->references('id')->on('table_sessions')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Order
@@ -74,7 +94,11 @@ return new class extends Migration
             $table->integer('status')->default(0); // 0=Open,1=InProgress...
             $table->decimal('total_amount', 18, 2)->default(0);
             $table->foreign('table_session_id')->references('id')->on('table_sessions')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Dish Category
@@ -82,7 +106,11 @@ return new class extends Migration
             $table->string('id', 10)->primary();
             $table->string('name', 100);
             $table->string('desc', 255)->nullable();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Dish
@@ -96,7 +124,11 @@ return new class extends Migration
             $table->string('image', 255)->nullable();
             $table->boolean('is_active')->default(true);
             $table->foreign('category_id')->references('id')->on('dish_categories')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Order Item
@@ -115,7 +147,11 @@ return new class extends Migration
             $table->foreign('order_id')->references('id')->on('orders')->cascadeOnDelete();
             $table->foreign('dish_id')->references('id')->on('dishes')->cascadeOnDelete();
             $table->foreign('prepared_by')->references('id')->on('employees')->nullOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Menu
@@ -125,7 +161,11 @@ return new class extends Migration
             $table->string('description', 200)->nullable();
             $table->integer('version')->default(1);
             $table->boolean('is_active')->default(false);
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
 
         // Menu Item
@@ -137,7 +177,11 @@ return new class extends Migration
             $table->string('notes', 255)->nullable();
             $table->foreign('menu_id')->references('id')->on('menus')->cascadeOnDelete();
             $table->foreign('dish_id')->references('id')->on('dishes')->cascadeOnDelete();
-            $table->timestamps();
+            // Base model fields
+            $table->timestamp('created_at')->nullable();
+            $table->timestamp('updated_at')->nullable();
+            $table->string('created_by', 10)->nullable();
+            $table->string('updated_by', 10)->nullable();
         });
     }
 

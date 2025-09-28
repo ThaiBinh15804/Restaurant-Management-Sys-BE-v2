@@ -2,8 +2,19 @@
 
 namespace Database\Seeders;
 
+use App\Models\DiningTable;
+use App\Models\Dish;
+use App\Models\DishCategory;
+use App\Models\Menu;
+use App\Models\MenuItem;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\TableSession;
+use App\Models\TableSessionDiningTable;
+use App\Models\TableSessionReservation;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -17,6 +28,7 @@ class DatabaseSeeder extends Seeder
         // First create roles and permissions
         $this->call(RolePermissionSeeder::class);
         $this->createDefaultUsers();
+        $this->createDefaultTableDiskMenuData();
 
         // Then create default users
     }
@@ -113,6 +125,163 @@ class DatabaseSeeder extends Seeder
         ]);
         $customerProfile = $customerUser->customerProfile()->create([
             'full_name' => 'Customer User',
+        ]);
+    }
+
+    private function createDefaultTableDiskMenuData(): void
+    {
+        $now = \Carbon\Carbon::now();
+
+        // Lấy lại User vừa tạo
+        $employeeUser = User::where('email', 'admin@restaurant.com')->first();
+        $customerUser = User::where('email', 'customer@restaurant.com')->first();
+        $customerProfile = $customerUser->customerProfile; // Lấy profile vừa tạo
+        $employeeProfile = $employeeUser->employeeProfile; // Lấy profile vừa tạo
+
+        // 1. Dining Tables
+        $table1 = DiningTable::create([
+            'table_number' => 1,
+            'capacity' => 4,
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        $table2 = DiningTable::create([
+            'table_number' => 2,
+            'capacity' => 2,
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 2. Reservation
+        $reservation = Reservation::create([
+            'customer_id' => $customerProfile->id, // <-- FK đúng,
+            'reserved_at' => $now->copy()->addHour(),
+            'number_of_people' => 2,
+            'status' => 0, // Pending
+            'notes' => 'Near window',
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 3. Table Session
+        $session = TableSession::create([
+            'type' => 0, // Offline
+            'status' => 1, // Active
+            'customer_id' => $customerProfile->id, // <-- FK đúng,
+            'employee_id' => $employeeProfile->id,
+            'started_at' => $now,
+            'ended_at' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 4. Pivot: session - reservation
+        TableSessionReservation::create([
+            'table_session_id' => $session->id,
+            'reservation_id' => $reservation->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 5. Pivot: session - dining table
+        TableSessionDiningTable::create([
+            'table_session_id' => $session->id,
+            'dining_table_id' => $table1->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 6. Orders
+        $order = Order::create([
+            'table_session_id' => $session->id,
+            'status' => 0, // Open
+            'total_amount' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 7. Dish Categories
+        $category = DishCategory::create([
+            'name' => 'Appetizers',
+            'desc' => 'Starters',
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 8. Dishes
+        $dish = Dish::create([
+            'name' => 'Spring Roll',
+            'price' => 5,
+            'desc' => 'Crispy rolls',
+            'category_id' => $category->id,
+            'cooking_time' => 10,
+            'image' => null,
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 9. Order Items
+        OrderItem::create([
+            'order_id' => $order->id,
+            'dish_id' => $dish->id,
+            'quantity' => 2,
+            'price' => 5,
+            'total_price' => 10,
+            'status' => 0, // Ordered
+            'notes' => 'Extra spicy',
+            'prepared_by' => $employeeProfile->id,
+            'served_at' => null,
+            'cancelled_reason' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 10. Menus
+        $menu = Menu::create([
+            'name' => 'Lunch Menu',
+            'description' => 'Lunch specials',
+            'version' => 1,
+            'is_active' => true,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 11. Menu Items
+        MenuItem::create([
+            'menu_id' => $menu->id,
+            'dish_id' => $dish->id,
+            'price' => 5,
+            'notes' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
         ]);
     }
 }
