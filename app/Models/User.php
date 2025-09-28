@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\BaseAuthenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Tymon\JWTAuth\Contracts\JWTSubject;
@@ -43,7 +44,6 @@ class User extends BaseAuthenticatable implements JWTSubject
      * @var list<string>
      */
     protected $fillable = [
-        'name',
         'email',
         'password',
         'status',
@@ -95,6 +95,22 @@ class User extends BaseAuthenticatable implements JWTSubject
     public function refreshTokens(): HasMany
     {
         return $this->hasMany(RefreshToken::class, 'user_id');
+    }
+
+    /**
+     * Get the customer profile linked to the user.
+     */
+    public function customerProfile(): HasOne
+    {
+        return $this->hasOne(Customer::class, 'user_id');
+    }
+
+    /**
+     * Get the employee profile linked to the user.
+     */
+    public function employeeProfile(): HasOne
+    {
+        return $this->hasOne(Employee::class, 'user_id');
     }
 
     /**

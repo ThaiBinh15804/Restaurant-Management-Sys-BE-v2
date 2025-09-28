@@ -438,7 +438,7 @@ return [
         ],
 
         'waiter' => [
-            'name' => 'Waiter/Server',
+            'name' => 'Waiter',
             'description' => 'Order taking and table service permissions',
             'permissions' => [
                 'categories.view',
@@ -449,9 +449,9 @@ return [
             ],
         ],
 
-        'guest' => [
-            'name' => 'Guest User',
-            'description' => 'Limited access for guest users',
+        'customer' => [
+            'name' => 'Customer',
+            'description' => 'Limited access for customers',
             'permissions' => [
                 'products.view',
                 'reservations.view', 'reservations.create',

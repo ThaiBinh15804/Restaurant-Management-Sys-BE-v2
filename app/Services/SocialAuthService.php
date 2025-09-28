@@ -178,17 +178,20 @@ class SocialAuthService
     private function registerNewUser($googleUser): array
     {
         try {
-            $defaultRole = Role::where('name', 'Guest User')->where('is_active', true)->first();
+            $defaultRole = Role::where('name', 'Customer')->where('is_active', true)->first();
 
             // Create new user
             $user = User::create([
-                'name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
                 'email' => $googleUser->getEmail(),
                 'password' => bcrypt(uniqid()),
                 'status' => User::STATUS_ACTIVE,
                 'role_id' => $defaultRole?->id,
                 'avatar' => $googleUser->getAvatar(),
                 'email_verified_at' => Carbon::now(),
+            ]);
+
+            $customer = $user->customerProfile()->create([
+                'full_name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
             ]);
 
             $tokenData = $this->jwtAuthService->generateTokenForUser($user);
@@ -249,8 +252,8 @@ class SocialAuthService
             $updates['email_verified_at'] = Carbon::now();
         }
 
-        if (empty(trim($user->name)) && $googleUser->getName()) {
-            $updates['name'] = $googleUser->getName();
+        if (empty(trim($user->customerProfile->name)) && $googleUser->getName()) {
+            $user->customerProfile->update(['full_name' => $googleUser->getName()]);
         }
 
         if (!empty($updates)) {

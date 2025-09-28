@@ -2,7 +2,7 @@
 
 ## Tổng Quan
 
-Hệ thống đã được bổ sung tính năng đăng ký tài khoản mới với xác thực email cho guest users. Đây là giải pháp tối ưu cho hệ thống nhỏ với các đặc điểm:
+Hệ thống đã được bổ sung tính năng đăng ký tài khoản mới với xác thực email cho customers. Đây là giải pháp tối ưu cho hệ thống nhỏ với các đặc điểm:
 
 - **Đăng ký 2 bước**: Tạo token verification → Xác thực email
 - **Email verification**: Bắt buộc xác thực email trước khi tạo tài khoản
@@ -158,7 +158,7 @@ CREATE TABLE email_verification_tokens (
 - `auth.verify_email` - Quyền xác thực email  
 - `auth.resend_verification` - Quyền gửi lại email xác thực
 
-**Guest role** đã được cập nhật với các permissions trên.
+**Customer role** đã được cập nhật với các permissions trên.
 
 ---
 
