@@ -126,6 +126,16 @@ class DatabaseSeeder extends Seeder
         $customerProfile = $customerUser->customerProfile()->create([
             'full_name' => 'Customer User',
         ]);
+
+        $customerUser2 = User::create([
+            'email' => 'customer2@restaurant.com',
+            'password' => 'password123',
+            'status' => User::STATUS_ACTIVE,
+            'role_id' => $customer?->id,
+        ]);
+        $customerProfile2 = $customerUser2->customerProfile()->create([
+            'full_name' => 'Customer User 2',
+        ]);
     }
 
     private function createDefaultTableDiskMenuData(): void
@@ -134,37 +144,33 @@ class DatabaseSeeder extends Seeder
 
         // Lấy lại User vừa tạo
         $employeeUser = User::where('email', 'admin@restaurant.com')->first();
-        $customerUser = User::where('email', 'customer@restaurant.com')->first();
-        $customerProfile = $customerUser->customerProfile; // Lấy profile vừa tạo
-        $employeeProfile = $employeeUser->employeeProfile; // Lấy profile vừa tạo
+        $customerUser1 = User::where('email', 'customer@restaurant.com')->first();
+        $customerUser2 = User::where('email', 'customer2@restaurant.com')->first();
 
-        // 1. Dining Tables
-        $table1 = DiningTable::create([
-            'table_number' => 1,
-            'capacity' => 4,
-            'is_active' => true,
-            'created_at' => $now,
-            'updated_at' => $now,
-            'created_by' => $employeeProfile->id,
-            'updated_by' => $employeeProfile->id,
-        ]);
+        $employeeProfile = $employeeUser->employeeProfile;
+        $customerProfile1 = $customerUser1->customerProfile;
+        $customerProfile2 = $customerUser2->customerProfile;
 
-        $table2 = DiningTable::create([
-            'table_number' => 2,
-            'capacity' => 2,
-            'is_active' => true,
-            'created_at' => $now,
-            'updated_at' => $now,
-            'created_by' => $employeeProfile->id,
-            'updated_by' => $employeeProfile->id,
-        ]);
+        // 1. Tạo 10 Dining Tables
+        $tables = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $tables[$i] = DiningTable::create([
+                'table_number' => $i,
+                'capacity' => rand(2, 6),
+                'is_active' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+                'created_by' => $employeeProfile->id,
+                'updated_by' => $employeeProfile->id,
+            ]);
+        }
 
-        // 2. Reservation
-        $reservation = Reservation::create([
-            'customer_id' => $customerProfile->id, // <-- FK đúng,
+        // 2. Tạo 2 Reservations
+        $reservation1 = Reservation::create([
+            'customer_id' => $customerProfile1->id,
             'reserved_at' => $now->copy()->addHour(),
             'number_of_people' => 2,
-            'status' => 0, // Pending
+            'status' => 0,
             'notes' => 'Near window',
             'created_at' => $now,
             'updated_at' => $now,
@@ -172,11 +178,23 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 3. Table Session
-        $session = TableSession::create([
-            'type' => 0, // Offline
+        $reservation2 = Reservation::create([
+            'customer_id' => $customerProfile2->id,
+            'reserved_at' => $now->copy()->addHours(2),
+            'number_of_people' => 4,
+            'status' => 0,
+            'notes' => 'Near door',
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
+        // 3. Tạo 2 Table Sessions
+        $session1 = TableSession::create([
+            'type' => 0,
             'status' => 1, // Active
-            'customer_id' => $customerProfile->id, // <-- FK đúng,
+            'customer_id' => $customerProfile1->id,
             'employee_id' => $employeeProfile->id,
             'started_at' => $now,
             'ended_at' => null,
@@ -186,38 +204,56 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
+        $session2 = TableSession::create([
+            'type' => 0,
+            'status' => 0, // Pending
+            'customer_id' => $customerProfile2->id,
+            'employee_id' => $employeeProfile->id,
+            'started_at' => $now->copy()->addHours(2),
+            'ended_at' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
         // 4. Pivot: session - reservation
         TableSessionReservation::create([
-            'table_session_id' => $session->id,
-            'reservation_id' => $reservation->id,
+            'table_session_id' => $session1->id,
+            'reservation_id' => $reservation1->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+        TableSessionReservation::create([
+            'table_session_id' => $session2->id,
+            'reservation_id' => $reservation2->id,
             'created_at' => $now,
             'updated_at' => $now,
             'created_by' => $employeeProfile->id,
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 5. Pivot: session - dining table
+        // 5. Pivot: session - dining table (gán table 1 và table 2)
         TableSessionDiningTable::create([
-            'table_session_id' => $session->id,
-            'dining_table_id' => $table1->id,
+            'table_session_id' => $session1->id,
+            'dining_table_id' => $tables[1]->id,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+        TableSessionDiningTable::create([
+            'table_session_id' => $session2->id,
+            'dining_table_id' => $tables[2]->id,
             'created_at' => $now,
             'updated_at' => $now,
             'created_by' => $employeeProfile->id,
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 6. Orders
-        $order = Order::create([
-            'table_session_id' => $session->id,
-            'status' => 0, // Open
-            'total_amount' => 0,
-            'created_at' => $now,
-            'updated_at' => $now,
-            'created_by' => $employeeProfile->id,
-            'updated_by' => $employeeProfile->id,
-        ]);
-
-        // 7. Dish Categories
+        // 6. Tạo 1 Order + Dish + Category + OrderItem + Menu + MenuItem cho session1
         $category = DishCategory::create([
             'name' => 'Appetizers',
             'desc' => 'Starters',
@@ -227,7 +263,6 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 8. Dishes
         $dish = Dish::create([
             'name' => 'Spring Roll',
             'price' => 5,
@@ -242,14 +277,23 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 9. Order Items
+        $order1 = Order::create([
+            'table_session_id' => $session1->id,
+            'status' => 0,
+            'total_amount' => 0,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'created_by' => $employeeProfile->id,
+            'updated_by' => $employeeProfile->id,
+        ]);
+
         OrderItem::create([
-            'order_id' => $order->id,
+            'order_id' => $order1->id,
             'dish_id' => $dish->id,
             'quantity' => 2,
             'price' => 5,
             'total_price' => 10,
-            'status' => 0, // Ordered
+            'status' => 0,
             'notes' => 'Extra spicy',
             'prepared_by' => $employeeProfile->id,
             'served_at' => null,
@@ -260,7 +304,6 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 10. Menus
         $menu = Menu::create([
             'name' => 'Lunch Menu',
             'description' => 'Lunch specials',
@@ -272,7 +315,6 @@ class DatabaseSeeder extends Seeder
             'updated_by' => $employeeProfile->id,
         ]);
 
-        // 11. Menu Items
         MenuItem::create([
             'menu_id' => $menu->id,
             'dish_id' => $dish->id,

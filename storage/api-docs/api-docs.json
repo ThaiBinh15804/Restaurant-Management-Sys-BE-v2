@@ -934,6 +934,275 @@
                 }
             }
         },
+        "/api/auth/dining-tables": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Get all dining tables",
+                "description": "Retrieve all dining tables with pagination",
+                "operationId": "c7a2c719935f10e5301beb68112f5324",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dining tables retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dining tables retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "DT001"
+                                                            },
+                                                            "table_number": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "capacity": {
+                                                                "type": "integer",
+                                                                "example": 4
+                                                            },
+                                                            "is_active": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "current_page": {
+                                                    "type": "integer"
+                                                },
+                                                "last_page": {
+                                                    "type": "integer"
+                                                },
+                                                "per_page": {
+                                                    "type": "integer"
+                                                },
+                                                "total": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Create new dining table",
+                "description": "Create a new dining table",
+                "operationId": "ff12136906499febd175df822b491a17",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "table_number",
+                                    "capacity"
+                                ],
+                                "properties": {
+                                    "table_number": {
+                                        "type": "integer",
+                                        "example": 5
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 6
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Dining table created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/dining-tables/{id}": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Get dining table by ID",
+                "description": "Retrieve a specific dining table by ID",
+                "operationId": "efc819ea6a824888cf98851a0b647ad3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Dining Table ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dining table retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Dining table not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Update dining table",
+                "description": "Update an existing dining table",
+                "operationId": "ec139060fa0f40ad6ccb7afa133a91dd",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Dining Table ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "table_number": {
+                                        "type": "integer",
+                                        "example": 10
+                                    },
+                                    "capacity": {
+                                        "type": "integer",
+                                        "example": 8
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": false
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dining table updated successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Delete dining table",
+                "description": "Delete a dining table",
+                "operationId": "c634b6b7741425ce9608a70fd5b1d644",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Dining Table ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Dining table deleted successfully"
+                    },
+                    "404": {
+                        "description": "Dining table not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/health": {
             "get": {
                 "tags": [
@@ -972,6 +1241,103 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/auth/order-items/status": {
+            "put": {
+                "tags": [
+                    "OrderItems"
+                ],
+                "summary": "Cập nhật trạng thái nhiều OrderItem",
+                "operationId": "f3c123c3213e9525cf6df093016760b0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "items": {
+                                        "description": "Key-value: orderItemId => status",
+                                        "type": "object",
+                                        "additionalProperties": {
+                                            "description": "0=Ordered, 1=Cooking, 2=Served, 3=Cancelled",
+                                            "type": "integer",
+                                            "enum": [
+                                                0,
+                                                1,
+                                                2,
+                                                3
+                                            ],
+                                            "property": null
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order items and order status updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "description": "OrderItem ID",
+                                                "type": "string"
+                                            },
+                                            "order_id": {
+                                                "description": "Order ID",
+                                                "type": "string"
+                                            },
+                                            "status": {
+                                                "description": "OrderItem status",
+                                                "type": "integer",
+                                                "enum": [
+                                                    0,
+                                                    1,
+                                                    2,
+                                                    3
+                                                ]
+                                            },
+                                            "quantity": {
+                                                "type": "integer"
+                                            },
+                                            "price": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "total_price": {
+                                                "type": "number",
+                                                "format": "float"
+                                            },
+                                            "notes": {
+                                                "type": "string",
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validate lỗi input"
+                    },
+                    "403": {
+                        "description": "Không có quyền"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/permissions": {
@@ -2038,6 +2404,588 @@
                 ]
             }
         },
+        "/api/auth/table-sessions": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Danh sách bàn + phiên bàn",
+                "operationId": "5acc82279e457a79675eef8bd7a53ad5",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách bàn và phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "dining_table_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "table_number": {
+                                                        "type": "string"
+                                                    },
+                                                    "capacity": {
+                                                        "type": "integer"
+                                                    },
+                                                    "is_active": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "session_id": {
+                                                        "type": "integer",
+                                                        "nullable": true
+                                                    },
+                                                    "session_type": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "session_status": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    },
+                                                    "started_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    },
+                                                    "ended_at": {
+                                                        "type": "string",
+                                                        "format": "date-time",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/table-sessions/{idDiningTable}": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Lấy thông tin phiên bàn theo Dining Table ID",
+                "description": "Trả về phiên bàn (status = 1 - đang phục vụ) kèm thông tin đặt chỗ và khách hàng",
+                "operationId": "fbb65aa04033c53513540ef91bcb1cb7",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của Dining Table (ví dụ: DT4PP4X0GT)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Thông tin phiên bàn lấy thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "dining_table_id": {
+                                                    "type": "string",
+                                                    "example": "DT4PP4X0GT"
+                                                },
+                                                "session_id": {
+                                                    "type": "string",
+                                                    "example": "TS12345"
+                                                },
+                                                "session_type": {
+                                                    "description": "0=Offline, 1=Online",
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "session_status": {
+                                                    "description": "1=Active",
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "started_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-02T08:30:00Z"
+                                                },
+                                                "ended_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "nullable": true
+                                                },
+                                                "reservation_number_of_people": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "reservation_notes": {
+                                                    "type": "string",
+                                                    "example": "Near window"
+                                                },
+                                                "customer_id": {
+                                                    "type": "string",
+                                                    "example": "CUS001"
+                                                },
+                                                "customer_name": {
+                                                    "type": "string",
+                                                    "example": "Nguyen Van A"
+                                                },
+                                                "customer_gender": {
+                                                    "type": "string",
+                                                    "example": "male"
+                                                },
+                                                "customer_phone": {
+                                                    "type": "string",
+                                                    "example": "0901234567"
+                                                },
+                                                "customer_address": {
+                                                    "type": "string",
+                                                    "example": "123 Le Loi, District 1, HCMC"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy phiên bàn đang phục vụ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy phiên bàn đang phục vụ cho Dining Table: DT4PP4X0GT"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/table-sessions/{tableSessionId}/orders": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Lấy danh sách Order theo Table Session ID",
+                "description": "Trả về danh sách order và chi tiết order_items kèm thông tin món ăn và category",
+                "operationId": "5f756096e3f4e1b645ce2bd733af657b",
+                "parameters": [
+                    {
+                        "name": "tableSessionId",
+                        "in": "path",
+                        "description": "ID của Table Session (ví dụ: TSPC3JAEON)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách order lấy thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Orders retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "order_id": {
+                                                        "type": "string",
+                                                        "example": "O123"
+                                                    },
+                                                    "table_session_id": {
+                                                        "type": "string",
+                                                        "example": "TSPC3JAEON"
+                                                    },
+                                                    "order_status": {
+                                                        "description": "0=Open, 1=In-Progress, 2=Served, 3=Paid, 4=Cancelled",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "total_amount": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 350000
+                                                    },
+                                                    "items": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "order_item_id": {
+                                                                    "type": "string",
+                                                                    "example": "OI001"
+                                                                },
+                                                                "quantity": {
+                                                                    "type": "integer",
+                                                                    "example": 2
+                                                                },
+                                                                "item_price": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 120000
+                                                                },
+                                                                "total_price": {
+                                                                    "type": "number",
+                                                                    "format": "float",
+                                                                    "example": 240000
+                                                                },
+                                                                "item_status": {
+                                                                    "description": "0=Ordered, 1=Cooking, 2=Served, 3=Cancelled",
+                                                                    "type": "integer",
+                                                                    "example": 1
+                                                                },
+                                                                "notes": {
+                                                                    "type": "string",
+                                                                    "example": "Less spicy"
+                                                                },
+                                                                "prepared_by": {
+                                                                    "type": "string",
+                                                                    "example": "EMP001"
+                                                                },
+                                                                "served_at": {
+                                                                    "type": "string",
+                                                                    "format": "date-time",
+                                                                    "example": "2025-10-02T08:45:00Z"
+                                                                },
+                                                                "cancelled_reason": {
+                                                                    "type": "string",
+                                                                    "example": null
+                                                                },
+                                                                "dish": {
+                                                                    "properties": {
+                                                                        "dish_id": {
+                                                                            "type": "string",
+                                                                            "example": "D123"
+                                                                        },
+                                                                        "dish_name": {
+                                                                            "type": "string",
+                                                                            "example": "Fried Rice"
+                                                                        },
+                                                                        "dish_price": {
+                                                                            "type": "number",
+                                                                            "example": 120000
+                                                                        },
+                                                                        "dish_desc": {
+                                                                            "type": "string",
+                                                                            "example": "Delicious fried rice"
+                                                                        },
+                                                                        "cooking_time": {
+                                                                            "type": "integer",
+                                                                            "example": 15
+                                                                        },
+                                                                        "image": {
+                                                                            "type": "string",
+                                                                            "example": "/images/fried_rice.png"
+                                                                        },
+                                                                        "dish_active": {
+                                                                            "type": "boolean",
+                                                                            "example": true
+                                                                        },
+                                                                        "category_name": {
+                                                                            "type": "string",
+                                                                            "example": "Main Course"
+                                                                        },
+                                                                        "category_desc": {
+                                                                            "type": "string",
+                                                                            "example": "Main course dishes"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy orders cho Table Session",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy orders cho Table Session: TSPC3JAEON"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dining-tables/{idDiningTable}/session-history": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Lấy lịch sử phiên bàn theo Dining Table",
+                "description": "Trả về danh sách các phiên bàn đã hoàn thành hoặc bị hủy, kèm thông tin reservation nếu có",
+                "operationId": "getTableSessionHistory",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của dining table",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lịch sử phiên bàn retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "session_id": {
+                                                "type": "string"
+                                            },
+                                            "table_id": {
+                                                "type": "string"
+                                            },
+                                            "table_number": {
+                                                "type": "string"
+                                            },
+                                            "session_type": {
+                                                "description": "0-Offline,1-Merge,2-Reservation,3-Split",
+                                                "type": "integer"
+                                            },
+                                            "session_status": {
+                                                "description": "3-Completed,4-Cancelled",
+                                                "type": "integer"
+                                            },
+                                            "started_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "ended_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "customer_id": {
+                                                "type": "string"
+                                            },
+                                            "employee_id": {
+                                                "type": "string"
+                                            },
+                                            "reservations": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "reservation_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "reservation_customer_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "reservation_time": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "number_of_people": {
+                                                            "type": "integer"
+                                                        },
+                                                        "reservation_status": {
+                                                            "description": "0-Pending,1-Confirmed,2-Cancelled,3-Completed",
+                                                            "type": "integer"
+                                                        },
+                                                        "notes": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy lịch sử phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/table-sessions/{idDiningTable}/session-history/{sessionId}": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Xem lịch sử chi tiết một phiên bàn",
+                "description": "Trả về tất cả thông tin liên quan tới một phiên bàn: bàn, reservation, khách hàng, orders và món ăn",
+                "operationId": "getTableSessionDetail",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của bàn",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sessionId",
+                        "in": "path",
+                        "description": "ID của phiên bàn",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy phiên bàn"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -2123,126 +3071,6 @@
                                                     "type": "integer"
                                                 }
                                             },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Users"
-                ],
-                "summary": "Create new user",
-                "description": "Create a new user",
-                "operationId": "be551c1d694a01c164966f58bfa77013",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "required": [
-                                    "name",
-                                    "email",
-                                    "password",
-                                    "role_id"
-                                ],
-                                "properties": {
-                                    "name": {
-                                        "type": "string",
-                                        "example": "John Doe"
-                                    },
-                                    "email": {
-                                        "type": "string",
-                                        "format": "email",
-                                        "example": "john@example.com"
-                                    },
-                                    "password": {
-                                        "type": "string",
-                                        "format": "password",
-                                        "example": "password123"
-                                    },
-                                    "role_id": {
-                                        "type": "string",
-                                        "example": "ROLE123"
-                                    },
-                                    "status": {
-                                        "description": "User status (1=active, 0=inactive)",
-                                        "type": "integer",
-                                        "example": 1
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "201": {
-                        "description": "User created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "success"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "User created successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "example": "U001"
-                                                },
-                                                "username": {
-                                                    "type": "string",
-                                                    "example": "john_doe"
-                                                },
-                                                "email": {
-                                                    "type": "string",
-                                                    "example": "john@example.com"
-                                                },
-                                                "status": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "description": "Validation error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "status": {
-                                            "type": "string",
-                                            "example": "error"
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Validation failed"
-                                        },
-                                        "errors": {
                                             "type": "object"
                                         }
                                     },
@@ -2520,6 +3348,10 @@
             "description": "API Endpoints for Authentication"
         },
         {
+            "name": "DiningTables",
+            "description": "API Endpoints for Dining Table Management"
+        },
+        {
             "name": "Permissions",
             "description": "API Endpoints for Permission Management"
         },
@@ -2534,6 +3366,14 @@
         {
             "name": "Health",
             "description": "Health"
+        },
+        {
+            "name": "OrderItems",
+            "description": "OrderItems"
+        },
+        {
+            "name": "TableSessions",
+            "description": "TableSessions"
         }
     ]
 }
