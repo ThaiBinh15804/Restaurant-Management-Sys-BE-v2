@@ -84,6 +84,7 @@ class DishCategoryController extends Controller
      *     )
      * )
      */
+   
     #[Get('/', middleware: ['permission:table-sessions.view'])]
     public function index(Request $request): JsonResponse
     {
@@ -237,5 +238,41 @@ class DishCategoryController extends Controller
         $category->delete();
 
         return $this->successResponse([], 'Dish category deleted successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/dish-categories/get-name-list-dish-category",
+     *     tags={"DishCategories"},
+     *     summary="Lấy danh sách tên danh mục món ăn",
+     *     description="Trả về danh sách {id, name} của các danh mục món ăn",
+     *     operationId="getNameListDishCategory",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách tên danh mục món ăn",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="id", type="integer", example=1),
+     *                 @OA\Property(property="name", type="string", example="Món khai vị")
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/get-name-list-dish-category', middleware: ['permission:table-sessions.view'])]
+    public function getListNameDishCategory(Request $request): JsonResponse
+    {
+        // Lấy danh sách id + name danh mục món ăn
+        $categories = DishCategory::orderBy('created_at', 'desc')
+            ->select('id', 'name')
+            ->get();
+
+        return $this->successResponse(
+            $categories,
+            'Get name dish categories retrieved successfully'
+        );
     }
 }

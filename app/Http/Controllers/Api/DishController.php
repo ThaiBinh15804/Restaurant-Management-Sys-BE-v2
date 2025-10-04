@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Dish;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -57,13 +58,38 @@ class DishController extends Controller
     public function index(Request $request): JsonResponse
     {
         $page  = max((int) $request->get('page', 1), 1);
-        $limit = min((int) $request->get('limit', 10), 100);
+        $limit = min((int) $request->get('limit', 5), 100);
+        $isActive = $request->get('is_active');
+        $categoryId = $request->get('category'); // thêm param category_id
+        $cookingTime = $request->get('cooking_time');
+        $minPrice    = $request->get('min_price');
+        $maxPrice    = $request->get('max_price');
 
         $query = Dish::with('category');
 
         // Search theo tên
         if ($request->filled('name')) {
             $query->where('name', 'like', '%' . $request->get('name') . '%');
+        }
+
+        if (!is_null($isActive)) {
+            $query->where('is_active', $isActive);
+        }
+
+        if (!is_null($categoryId)) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if (!is_null($cookingTime)) {
+            $query->where('cooking_time', $cookingTime);
+        }
+
+        // Lọc theo khoảng giá
+        if (!is_null($minPrice)) {
+            $query->where('price', '>=', $minPrice);
+        }
+        if (!is_null($maxPrice)) {
+            $query->where('price', '<=', $maxPrice);
         }
 
         $dishes = $query->orderBy('created_at', 'desc')
@@ -130,7 +156,7 @@ class DishController extends Controller
      *     @OA\Response(response=200, description="Dish updated successfully")
      * )
      */
-    #[Put('/{id}', middleware: ['permission:table-sessions.update'])]
+    #[Put('/{id}', middleware: ['permission:table-sessions.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
         $dish = Dish::findOrFail($id);
@@ -162,9 +188,19 @@ class DishController extends Controller
     #[Delete('/{id}', middleware: ['permission:table-sessions.delete'])]
     public function destroy(string $id): JsonResponse
     {
+        // Tìm món ăn
         $dish = Dish::findOrFail($id);
+
+        // Kiểm tra xem có OrderItem nào đang chứa dish_id này không
+        $hasOrderItems = OrderItem::where('dish_id', $id)->exists();
+
+        if ($hasOrderItems) {
+            return $this->errorResponse('Không thể xóa món ăn vì đang được sử dụng trong đơn hàng.', 400);
+        }
+
+        // Nếu không có, tiến hành xóa
         $dish->delete();
 
-        return $this->successResponse(null, 'Dish deleted successfully');
+        return $this->successResponse(null, 'Xóa món ăn thành công');
     }
 }
