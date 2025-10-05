@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use OpenApi\Attributes as OA;
 use App\Http\Controllers\Api\Traits\ApiResponseTrait;
+use Illuminate\Routing\Controller as BaseController;
 
 /**
  * @OA\Info(
@@ -32,7 +33,7 @@ use App\Http\Controllers\Api\Traits\ApiResponseTrait;
  *     description="Enter JWT token in format: Bearer {token}"
  * )
  */
-abstract class Controller
+abstract class Controller extends BaseController
 {
     use ApiResponseTrait;
 }

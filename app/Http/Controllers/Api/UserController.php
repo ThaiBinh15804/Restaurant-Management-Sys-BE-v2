@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('users')]
-#[Middleware('auth:api')]
 class UserController extends Controller
 {
     /**
@@ -78,7 +77,7 @@ class UserController extends Controller
     #[Get('/', middleware: ['permission:users.view'])]
     public function index(Request $request): JsonResponse
     {
-        $perPage = min($request->get('per_page', 15), 100);
+        $perPage = $request->get('per_page');
 
         $users = User::with('role')
             ->orderBy('created_at', 'desc')
@@ -147,80 +146,82 @@ class UserController extends Controller
         );
     }
 
-    /**
-     * @OA\Post(
-     *     path="/api/users",
-     *     tags={"Users"},
-     *     summary="Create new user",
-     *     description="Create a new user",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","email","password","role_id"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123"),
-     *             @OA\Property(property="role_id", type="string", example="ROLE123"),
-     *             @OA\Property(property="status", type="integer", example=1, description="User status (1=active, 0=inactive)")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="User created successfully"),
-     *             @OA\Property(property="data", type="object",
-     *               @OA\Property(property="id", type="string", example="U001"),
-     *               @OA\Property(property="username", type="string", example="john_doe"),
-     *               @OA\Property(property="email", type="string", example="john@example.com"),
-     *               @OA\Property(property="status", type="integer", example=1))
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="error"),
-     *             @OA\Property(property="message", type="string", example="Validation failed"),
-     *             @OA\Property(property="errors", type="object")
-     *         )
-     *     )
-     * )
-     */
-    #[Post('/', middleware: ['permission:users.create'])]
-    public function store(Request $request): JsonResponse
-    {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:100',
-            'email' => 'required|email|unique:users,email|max:100',
-            'password' => 'required|string|min:6|max:255',
-            'role_id' => 'required|string|exists:roles,id',
-            'status' => 'sometimes|integer|in:0,1'
-        ]);
 
-        if ($validator->fails()) {
-            return $this->errorResponse(
-                'Validation failed',
-                $validator->errors(),
-                422
-            );
-        }
+    // Create user through API of Customer or Employee. User must belong to Role Customer or Employee.
+    // /**
+    //  * @OA\Post(
+    //  *     path="/api/users",
+    //  *     tags={"Users"},
+    //  *     summary="Create new user",
+    //  *     description="Create a new user",
+    //  *     security={{"bearerAuth":{}}},
+    //  *     @OA\RequestBody(
+    //  *         required=true,
+    //  *         @OA\JsonContent(
+    //  *             required={"name","email","password","role_id"},
+    //  *             @OA\Property(property="name", type="string", example="John Doe"),
+    //  *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
+    //  *             @OA\Property(property="password", type="string", format="password", example="password123"),
+    //  *             @OA\Property(property="role_id", type="string", example="ROLE123"),
+    //  *             @OA\Property(property="status", type="integer", example=1, description="User status (1=active, 0=inactive)")
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=201,
+    //  *         description="User created successfully",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="success"),
+    //  *             @OA\Property(property="message", type="string", example="User created successfully"),
+    //  *             @OA\Property(property="data", type="object",
+    //  *               @OA\Property(property="id", type="string", example="U001"),
+    //  *               @OA\Property(property="username", type="string", example="john_doe"),
+    //  *               @OA\Property(property="email", type="string", example="john@example.com"),
+    //  *               @OA\Property(property="status", type="integer", example=1))
+    //  *         )
+    //  *     ),
+    //  *     @OA\Response(
+    //  *         response=422,
+    //  *         description="Validation error",
+    //  *         @OA\JsonContent(
+    //  *             @OA\Property(property="status", type="string", example="error"),
+    //  *             @OA\Property(property="message", type="string", example="Validation failed"),
+    //  *             @OA\Property(property="errors", type="object")
+    //  *         )
+    //  *     )
+    //  * )
+    //  */
+    // #[Post('/', middleware: ['permission:users.create'])]
+    // public function store(Request $request): JsonResponse
+    // {
+    //     $validator = Validator::make($request->all(), [
+    //         'name' => 'required|string|max:100',
+    //         'email' => 'required|email|unique:users,email|max:100',
+    //         'password' => 'required|string|min:6|max:255',
+    //         'role_id' => 'required|string|exists:roles,id',
+    //         'status' => 'sometimes|integer|in:0,1'
+    //     ]);
 
-        $userData = $request->all();
-        $userData['password'] = bcrypt($userData['password']);
-        $userData['status'] = $userData['status'] ?? User::STATUS_ACTIVE;
+    //     if ($validator->fails()) {
+    //         return $this->errorResponse(
+    //             'Validation failed',
+    //             $validator->errors(),
+    //             422
+    //         );
+    //     }
 
-        $user = User::create($userData);
-        $user->load('role');
+    //     $userData = $request->all();
+    //     $userData['password'] = bcrypt($userData['password']);
+    //     $userData['status'] = $userData['status'] ?? User::STATUS_ACTIVE;
 
-        return $this->successResponse(
-            $user,
-            'User created successfully',
-            201
-        );
-    }
+    //     $user = User::create($userData);
+    //     $user->load('role');
+
+    //     return $this->successResponse(
+    //         $user,
+    //         'User created successfully',
+    //         201
+    //     );
+    // }
 
     /**
      * @OA\Put(
