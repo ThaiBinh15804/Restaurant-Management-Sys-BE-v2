@@ -16,6 +16,8 @@ use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
+use Illuminate\Http\RedirectResponse;
+
 
 /**
  * @OA\Tag(
@@ -470,7 +472,7 @@ class AuthController extends BaseController
      * )
      */
     #[Get('verify-email')]
-    public function verifyEmail(Request $request): JsonResponse
+    public function verifyEmail(Request $request): JsonResponse|RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required|string|size:64',
@@ -487,10 +489,7 @@ class AuthController extends BaseController
         $result = $this->registrationService->completeRegistration($request->token);
 
         if ($result['success']) {
-            return $this->successResponse(
-                $result['data'],
-                $result['message']
-            );
+            return redirect()->to(config('app.frontend_url') . '/login');
         }
 
         return $this->errorResponse(
