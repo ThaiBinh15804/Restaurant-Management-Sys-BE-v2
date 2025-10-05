@@ -52,41 +52,36 @@ class PayrollController extends Controller
     #[Get('/', middleware: 'permission:payrolls.view')]
     public function index(PayrollQueryRequest $request): JsonResponse
     {
-        $query = Payroll::query()
-            ->with(['employee', 'paidByEmployee'])
-            ->orderByDesc('year')
-            ->orderByDesc('month');
-
         $filters = $request->filters();
 
-        if (!empty($filters['month'])) {
-            $query->where('month', $filters['month']);
-        }
+        $query = Payroll::with(['employee', 'paidByEmployee'])
+            ->orderByDesc('year')
+            ->orderByDesc('month')
+            ->when(
+                $filters['month'] ?? null,
+                fn($q, $v) =>
+                $q->where('month', $v)
+            )
+            ->when(
+                $filters['year'] ?? null,
+                fn($q, $v) =>
+                $q->where('year', $v)
+            )
+            ->when(
+                array_key_exists('status', $filters) && $filters['status'] !== null,
+                fn($q) =>
+                $q->where('status', $filters['status'])
+            )
+            ->when(
+                $filters['employee_id'] ?? null,
+                fn($q, $v) =>
+                $q->where('employee_id', $v)
+            );
 
-        if (!empty($filters['year'])) {
-            $query->where('year', $filters['year']);
-        }
+        $perpage = $request->perPage();
+        $paginator = $query->paginate($perpage);
 
-        if (array_key_exists('status', $filters) && $filters['status'] !== null) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
-        }
-
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
-
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Payrolls retrieved successfully');
+        return $this->successResponse($paginator, 'Payrolls retrieved successfully');
     }
 
     /**

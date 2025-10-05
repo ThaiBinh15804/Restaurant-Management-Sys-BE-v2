@@ -45,9 +45,9 @@ class PayrollItemController extends Controller
     #[Get('/', middleware: 'permission:payroll_items.view')]
     public function index(PayrollItemQueryRequest $request): JsonResponse
     {
-        $query = PayrollItem::query()->with('payroll');
         $filters = $request->filters();
-
+        
+        $query = PayrollItem::query()->with('payroll');
         if (!empty($filters['payroll_id'])) {
             $query->where('payroll_id', $filters['payroll_id']);
         }
@@ -60,18 +60,11 @@ class PayrollItemController extends Controller
             $query->where('code', 'like', '%' . $filters['code'] . '%');
         }
 
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
+        $perpage = $request->perPage();
+        $paginator = $query->orderBy('created_at', 'desc')->paginate($perpage);
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Payroll items retrieved successfully');
+
+        return $this->successResponse($paginator, 'Payroll items retrieved successfully');
     }
 
     /**

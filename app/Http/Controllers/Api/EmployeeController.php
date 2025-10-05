@@ -55,53 +55,48 @@ class EmployeeController extends Controller
     #[Get('/', middleware: 'permission:employees.view')]
     public function index(EmployeeQueryRequest $request): JsonResponse
     {
-        $query = Employee::query()
-            ->with(['user'])
-            ->orderBy('full_name');
-
         $filters = $request->filters();
 
-        if (!empty($filters['full_name'])) {
-            $query->where('full_name', 'like', '%' . $filters['full_name'] . '%');
-        }
+        $query = Employee::with('user')
+            ->orderBy('full_name')
+            ->when(
+                $filters['full_name'] ?? null,
+                fn($q, $v) =>
+                $q->where('full_name', 'like', '%' . addcslashes($v, '%_') . '%')
+            )
+            ->when(array_key_exists('is_active', $filters), function ($q) use ($filters) {
+                $isActive = filter_var($filters['is_active'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+                if ($isActive !== null) {
+                    $q->where('is_active', $isActive);
+                }
+            })
+            ->when(
+                $filters['contract_type'] ?? null,
+                fn($q, $v) =>
+                $q->where('contract_type', $v)
+            )
+            ->when(
+                $filters['gender'] ?? null,
+                fn($q, $v) =>
+                $q->where('gender', $v)
+            )
+            ->when(
+                $filters['hire_date_from'] ?? null,
+                fn($q, $v) =>
+                $q->whereDate('hire_date', '>=', $v)
+            )
+            ->when(
+                $filters['hire_date_to'] ?? null,
+                fn($q, $v) =>
+                $q->whereDate('hire_date', '<=', $v)
+            );
 
-        if (array_key_exists('is_active', $filters)) {
-            $isActive = filter_var($filters['is_active'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+        $perPage = $request->perPage();
+        $paginator = $query->paginate($perPage);
 
-            if ($isActive !== null) {
-                $query->where('is_active', $isActive);
-            }
-        }
-
-        if (array_key_exists('contract_type', $filters) && $filters['contract_type'] !== null) {
-            $query->where('contract_type', $filters['contract_type']);
-        }
-
-        if (!empty($filters['gender'])) {
-            $query->where('gender', $filters['gender']);
-        }
-
-        if (!empty($filters['hire_date_from'])) {
-            $query->whereDate('hire_date', '>=', $filters['hire_date_from']);
-        }
-
-        if (!empty($filters['hire_date_to'])) {
-            $query->whereDate('hire_date', '<=', $filters['hire_date_to']);
-        }
-
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
-
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Employees retrieved successfully');
+        return $this->successResponse($paginator, 'Employees retrieved successfully');
     }
+
 
     /**
      * @OA\Post(
@@ -144,7 +139,7 @@ class EmployeeController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             $employee = DB::transaction(function () use ($data) {
                 if (!empty($data['user_id'])) {
                     $userId = $data['user_id'];
@@ -158,7 +153,7 @@ class EmployeeController extends Controller
                     ]);
                     $userId = $user->id;
                 }
-                
+
                 $employeeData = [
                     'full_name' => $data['full_name'],
                     'phone' => $data['phone'] ?? null,
@@ -171,12 +166,12 @@ class EmployeeController extends Controller
                     'is_active' => $data['is_active'] ?? true,
                     'user_id' => $userId,
                 ];
-                
+
                 $employee = Employee::create($employeeData);
-                
+
                 return $employee;
             });
-            
+
             Log::info('Employee created successfully', [
                 'employee_id' => $employee->id,
                 'user_id' => $employee->user_id,
@@ -193,7 +188,7 @@ class EmployeeController extends Controller
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             return $this->errorResponse(
                 'Failed to create employee: ' . $e->getMessage(),
                 500
@@ -279,30 +274,30 @@ class EmployeeController extends Controller
             }
 
             $data = $request->validated();
-            
+
             DB::transaction(function () use ($employee, $data) {
                 $employeeData = array_filter($data, function ($key) {
                     return !in_array($key, ['email', 'password', 'password_confirmation', 'role_id']);
                 }, ARRAY_FILTER_USE_KEY);
-                
+
                 $employee->fill($employeeData);
                 $employee->save();
-                
+
                 if ($employee->user && (isset($data['email']) || isset($data['password']) || isset($data['role_id']))) {
                     $userUpdates = [];
-                    
+
                     if (isset($data['email'])) {
                         $userUpdates['email'] = $data['email'];
                     }
-                    
+
                     if (!empty($data['password'])) {
                         $userUpdates['password'] = Hash::make($data['password']);
                     }
-                    
+
                     if (isset($data['role_id'])) {
                         $userUpdates['role_id'] = $data['role_id'];
                     }
-                    
+
                     if (!empty($userUpdates)) {
                         $userUpdates['updated_by'] = auth('api')->id();
                         $employee->user->update($userUpdates);
@@ -324,7 +319,7 @@ class EmployeeController extends Controller
                 'employee_id' => $id,
                 'error' => $e->getMessage(),
             ]);
-            
+
             return $this->errorResponse(
                 'Failed to update employee: ' . $e->getMessage(),
                 500

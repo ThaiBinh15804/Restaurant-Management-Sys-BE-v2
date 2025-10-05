@@ -49,46 +49,43 @@ class EmployeeShiftController extends Controller
     #[Get('/', middleware: 'permission:employee_shifts.view')]
     public function index(EmployeeShiftQueryRequest $request): JsonResponse
     {
-        $query = EmployeeShift::query()
-            ->with(['employee', 'shift'])
-            ->orderByDesc('assigned_date')
-            ->orderBy('shift_id');
-
         $filters = $request->filters();
 
-        if (!empty($filters['employee_id'])) {
-            $query->where('employee_id', $filters['employee_id']);
-        }
+        $query = EmployeeShift::with(['employee', 'shift'])
+            ->orderByDesc('assigned_date')
+            ->orderBy('shift_id')
+            ->when(
+                $filters['employee_id'] ?? null,
+                fn($q, $v) =>
+                $q->where('employee_id', $v)
+            )
+            ->when(
+                $filters['shift_id'] ?? null,
+                fn($q, $v) =>
+                $q->where('shift_id', $v)
+            )
+            ->when(
+                array_key_exists('status', $filters) && $filters['status'] !== null,
+                fn($q) =>
+                $q->where('status', $filters['status'])
+            )
+            ->when(
+                $filters['date_from'] ?? null,
+                fn($q, $v) =>
+                $q->whereDate('assigned_date', '>=', $v)
+            )
+            ->when(
+                $filters['date_to'] ?? null,
+                fn($q, $v) =>
+                $q->whereDate('assigned_date', '<=', $v)
+            );
 
-        if (!empty($filters['shift_id'])) {
-            $query->where('shift_id', $filters['shift_id']);
-        }
+        $perPage = $request->perPage();
+        $paginator = $query->paginate($perPage);
 
-        if (array_key_exists('status', $filters) && $filters['status'] !== null) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (!empty($filters['date_from'])) {
-            $query->whereDate('assigned_date', '>=', $filters['date_from']);
-        }
-
-        if (!empty($filters['date_to'])) {
-            $query->whereDate('assigned_date', '<=', $filters['date_to']);
-        }
-
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
-
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Employee shifts retrieved successfully');
+        return $this->successResponse($paginator, 'Employee shifts retrieved successfully');
     }
+
 
     /**
      * @OA\Post(

@@ -46,11 +46,11 @@ class RoleController extends Controller
     #[Get('/', middleware: 'permission:roles.view')]
     public function index(RoleQueryRequest $request): JsonResponse
     {
+        $filters = $request->filters();
+        
         $query = Role::query()
             ->with('permissions')
             ->orderBy('name');
-
-        $filters = $request->filters();
 
         if (!empty($filters['name'])) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');
@@ -64,18 +64,10 @@ class RoleController extends Controller
             }
         }
 
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
+        $perpage = $request->perPage();
+        $paginator = $query->paginate($perpage);
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Roles retrieved successfully');
+        return $this->successResponse($paginator, 'Roles retrieved successfully');
     }
 
     /**

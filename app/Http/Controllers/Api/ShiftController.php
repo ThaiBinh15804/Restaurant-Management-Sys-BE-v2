@@ -49,8 +49,8 @@ class ShiftController extends Controller
     #[Get('/', middleware: 'permission:shifts.view')]
     public function index(ShiftQueryRequest $request): JsonResponse
     {
-        $query = Shift::query()->orderBy('start_time');
         $filters = $request->filters();
+        $query = Shift::query()->orderBy('start_time');
 
         if (!empty($filters['name'])) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');
@@ -72,18 +72,10 @@ class ShiftController extends Controller
             $query->whereTime('end_time', '<=', $filters['end_time_to']);
         }
 
-        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
-
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'last_page' => $paginator->lastPage(),
-            ],
-        ], 'Shifts retrieved successfully');
+        $perpage = $request->perPage();
+        $paginator = $query->paginate($perpage);
+        
+        return $this->successResponse($paginator, 'Shifts retrieved successfully');
     }
 
     /**
