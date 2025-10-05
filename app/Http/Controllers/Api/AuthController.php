@@ -472,7 +472,7 @@ class AuthController extends BaseController
      * )
      */
     #[Get('verify-email')]
-    public function verifyEmail(Request $request): JsonResponse|RedirectResponse
+    public function verifyEmail(Request $request): RedirectResponse|JsonResponse
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required|string|size:64',
@@ -489,7 +489,7 @@ class AuthController extends BaseController
         $result = $this->registrationService->completeRegistration($request->token);
 
         if ($result['success']) {
-            return redirect()->to(config('app.frontend_url') . '/login');
+            return redirect()->to(config('app.frontend_url') . '/login?message=' . urlencode('Đăng ký tài khoản thành công'));
         }
 
         return $this->errorResponse(
