@@ -39,7 +39,6 @@ class Employee extends BaseModel
         'address',
         'bank_account',
         'contract_type',
-        'position',
         'base_salary',
         'hire_date',
         'is_active',
@@ -58,6 +57,15 @@ class Employee extends BaseModel
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'contract_label',
     ];
 
     /**

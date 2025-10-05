@@ -28,14 +28,15 @@ class EmployeeManagementSeeder extends Seeder
                 return;
             }
 
-            $employeeUsers = Employee::all();
+            $employeeUsers = User::whereHas('employeeProfile')
+                ->with('employeeProfile')
+                ->get();
 
             $employees = $employeeUsers
                 ->filter(fn ($user) => $user->employeeProfile)
-                ->mapWithKeys(fn ($user) => [$user->email => $user->employeeProfile])
-                ->toArray();
+                ->mapWithKeys(fn ($user) => [$user->email => $user->employeeProfile]);
 
-            if (empty($employees)) {
+            if ($employees->isEmpty()) {
                 return;
             }
 
@@ -57,7 +58,7 @@ class EmployeeManagementSeeder extends Seeder
                 ],
             ];
 
-            $shifts = Shift::all();
+            $shifts = [];
 
             foreach ($shiftDefinitions as $definition) {
                 $shift = Shift::updateOrCreate(

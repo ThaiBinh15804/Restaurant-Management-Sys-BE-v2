@@ -23,10 +23,10 @@ class Customer extends BaseModel
     /**
      * Membership level constants.
      */
-    public const MEMBERSHIP_BRONZE = 1;
-    public const MEMBERSHIP_SILVER = 2;
-    public const MEMBERSHIP_GOLD = 3;
-    public const MEMBERSHIP_TITANIUM = 4;
+    public const MEMBERSHIP_BRONZE = 0;
+    public const MEMBERSHIP_SILVER = 1;
+    public const MEMBERSHIP_GOLD = 2;
+    public const MEMBERSHIP_TITANIUM = 3;
 
     /**
      * The attributes that are mass assignable.
@@ -40,6 +40,8 @@ class Customer extends BaseModel
         'address',
         'membership_level',
         'user_id',
+        'created_by',
+        'updated_by',
     ];
 
     /**
@@ -51,6 +53,15 @@ class Customer extends BaseModel
         'membership_level' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'membership_label',
     ];
 
     /**

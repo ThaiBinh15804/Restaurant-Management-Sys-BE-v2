@@ -27,9 +27,25 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('employee-shifts')]
-#[Middleware('auth:api')]
 class EmployeeShiftController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/employee-shifts",
+     *     tags={"Employee Shifts"},
+     *     summary="List employee shifts",
+     *     description="Retrieve a paginated list of employee shift assignments with optional filters",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15, maximum=100)),
+     *     @OA\Parameter(name="employee_id", in="query", description="Filter by employee ID", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="shift_id", in="query", description="Filter by shift ID", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="status", in="query", description="Filter by status", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="date_from", in="query", description="Filter assignments from date", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="date_to", in="query", description="Filter assignments to date", @OA\Schema(type="string", format="date")),
+     *     @OA\Response(response=200, description="Employee shifts retrieved successfully")
+     * )
+     */
     #[Get('/', middleware: 'permission:employee_shifts.view')]
     public function index(EmployeeShiftQueryRequest $request): JsonResponse
     {
@@ -74,6 +90,28 @@ class EmployeeShiftController extends Controller
         ], 'Employee shifts retrieved successfully');
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/employee-shifts",
+     *     tags={"Employee Shifts"},
+     *     summary="Assign shift",
+     *     description="Assign a shift to an employee on a given date",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"employee_id","shift_id","assigned_date"},
+     *             @OA\Property(property="employee_id", type="string", example="EMP001"),
+     *             @OA\Property(property="shift_id", type="string", example="SH001"),
+     *             @OA\Property(property="assigned_date", type="string", format="date", example="2025-09-01"),
+     *             @OA\Property(property="status", type="integer", example=0, description="Initial status"),
+     *             @OA\Property(property="notes", type="string", example="Assigned for breakfast prep")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Employee shift assigned successfully"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     #[Post('/', middleware: 'permission:employee_shifts.create')]
     public function store(EmployeeShiftStoreRequest $request): JsonResponse
     {
@@ -98,6 +136,18 @@ class EmployeeShiftController extends Controller
         );
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/employee-shifts/{id}",
+     *     tags={"Employee Shifts"},
+     *     summary="Show employee shift",
+     *     description="Retrieve details of a specific employee shift assignment",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", description="Employee shift ID", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Employee shift retrieved successfully"),
+     *     @OA\Response(response=404, description="Employee shift not found")
+     * )
+     */
     #[Get('/{id}', middleware: 'permission:employee_shifts.view')]
     public function show(string $id): JsonResponse
     {
@@ -110,6 +160,25 @@ class EmployeeShiftController extends Controller
         return $this->successResponse($assignment, 'Employee shift retrieved successfully');
     }
 
+    /**
+     * @OA\Patch(
+     *     path="/api/employee-shifts/{id}/check-in",
+     *     tags={"Employee Shifts"},
+     *     summary="Record employee check-in",
+     *     description="Mark an employee as checked-in for a shift",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Employee shift ID", @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="check_in", type="string", format="date-time", example="2025-09-01 08:05:00"),
+     *             @OA\Property(property="notes", type="string", example="Arrived slightly late due to traffic")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Check-in recorded successfully"),
+     *     @OA\Response(response=404, description="Employee shift not found")
+     * )
+     */
     #[Patch('/{id}/check-in', middleware: 'permission:employee_shifts.edit')]
     public function checkIn(EmployeeShiftCheckInRequest $request, string $id): JsonResponse
     {
@@ -142,6 +211,27 @@ class EmployeeShiftController extends Controller
         return $this->successResponse($assignment->fresh(['employee', 'shift']), 'Check-in recorded successfully');
     }
 
+    /**
+     * @OA\Patch(
+     *     path="/api/employee-shifts/{id}/check-out",
+     *     tags={"Employee Shifts"},
+     *     summary="Record employee check-out",
+     *     description="Mark an employee as checked-out from a shift and optionally record overtime",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Employee shift ID", @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=false,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="check_out", type="string", format="date-time", example="2025-09-01 16:15:00"),
+     *             @OA\Property(property="overtime_hours", type="integer", example=1),
+     *             @OA\Property(property="notes", type="string", example="Stayed late to clean kitchen")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Check-out recorded successfully"),
+     *     @OA\Response(response=404, description="Employee shift not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     #[Patch('/{id}/check-out', middleware: 'permission:employee_shifts.edit')]
     public function checkOut(EmployeeShiftCheckOutRequest $request, string $id): JsonResponse
     {
@@ -188,6 +278,26 @@ class EmployeeShiftController extends Controller
         return $this->successResponse($assignment->fresh(['employee', 'shift']), 'Check-out recorded successfully');
     }
 
+    /**
+     * @OA\Patch(
+     *     path="/api/employee-shifts/{id}/status",
+     *     tags={"Employee Shifts"},
+     *     summary="Update employee shift status",
+     *     description="Manually update the status or notes of a shift assignment",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Employee shift ID", @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"status"},
+     *             @OA\Property(property="status", type="integer", example=1),
+     *             @OA\Property(property="notes", type="string", example="Marked as late arrival")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Employee shift status updated successfully"),
+     *     @OA\Response(response=404, description="Employee shift not found")
+     * )
+     */
     #[Patch('/{id}/status', middleware: 'permission:employee_shifts.edit')]
     public function updateStatus(EmployeeShiftStatusRequest $request, string $id): JsonResponse
     {
@@ -208,6 +318,18 @@ class EmployeeShiftController extends Controller
         return $this->successResponse($assignment->fresh(['employee', 'shift']), 'Employee shift status updated successfully');
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/employee-shifts/{id}",
+     *     tags={"Employee Shifts"},
+     *     summary="Delete employee shift",
+     *     description="Remove an employee shift assignment",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Employee shift ID", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Employee shift deleted successfully"),
+     *     @OA\Response(response=404, description="Employee shift not found")
+     * )
+     */
     #[Delete('/{id}', middleware: 'permission:employee_shifts.delete')]
     public function destroy(string $id): JsonResponse
     {

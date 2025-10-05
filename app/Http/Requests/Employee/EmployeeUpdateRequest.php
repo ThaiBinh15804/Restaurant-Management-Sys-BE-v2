@@ -18,6 +18,7 @@ class EmployeeUpdateRequest extends FormRequest
         $employeeId = $this->route('id') ?? $this->route('employee');
 
         return [
+            // Employee information
             'full_name' => ['sometimes', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:15'],
             'gender' => ['nullable', 'string', 'max:20'],
@@ -31,6 +32,19 @@ class EmployeeUpdateRequest extends FormRequest
             'hire_date' => ['nullable', 'date'],
             'is_active' => ['sometimes', 'boolean'],
             'user_id' => ['nullable', 'string', 'exists:users,id', Rule::unique('employees', 'user_id')->ignore($employeeId, 'id')],
+            
+        ];
+    }
+    
+    /**
+     * Get custom messages for validator errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.unique' => 'This email address is already taken.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }

@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('permissions')]
-#[Middleware('auth:api')]
 class PermissionController extends Controller
 {
     /**

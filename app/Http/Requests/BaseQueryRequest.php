@@ -21,13 +21,13 @@ abstract class BaseQueryRequest extends FormRequest
         return true;
     }
 
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'page' => $this->normalizeInteger($this->input('page')),
-            'per_page' => $this->normalizeInteger($this->input('per_page')),
-        ]);
-    }
+    // protected function prepareForValidation(): void
+    // {
+    //     $this->merge([
+    //         'page' => $this->normalizeInteger($this->input('page')),
+    //         'per_page' => $this->normalizeInteger($this->input('per_page')),
+    //     ]);
+    // }
 
     public function rules(): array
     {

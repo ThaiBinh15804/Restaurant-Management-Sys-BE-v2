@@ -77,6 +77,16 @@ class Payroll extends BaseModel
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'status_label',
+        'payment_method_label',
+    ];
+
+    /**
      * Get the employee who owns the payroll record.
      */
     public function employee(): BelongsTo

@@ -24,9 +24,28 @@ use Spatie\RouteAttributes\Attributes\Put;
  * )
  */
 #[Prefix('shifts')]
-#[Middleware('auth:api')]
 class ShiftController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/shifts",
+     *     tags={"Shifts"},
+     *     summary="List shifts",
+     *     description="Retrieve a paginated list of shifts with optional time filters",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15, maximum=100)),
+     *     @OA\Parameter(name="name", in="query", description="Filter by shift name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="start_time_from", in="query", description="Filter shifts starting after or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
+     *     @OA\Parameter(name="start_time_to", in="query", description="Filter shifts starting before or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
+     *     @OA\Parameter(name="end_time_from", in="query", description="Filter shifts ending after or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
+     *     @OA\Parameter(name="end_time_to", in="query", description="Filter shifts ending before or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Shifts retrieved successfully"
+     *     )
+     * )
+     */
     #[Get('/', middleware: 'permission:shifts.view')]
     public function index(ShiftQueryRequest $request): JsonResponse
     {
@@ -67,6 +86,26 @@ class ShiftController extends Controller
         ], 'Shifts retrieved successfully');
     }
 
+    /**
+     * @OA\Post(
+     *     path="/api/shifts",
+     *     tags={"Shifts"},
+     *     summary="Create shift",
+     *     description="Create a new shift by providing name and working timeframe",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"name","start_time","end_time"},
+     *             @OA\Property(property="name", type="string", example="Morning Shift"),
+     *             @OA\Property(property="start_time", type="string", example="08:00"),
+     *             @OA\Property(property="end_time", type="string", example="16:00")
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Shift created successfully"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     #[Post('/', middleware: 'permission:shifts.create')]
     public function store(ShiftStoreRequest $request): JsonResponse
     {
@@ -79,6 +118,18 @@ class ShiftController extends Controller
         return $this->successResponse($shift, 'Shift created successfully', 201);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/api/shifts/{id}",
+     *     tags={"Shifts"},
+     *     summary="Show shift",
+     *     description="Retrieve details for a specific shift",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Shift ID", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Shift retrieved successfully"),
+     *     @OA\Response(response=404, description="Shift not found")
+     * )
+     */
     #[Get('/{id}', middleware: 'permission:shifts.view')]
     public function show(string $id): JsonResponse
     {
@@ -91,6 +142,27 @@ class ShiftController extends Controller
         return $this->successResponse($shift, 'Shift retrieved successfully');
     }
 
+    /**
+     * @OA\Put(
+     *     path="/api/shifts/{id}",
+     *     tags={"Shifts"},
+     *     summary="Update shift",
+     *     description="Update an existing shift's details",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Shift ID", @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="name", type="string", example="Morning Shift"),
+     *             @OA\Property(property="start_time", type="string", example="08:00"),
+     *             @OA\Property(property="end_time", type="string", example="17:00")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Shift updated successfully"),
+     *     @OA\Response(response=404, description="Shift not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     #[Put('/{id}', middleware: 'permission:shifts.edit')]
     public function update(ShiftUpdateRequest $request, string $id): JsonResponse
     {
@@ -122,6 +194,19 @@ class ShiftController extends Controller
         return $this->successResponse($shift->fresh(), 'Shift updated successfully');
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/api/shifts/{id}",
+     *     tags={"Shifts"},
+     *     summary="Delete shift",
+     *     description="Remove a shift if it's not assigned to employees",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Shift ID", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Shift deleted successfully"),
+     *     @OA\Response(response=400, description="Shift is assigned to employees"),
+     *     @OA\Response(response=404, description="Shift not found")
+     * )
+     */
     #[Delete('/{id}', middleware: 'permission:shifts.delete')]
     public function destroy(string $id): JsonResponse
     {

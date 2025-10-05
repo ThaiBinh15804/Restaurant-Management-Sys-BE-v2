@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('users')]
-#[Middleware('auth:api')]
 class UserController extends Controller
 {
     /**
@@ -78,7 +77,7 @@ class UserController extends Controller
     #[Get('/', middleware: ['permission:users.view'])]
     public function index(Request $request): JsonResponse
     {
-        $perPage = min($request->get('per_page', 15), 100);
+        $perPage = $request->get('per_page');
 
         $users = User::with('role')
             ->orderBy('created_at', 'desc')

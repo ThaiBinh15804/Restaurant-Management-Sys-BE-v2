@@ -25,9 +25,23 @@ use Spatie\RouteAttributes\Attributes\Put;
  * )
  */
 #[Prefix('payroll-items')]
-#[Middleware('auth:api')]
 class PayrollItemController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/api/payroll-items",
+     *     tags={"Payroll Items"},
+     *     summary="List payroll items",
+     *     description="Retrieve a paginated list of payroll items with optional filters",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15, maximum=100)),
+     *     @OA\Parameter(name="payroll_id", in="query", description="Filter by payroll ID", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="item_type", in="query", description="Filter by item type (0=earning, 1=deduction)", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="code", in="query", description="Filter by item code", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Payroll items retrieved successfully")
+     * )
+     */
     #[Get('/', middleware: 'permission:payroll_items.view')]
     public function index(PayrollItemQueryRequest $request): JsonResponse
     {
@@ -60,7 +74,30 @@ class PayrollItemController extends Controller
         ], 'Payroll items retrieved successfully');
     }
 
-    #[Post('/', middleware: 'permission:payroll_items.create')]
+    /**
+     * @OA\Post(
+     *     path="/api/payroll-items",
+     *     tags={"Payroll Items"},
+     *     summary="Create payroll item",
+     *     description="Add an earning or deduction item to a payroll",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"payroll_id","item_type","code","amount"},
+     *             @OA\Property(property="payroll_id", type="string", example="PAY001"),
+     *             @OA\Property(property="item_type", type="integer", example=0, description="0=earning, 1=deduction"),
+     *             @OA\Property(property="code", type="string", example="BONUS"),
+     *             @OA\Property(property="description", type="string", example="Performance bonus"),
+     *             @OA\Property(property="amount", type="number", format="float", example=150.50)
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Payroll item created successfully"),
+     *     @OA\Response(response=404, description="Payroll not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    #[Post('/', middleware: ['permission:payroll_items.create', 'auth:api'])]
     public function store(PayrollItemStoreRequest $request): JsonResponse
     {
         $data = $request->validated();
@@ -83,7 +120,19 @@ class PayrollItemController extends Controller
         return $this->successResponse($item?->load('payroll'), 'Payroll item created successfully', 201);
     }
 
-    #[Get('/{id}', middleware: 'permission:payroll_items.view')]
+    /**
+     * @OA\Get(
+     *     path="/api/payroll-items/{id}",
+     *     tags={"Payroll Items"},
+     *     summary="Show payroll item",
+     *     description="Retrieve details for a specific payroll item",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Payroll item ID", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Payroll item retrieved successfully"),
+     *     @OA\Response(response=404, description="Payroll item not found")
+     * )
+     */
+    #[Get('/{id}', middleware: ['permission:payroll_items.view', 'auth:api'])]
     public function show(string $id): JsonResponse
     {
         $item = PayrollItem::with('payroll')->find($id);
@@ -95,7 +144,29 @@ class PayrollItemController extends Controller
         return $this->successResponse($item, 'Payroll item retrieved successfully');
     }
 
-    #[Put('/{id}', middleware: 'permission:payroll_items.edit')]
+    /**
+     * @OA\Put(
+     *     path="/api/payroll-items/{id}",
+     *     tags={"Payroll Items"},
+     *     summary="Update payroll item",
+     *     description="Update amount, code, or description for a payroll item",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Payroll item ID", @OA\Schema(type="string")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="item_type", type="integer", example=1),
+     *             @OA\Property(property="code", type="string", example="MEAL_DED"),
+     *             @OA\Property(property="description", type="string", example="Meal plan deduction"),
+     *             @OA\Property(property="amount", type="number", format="float", example=25.00)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Payroll item updated successfully"),
+     *     @OA\Response(response=404, description="Payroll item not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    #[Put('/{id}', middleware: ['permission:payroll_items.edit', 'auth:api'])]
     public function update(PayrollItemUpdateRequest $request, string $id): JsonResponse
     {
         $item = PayrollItem::find($id);
@@ -117,7 +188,19 @@ class PayrollItemController extends Controller
         return $this->successResponse($item->load('payroll'), 'Payroll item updated successfully');
     }
 
-    #[Delete('/{id}', middleware: 'permission:payroll_items.delete')]
+    /**
+     * @OA\Delete(
+     *     path="/api/payroll-items/{id}",
+     *     tags={"Payroll Items"},
+     *     summary="Delete payroll item",
+     *     description="Remove a payroll item and recalculate the payroll total",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, description="Payroll item ID", @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Payroll item deleted successfully"),
+     *     @OA\Response(response=404, description="Payroll item not found")
+     * )
+     */
+    #[Delete('/{id}', middleware: ['permission:payroll_items.delete', 'auth:api'])]
     public function destroy(string $id): JsonResponse
     {
         $item = PayrollItem::find($id);

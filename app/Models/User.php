@@ -32,11 +32,11 @@ class User extends BaseAuthenticatable implements JWTSubject
     /**
      * User status constants.
      */
-    const STATUS_INACTIVE = 0;
-    const STATUS_ACTIVE = 1;
-    const STATUS_PENDING = 2;
-    const STATUS_BANNED = 3;
-    const STATUS_DELETED = 4;
+    public const STATUS_INACTIVE = 0;
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_PENDING = 2;
+    public const STATUS_BANNED = 3;
+    public const STATUS_DELETED = 4;
 
     /**
      * The attributes that are mass assignable.
@@ -49,6 +49,7 @@ class User extends BaseAuthenticatable implements JWTSubject
         'status',
         'avatar',
         'role_id',
+        'email_verified_at',
         'created_by',
         'updated_by',
     ];
@@ -63,6 +64,10 @@ class User extends BaseAuthenticatable implements JWTSubject
         'remember_token',
         'created_by',
         'updated_by',
+    ];
+
+    protected $appends = [
+        'status_label',
     ];
 
     /**
@@ -222,6 +227,70 @@ class User extends BaseAuthenticatable implements JWTSubject
     }
 
     /**
+     * Check if user is a customer.
+     *
+     * @return bool
+     */
+    public function isCustomer(): bool
+    {
+        return $this->customerProfile()->exists();
+    }
+
+    /**
+     * Check if user is an employee.
+     *
+     * @return bool
+     */
+    public function isEmployee(): bool
+    {
+        return $this->employeeProfile()->exists();
+    }
+
+    /**
+     * Get user type.
+     *
+     * @return string|null Returns 'customer', 'employee', or null if neither
+     */
+    public function getUserType(): ?string
+    {
+        if ($this->relationLoaded('customerProfile') && $this->customerProfile) {
+            return 'customer';
+        }
+        
+        if ($this->relationLoaded('employeeProfile') && $this->employeeProfile) {
+            return 'employee';
+        }
+
+        if ($this->customerProfile()->exists()) {
+            return 'customer';
+        }
+        
+        if ($this->employeeProfile()->exists()) {
+            return 'employee';
+        }
+        
+        return null;
+    }
+
+    /**
+     * Get the profile instance (customer or employee).
+     *
+     * @return \App\Models\Customer|\App\Models\Employee|null
+     */
+    public function getProfile()
+    {
+        if ($this->isCustomer()) {
+            return $this->customerProfile;
+        }
+        
+        if ($this->isEmployee()) {
+            return $this->employeeProfile;
+        }
+        
+        return null;
+    }
+
+    /**
      * Scope a query to only include active users.
      */
     public function scopeActive($query)
@@ -242,7 +311,7 @@ class User extends BaseAuthenticatable implements JWTSubject
      *
      * @return string
      */
-    public function getStatusLabel(): string
+    public function getStatusLabelAttribute(): string
     {
         return match($this->status) {
             self::STATUS_INACTIVE => 'Inactive',
