@@ -59,6 +59,15 @@ class PayrollItem extends BaseModel
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'signed_amount',
+    ];  
+
+    /**
      * Get the payroll that owns the item.
      */
     public function payroll(): BelongsTo

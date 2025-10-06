@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Role\RoleQueryRequest;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
@@ -22,47 +24,58 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('roles')]
-#[Middleware('auth:api')]
 class RoleController extends Controller
 {
     /**
      * @OA\Get(
      *     path="/api/roles",
      *     tags={"Roles"},
-     *     summary="Get all roles",
-     *     description="Retrieve all roles with their permissions",
+     *     summary="List roles",
+     *     description="Retrieve a paginated list of roles with optional filters",
      *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="name", in="query", description="Filter by role name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="is_active", in="query", description="Filter by active status", @OA\Schema(type="boolean")),
      *     @OA\Response(
      *         response=200,
-     *         description="Roles retrieved successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Roles retrieved successfully"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(type="object",
-     *               @OA\Property(property="id", type="string", example="R001"),
-     *               @OA\Property(property="name", type="string", example="Admin"),
-     *               @OA\Property(property="description", type="string", example="System administrator"),
-     *               @OA\Property(property="is_active", type="boolean", example=true))
-     *             )
-     *         )
+     *         description="Roles retrieved successfully"
      *     )
      * )
      */
     #[Get('/', middleware: 'permission:roles.view')]
-    public function index(): JsonResponse
+    public function index(RoleQueryRequest $request): JsonResponse
     {
-        $roles = Role::with('permissions')
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get();
+        $query = Role::query()
+            ->with('permissions')
+            ->orderBy('name');
 
-        return $this->successResponse(
-            $roles,
-            'Roles retrieved successfully'
-        );
+        $filters = $request->filters();
+
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+
+        if (array_key_exists('is_active', $filters)) {
+            $isActive = filter_var($filters['is_active'], FILTER_VALIDATE_BOOL, FILTER_NULL_ON_FAILURE);
+
+            if ($isActive !== null) {
+                $query->where('is_active', $isActive);
+            }
+        }
+
+        $paginator = $query->paginate($request->perPage(), ['*'], 'page', $request->page());
+        $paginator->withQueryString();
+
+        return $this->successResponse([
+            'items' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ], 'Roles retrieved successfully');
     }
 
     /**
@@ -153,22 +166,7 @@ class RoleController extends Controller
      *     ),
      *     @OA\Response(
      *         response=201,
-     *         description="Role created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Role created successfully"),
-     *             @OA\Property(property="data", type="object",
-     *                 @OA\Property(property="id", type="string", example="R001"),
-     *                 @OA\Property(property="name", type="string", example="Manager"),
-     *                 @OA\Property(property="description", type="string", example="Restaurant Manager Role"),
-     *                 @OA\Property(property="is_active", type="boolean", example=true),
-     *                 @OA\Property(property="permissions", type="array", @OA\Items(type="object",
-     *                     @OA\Property(property="id", type="string", example="P001"),
-     *                     @OA\Property(property="name", type="string", example="Manage Users"),
-     *                     @OA\Property(property="code", type="string", example="users.manage")
-     *                 ))
-     *             )
-     *         )
+     *         description="Role created successfully"
      *     )
      * )
      */
@@ -191,22 +189,39 @@ class RoleController extends Controller
             );
         }
 
-        $roleData = $request->only(['name', 'description', 'is_active']);
-        $roleData['is_active'] = $roleData['is_active'] ?? true;
+        try {
+            $roleData = $request->only(['name', 'description', 'is_active']);
+            $roleData['is_active'] = $roleData['is_active'] ?? true;
 
-        $role = Role::create($roleData);
+            $role = Role::create($roleData);
 
-        if ($request->has('permissions')) {
-            $role->permissions()->attach($request->permissions);
+            if ($request->has('permissions')) {
+                $role->permissions()->attach($request->permissions);
+            }
+
+            $role->load('permissions');
+
+            Log::info('Role created', [
+                'role_id' => $role->id,
+            ]);
+
+            return $this->successResponse(
+                $role,
+                'Role created successfully',
+                201
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to create role', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse(
+                'Failed to create role',
+                ['error' => $e->getMessage()],
+                500
+            );
         }
-
-        $role->load('permissions');
-
-        return $this->successResponse(
-            $role,
-            'Role created successfully',
-            201
-        );
     }
 
     /**
@@ -277,20 +292,37 @@ class RoleController extends Controller
             );
         }
 
-        $roleData = $request->only(['name', 'description', 'is_active']);
-        $role->update($roleData);
+        try {
+            $roleData = $request->only(['name', 'description', 'is_active']);
+            $role->update($roleData);
 
-        // Update permissions if provided
-        if ($request->has('permissions')) {
-            $role->permissions()->sync($request->permissions);
+            // Update permissions if provided
+            if ($request->has('permissions')) {
+                $role->permissions()->sync($request->permissions);
+            }
+
+            $role->load('permissions');
+
+            Log::info('Role updated', [
+                'role_id' => $role->id,
+            ]);
+
+            return $this->successResponse(
+                $role,
+                'Role updated successfully'
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to update role', [
+                'role_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->errorResponse(
+                'Failed to update role',
+                ['error' => $e->getMessage()],
+                500
+            );
         }
-
-        $role->load('permissions');
-
-        return $this->successResponse(
-            $role,
-            'Role updated successfully'
-        );
     }
 
     /**
@@ -339,13 +371,30 @@ class RoleController extends Controller
             );
         }
 
-        $role->permissions()->detach();
-        $role->delete();
+        try {
+            $role->permissions()->detach();
+            $role->delete();
 
-        return $this->successResponse(
-            [],
-            'Role deleted successfully'
-        );
+            Log::info('Role deleted', [
+                'role_id' => $id,
+            ]);
+
+            return $this->successResponse(
+                [],
+                'Role deleted successfully'
+            );
+        } catch (\Exception $e) {
+            Log::error('Failed to delete role', [
+                'role_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->errorResponse(
+                'Failed to delete role',
+                ['error' => $e->getMessage()],
+                500
+            );
+        }
     }
 
     /**

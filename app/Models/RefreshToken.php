@@ -24,9 +24,9 @@ class RefreshToken extends BaseModel
     /**
      * Token status constants.
      */
-    const STATUS_ACTIVE = 1;
-    const STATUS_EXPIRED = 0;
-    const STATUS_REVOKED = 2;
+    public const STATUS_ACTIVE = 1;
+    public const STATUS_EXPIRED = 0;
+    public const STATUS_REVOKED = 2;
 
     /**
      * The attributes that are mass assignable.
@@ -56,6 +56,10 @@ class RefreshToken extends BaseModel
         'token',
         'created_by',
         'updated_by',
+    ];
+
+    protected $appends = [
+        'status_label',
     ];
 
     /**
@@ -185,21 +189,14 @@ class RefreshToken extends BaseModel
      *
      * @return string
      */
-    public function getStatusLabel(): string
+    public function getStatusLabelAttribute(): string
     {
-        if ($this->isRevoked()) {
-            return 'Revoked';
-        }
-        
-        if ($this->isExpired()) {
-            return 'Expired';
-        }
-        
-        if ($this->isActive()) {
-            return 'Active';
-        }
-        
-        return 'Unknown';
+        return match ($this->status) {
+            self::STATUS_ACTIVE => 'Active',
+            self::STATUS_EXPIRED => 'Expired',
+            self::STATUS_REVOKED => 'Revoked',
+            default => 'Unknown',
+        };
     }
 
     /**

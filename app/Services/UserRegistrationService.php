@@ -117,10 +117,10 @@ class UserRegistrationService
                 'email_verified_at' => Carbon::now(),
             ]);
 
-            $customer = $user->customerProfile()->create([
+            $user->customerProfile()->create([
                 'full_name' => $verificationToken->temp_name,
             ]);
-
+            
             $verificationToken->markAsUsed();
 
             DB::commit();
@@ -128,7 +128,10 @@ class UserRegistrationService
             Log::info('User registration completed', [
                 'user_id' => $user->id,
                 'email' => $user->email,
-                'token_id' => $verificationToken->id
+                'name' => $user->customerProfile->full_name,
+                'token_id' => $verificationToken->id,
+                'role_id' => $user->role_id,
+                'expires_at' => $user->email_verified_at,
             ]);
 
             return [
@@ -137,7 +140,7 @@ class UserRegistrationService
                 'data' => [
                     'user_id' => $user->id,
                     'email' => $user->email,
-                    'name' => $user->name,
+                    'name' => $user->customerProfile->full_name,
                 ]
             ];
 

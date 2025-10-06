@@ -121,6 +121,157 @@ return [
             ],
         ],
 
+        'employees' => [
+            'name' => 'Employee Management',
+            'description' => 'Permissions related to employee management',
+            'permissions' => [
+                'employees.view' => [
+                    'name' => 'View Employees',
+                    'description' => 'Permission to view employee listings and details',
+                ],
+                'employees.create' => [
+                    'name' => 'Create Employees',
+                    'description' => 'Permission to create new employee records',
+                ],
+                'employees.edit' => [
+                    'name' => 'Edit Employees',
+                    'description' => 'Permission to edit existing employee records',
+                ],
+                'employees.delete' => [
+                    'name' => 'Delete Employees',
+                    'description' => 'Permission to delete employee records',
+                ],
+                'employees.manage_roles' => [
+                    'name' => 'Manage Employee Roles',
+                    'description' => 'Permission to assign and modify employee roles',
+                ],
+            ],
+        ],
+
+        'customers' => [
+            'name' => 'Customer Management',
+            'description' => 'Permissions related to customer management',
+            'permissions' => [
+                'customers.view' => [
+                    'name' => 'View Customers',
+                    'description' => 'Permission to view customer listings and details',
+                ],
+                'customers.create' => [
+                    'name' => 'Create Customers',
+                    'description' => 'Permission to create new customer records',
+                ],
+                'customers.edit' => [
+                    'name' => 'Edit Customers',
+                    'description' => 'Permission to edit existing customer records',
+                ],
+                'customers.delete' => [
+                    'name' => 'Delete Customers',
+                    'description' => 'Permission to delete customer records',
+                ],
+            ],
+        ],
+
+        'employee_shifts' => [
+            'name' => 'Employee Shift Management',
+            'description' => 'Permissions related to employee shift scheduling and management',
+            'permissions' => [
+                'employee_shifts.view' => [
+                    'name' => 'View Employee Shifts',
+                    'description' => 'Permission to view employee shift schedules',
+                ],
+                'employee_shifts.create' => [
+                    'name' => 'Create Employee Shifts',
+                    'description' => 'Permission to create new employee shift schedules',
+                ],
+                'employee_shifts.edit' => [
+                    'name' => 'Edit Employee Shifts',
+                    'description' => 'Permission to edit existing employee shift schedules',
+                ],
+                'employee_shifts.delete' => [
+                    'name' => 'Delete Employee Shifts',
+                    'description' => 'Permission to delete employee shift schedules',
+                ],
+                'employee_shifts.assign' => [
+                    'name' => 'Assign Employee Shifts',
+                    'description' => 'Permission to assign shifts to employees',
+                ],
+            ],
+        ],
+
+        'payrolls' => [
+            'name' => 'Payroll Management',
+            'description' => 'Permissions related to payroll and salary management',
+            'permissions' => [
+                'payrolls.view' => [
+                    'name' => 'View Payrolls',
+                    'description' => 'Permission to view payroll listings and details',
+                ],
+                'payrolls.create' => [
+                    'name' => 'Create Payrolls',
+                    'description' => 'Permission to create new payroll records',
+                ],
+                'payrolls.edit' => [
+                    'name' => 'Edit Payrolls',
+                    'description' => 'Permission to edit existing payroll records',
+                ],
+                'payrolls.delete' => [
+                    'name' => 'Delete Payrolls',
+                    'description' => 'Permission to delete payroll records',
+                ],
+                'payrolls.process' => [
+                    'name' => 'Process Payrolls',
+                    'description' => 'Permission to process employee salaries and payments',
+                ],
+            ],
+        ],
+
+        'payroll-items' => [
+            'name' => 'Payroll Item Management',
+            'description' => 'Permissions related to individual payroll items management',
+            'permissions' => [
+                'payroll_items.view' => [
+                    'name' => 'View Payroll Items',
+                    'description' => 'Permission to view payroll item listings and details',
+                ],
+                'payroll_items.create' => [
+                    'name' => 'Create Payroll Items',
+                    'description' => 'Permission to create new payroll items',
+                ],
+                'payroll_items.edit' => [
+                    'name' => 'Edit Payroll Items',
+                    'description' => 'Permission to edit existing payroll items',
+                ],
+                'payroll_items.delete' => [
+                    'name' => 'Delete Payroll Items',
+                    'description' => 'Permission to delete payroll items',
+                ],
+            ],
+        ],
+
+        'shifts' => [
+            'name' => 'Shift Management',
+            'description' => 'Permissions related to shift definitions and management',
+            'permissions' => [
+                'shifts.view' => [
+                    'name' => 'View Shifts',
+                    'description' => 'Permission to view shift listings and details',
+                ],
+                'shifts.create' => [
+                    'name' => 'Create Shifts',
+                    'description' => 'Permission to create new shift definitions',
+                ],
+                'shifts.edit' => [
+                    'name' => 'Edit Shifts',
+                    'description' => 'Permission to edit existing shift definitions',
+                ],
+                'shifts.delete' => [
+                    'name' => 'Delete Shifts',
+                    'description' => 'Permission to delete shift definitions',
+                ],
+            ],
+        ],
+
+
         'categories' => [
             'name' => 'Category Management',
             'description' => 'Permissions related to menu category management',

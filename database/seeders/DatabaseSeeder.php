@@ -25,9 +25,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // First create roles and permissions
         $this->call(RolePermissionSeeder::class);
         $this->createDefaultUsers();
+        $this->call(EmployeeManagementSeeder::class);
         $this->createDefaultTableDiskMenuData();
 
         // Then create default users
