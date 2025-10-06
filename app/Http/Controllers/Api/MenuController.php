@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Put;
  * )
  */
 #[Prefix('auth/menus')]
-#[Middleware('auth:api')]
 class MenuController extends Controller
 {
     /**

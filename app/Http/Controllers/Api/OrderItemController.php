@@ -13,7 +13,6 @@ use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
 #[Prefix('auth/order-items')]
-#[Middleware('auth:api')]
 class OrderItemController extends Controller
 {
     /**

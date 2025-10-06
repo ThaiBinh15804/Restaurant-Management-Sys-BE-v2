@@ -12,7 +12,6 @@ use Spatie\RouteAttributes\Attributes\Prefix;
 use Illuminate\Support\Facades\DB;
 
 #[Prefix('auth/table-sessions')]
-#[Middleware('auth:api')]
 class TableSessionController extends Controller
 {
     /**

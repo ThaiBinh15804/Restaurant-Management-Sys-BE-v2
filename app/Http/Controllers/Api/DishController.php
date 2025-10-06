@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Put;
  * )
  */
 #[Prefix('auth/dishes')]
-#[Middleware('auth:api')]
 class DishController extends Controller
 {
     /**

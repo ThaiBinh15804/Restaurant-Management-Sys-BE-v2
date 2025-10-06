@@ -22,7 +22,6 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('auth/dining-tables')]
-#[Middleware('auth:api')]
 class DiningTableController extends Controller
 {
     /**
