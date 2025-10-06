@@ -59,20 +59,35 @@ class EmployeeManagementSeeder extends Seeder
             ];
 
             $shifts = [];
+            $today = Carbon::today();
 
-            foreach ($shiftDefinitions as $definition) {
+            // Create shifts for different dates
+            $shiftSchedule = [
+                ['name' => 'Morning Shift', 'date' => $today->copy()->subDays(2)],
+                ['name' => 'Evening Shift', 'date' => $today->copy()->subDay()],
+                ['name' => 'Weekend Premium Shift', 'date' => $today->copy()->next('saturday')],
+            ];
+
+            foreach ($shiftSchedule as $schedule) {
+                $definition = collect($shiftDefinitions)->firstWhere('name', $schedule['name']);
+                
+                if (!$definition) {
+                    continue;
+                }
+
                 $shift = Shift::updateOrCreate(
-                    ['name' => $definition['name']],
+                    [
+                        'name' => $definition['name'],
+                        'shift_date' => $schedule['date']->toDateString(),
+                    ],
                     [
                         'start_time' => $definition['start_time'],
                         'end_time' => $definition['end_time'],
                     ]
                 );
 
-                $shifts[$definition['name']] = $shift;
+                $shifts[$definition['name'] . '_' . $schedule['date']->toDateString()] = $shift;
             }
-
-            $today = Carbon::today();
 
             $assignmentTemplates = [
                 [
@@ -109,15 +124,22 @@ class EmployeeManagementSeeder extends Seeder
 
             foreach ($assignmentTemplates as $assignment) {
                 $employee = $employees[$assignment['email']] ?? null;
-                $shift = $shifts[$assignment['shift']] ?? null;
-
-                if (!$employee || !$shift) {
+                
+                if (!$employee) {
                     continue;
                 }
 
                 $assignedDate = $assignment['date'] instanceof Carbon
                     ? $assignment['date']->toDateString()
                     : Carbon::parse($assignment['date'])->toDateString();
+
+                // Find the shift with matching name and date
+                $shiftKey = $assignment['shift'] . '_' . $assignedDate;
+                $shift = $shifts[$shiftKey] ?? null;
+
+                if (!$shift) {
+                    continue;
+                }
 
                 $checkIn = $assignment['check_in_time']
                     ? Carbon::parse($assignedDate . ' ' . $assignment['check_in_time'])
@@ -131,7 +153,6 @@ class EmployeeManagementSeeder extends Seeder
                     [
                         'employee_id' => $employee->id,
                         'shift_id' => $shift->id,
-                        'assigned_date' => $assignedDate,
                     ],
                     [
                         'status' => $assignment['status'],

@@ -34,7 +34,6 @@ class EmployeeShift extends BaseModel
      * @var array<int, string>
      */
     protected $fillable = [
-        'assigned_date',
         'status',
         'check_in',
         'check_out',
@@ -50,7 +49,6 @@ class EmployeeShift extends BaseModel
      * @var array<string, string>
      */
     protected $casts = [
-        'assigned_date' => 'date',
         'status' => 'integer',
         'check_in' => 'datetime',
         'check_out' => 'datetime',

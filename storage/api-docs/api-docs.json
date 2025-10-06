@@ -1720,7 +1720,7 @@
                     "Employee Shifts"
                 ],
                 "summary": "Assign shift",
-                "description": "Assign a shift to an employee on a given date",
+                "description": "Assign a shift to an employee (shift must have shift_date set)",
                 "operationId": "8738ffd49926ee6f9671729b80dd3dae",
                 "requestBody": {
                     "required": true,
@@ -1729,8 +1729,7 @@
                             "schema": {
                                 "required": [
                                     "employee_id",
-                                    "shift_id",
-                                    "assigned_date"
+                                    "shift_id"
                                 ],
                                 "properties": {
                                     "employee_id": {
@@ -1740,11 +1739,6 @@
                                     "shift_id": {
                                         "type": "string",
                                         "example": "SH001"
-                                    },
-                                    "assigned_date": {
-                                        "type": "string",
-                                        "format": "date",
-                                        "example": "2025-09-01"
                                     },
                                     "status": {
                                         "description": "Initial status",
@@ -3696,7 +3690,7 @@
                     "Shifts"
                 ],
                 "summary": "List shifts",
-                "description": "Retrieve a paginated list of shifts with optional time filters",
+                "description": "Retrieve a paginated list of shifts with optional date and time filters",
                 "operationId": "2b37ae349973fabb23781d7a24489578",
                 "parameters": [
                     {
@@ -3724,6 +3718,33 @@
                         "description": "Filter by shift name",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    {
+                        "name": "shift_date",
+                        "in": "query",
+                        "description": "Filter by specific shift date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "shift_date_from",
+                        "in": "query",
+                        "description": "Filter shifts from date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "shift_date_to",
+                        "in": "query",
+                        "description": "Filter shifts to date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
                         }
                     },
                     {
@@ -3779,7 +3800,7 @@
                     "Shifts"
                 ],
                 "summary": "Create shift",
-                "description": "Create a new shift by providing name and working timeframe",
+                "description": "Create a new shift with name, date (optional), and working timeframe",
                 "operationId": "0779dbf1996b054031291aba6ea78fa7",
                 "requestBody": {
                     "required": true,
@@ -3796,11 +3817,19 @@
                                         "type": "string",
                                         "example": "Morning Shift"
                                     },
+                                    "shift_date": {
+                                        "description": "Optional shift date",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-06"
+                                    },
                                     "start_time": {
+                                        "description": "Format: HH:MM",
                                         "type": "string",
                                         "example": "08:00"
                                     },
                                     "end_time": {
+                                        "description": "Format: HH:MM",
                                         "type": "string",
                                         "example": "16:00"
                                     }
@@ -3863,7 +3892,7 @@
                     "Shifts"
                 ],
                 "summary": "Update shift",
-                "description": "Update an existing shift's details",
+                "description": "Update an existing shift's details including date, name, and time",
                 "operationId": "b26730cfb5e0bcb5feed6aa8658be51e",
                 "parameters": [
                     {
@@ -3886,11 +3915,19 @@
                                         "type": "string",
                                         "example": "Morning Shift"
                                     },
+                                    "shift_date": {
+                                        "description": "Shift date (nullable)",
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-06"
+                                    },
                                     "start_time": {
+                                        "description": "Format: HH:MM",
                                         "type": "string",
                                         "example": "08:00"
                                     },
                                     "end_time": {
+                                        "description": "Format: HH:MM",
                                         "type": "string",
                                         "example": "17:00"
                                     }

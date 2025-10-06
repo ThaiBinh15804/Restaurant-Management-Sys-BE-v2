@@ -27,6 +27,7 @@ class Shift extends BaseModel
      */
     protected $fillable = [
         'name',
+        'shift_date',
         'start_time',
         'end_time',
     ];
@@ -37,6 +38,7 @@ class Shift extends BaseModel
      * @var array<string, string>
      */
     protected $casts = [
+        'shift_date' => 'date',
         'start_time' => 'datetime:H:i:s',
         'end_time' => 'datetime:H:i:s',
         'created_at' => 'datetime',

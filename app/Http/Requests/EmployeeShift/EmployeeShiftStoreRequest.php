@@ -18,7 +18,6 @@ class EmployeeShiftStoreRequest extends FormRequest
         return [
             'employee_id' => ['required', 'string', 'exists:employees,id'],
             'shift_id' => ['required', 'string', 'exists:shifts,id'],
-            'assigned_date' => ['required', 'date'],
             'status' => ['sometimes', 'integer', Rule::in([
                 EmployeeShift::STATUS_SCHEDULED,
                 EmployeeShift::STATUS_PRESENT,

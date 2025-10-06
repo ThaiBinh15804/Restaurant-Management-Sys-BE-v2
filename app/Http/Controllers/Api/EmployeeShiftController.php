@@ -52,32 +52,34 @@ class EmployeeShiftController extends Controller
         $filters = $request->filters();
 
         $query = EmployeeShift::with(['employee', 'shift'])
-            ->orderByDesc('assigned_date')
-            ->orderBy('shift_id')
+            ->join('shifts', 'employee_shifts.shift_id', '=', 'shifts.id')
+            ->select('employee_shifts.*')
+            ->orderByDesc('shifts.shift_date')
+            ->orderBy('employee_shifts.shift_id')
             ->when(
                 $filters['employee_id'] ?? null,
                 fn($q, $v) =>
-                $q->where('employee_id', $v)
+                $q->where('employee_shifts.employee_id', $v)
             )
             ->when(
                 $filters['shift_id'] ?? null,
                 fn($q, $v) =>
-                $q->where('shift_id', $v)
+                $q->where('employee_shifts.shift_id', $v)
             )
             ->when(
                 array_key_exists('status', $filters) && $filters['status'] !== null,
                 fn($q) =>
-                $q->where('status', $filters['status'])
+                $q->where('employee_shifts.status', $filters['status'])
             )
             ->when(
                 $filters['date_from'] ?? null,
                 fn($q, $v) =>
-                $q->whereDate('assigned_date', '>=', $v)
+                $q->whereDate('shifts.shift_date', '>=', $v)
             )
             ->when(
                 $filters['date_to'] ?? null,
                 fn($q, $v) =>
-                $q->whereDate('assigned_date', '<=', $v)
+                $q->whereDate('shifts.shift_date', '<=', $v)
             );
 
         $perPage = $request->perPage();
@@ -92,15 +94,14 @@ class EmployeeShiftController extends Controller
      *     path="/api/employee-shifts",
      *     tags={"Employee Shifts"},
      *     summary="Assign shift",
-     *     description="Assign a shift to an employee on a given date",
+     *     description="Assign a shift to an employee (shift must have shift_date set)",
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"employee_id","shift_id","assigned_date"},
+     *             required={"employee_id","shift_id"},
      *             @OA\Property(property="employee_id", type="string", example="EMP001"),
      *             @OA\Property(property="shift_id", type="string", example="SH001"),
-     *             @OA\Property(property="assigned_date", type="string", format="date", example="2025-09-01"),
      *             @OA\Property(property="status", type="integer", example=0, description="Initial status"),
      *             @OA\Property(property="notes", type="string", example="Assigned for breakfast prep")
      *         )
@@ -117,11 +118,10 @@ class EmployeeShiftController extends Controller
 
         $exists = EmployeeShift::where('employee_id', $data['employee_id'])
             ->where('shift_id', $data['shift_id'])
-            ->whereDate('assigned_date', $data['assigned_date'])
             ->exists();
 
         if ($exists) {
-            return $this->errorResponse('Shift assignment already exists for this employee on the selected date.', [], 422);
+            return $this->errorResponse('Shift assignment already exists for this employee and shift.', [], 422);
         }
 
         $assignment = EmployeeShift::create($data);
@@ -250,8 +250,8 @@ class EmployeeShiftController extends Controller
 
         if ($request->filled('overtime_hours')) {
             $assignment->overtime_hours = (int) $request->input('overtime_hours');
-        } elseif ($assignment->shift) {
-            $scheduledEnd = Carbon::parse($assignment->assigned_date . ' ' . $assignment->shift->end_time);
+        } elseif ($assignment->shift && $assignment->shift->shift_date) {
+            $scheduledEnd = Carbon::parse($assignment->shift->shift_date . ' ' . $assignment->shift->end_time);
             $diffMinutes = $scheduledEnd->diffInMinutes($timestamp, false);
             $assignment->overtime_hours = $diffMinutes > 0 ? (int) ceil($diffMinutes / 60) : 0;
         }

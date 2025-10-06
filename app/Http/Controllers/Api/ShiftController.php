@@ -31,11 +31,14 @@ class ShiftController extends Controller
      *     path="/api/shifts",
      *     tags={"Shifts"},
      *     summary="List shifts",
-     *     description="Retrieve a paginated list of shifts with optional time filters",
+     *     description="Retrieve a paginated list of shifts with optional date and time filters",
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", default=1)),
      *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", default=15, maximum=100)),
      *     @OA\Parameter(name="name", in="query", description="Filter by shift name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="shift_date", in="query", description="Filter by specific shift date", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="shift_date_from", in="query", description="Filter shifts from date", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="shift_date_to", in="query", description="Filter shifts to date", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="start_time_from", in="query", description="Filter shifts starting after or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
      *     @OA\Parameter(name="start_time_to", in="query", description="Filter shifts starting before or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
      *     @OA\Parameter(name="end_time_from", in="query", description="Filter shifts ending after or at this time (HH:MM)", @OA\Schema(type="string", pattern="^\\d{2}:\\d{2}$")),
@@ -50,10 +53,22 @@ class ShiftController extends Controller
     public function index(ShiftQueryRequest $request): JsonResponse
     {
         $filters = $request->filters();
-        $query = Shift::query()->orderBy('start_time');
+        $query = Shift::query()->orderBy('shift_date')->orderBy('start_time');
 
         if (!empty($filters['name'])) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+
+        if (!empty($filters['shift_date'])) {
+            $query->whereDate('shift_date', $filters['shift_date']);
+        }
+
+        if (!empty($filters['shift_date_from'])) {
+            $query->whereDate('shift_date', '>=', $filters['shift_date_from']);
+        }
+
+        if (!empty($filters['shift_date_to'])) {
+            $query->whereDate('shift_date', '<=', $filters['shift_date_to']);
         }
 
         if (!empty($filters['start_time_from'])) {
@@ -83,15 +98,16 @@ class ShiftController extends Controller
      *     path="/api/shifts",
      *     tags={"Shifts"},
      *     summary="Create shift",
-     *     description="Create a new shift by providing name and working timeframe",
+     *     description="Create a new shift with name, date (optional), and working timeframe",
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             required={"name","start_time","end_time"},
      *             @OA\Property(property="name", type="string", example="Morning Shift"),
-     *             @OA\Property(property="start_time", type="string", example="08:00"),
-     *             @OA\Property(property="end_time", type="string", example="16:00")
+     *             @OA\Property(property="shift_date", type="string", format="date", example="2025-10-06", description="Optional shift date"),
+     *             @OA\Property(property="start_time", type="string", example="08:00", description="Format: HH:MM"),
+     *             @OA\Property(property="end_time", type="string", example="16:00", description="Format: HH:MM")
      *         )
      *     ),
      *     @OA\Response(response=201, description="Shift created successfully"),
@@ -139,15 +155,16 @@ class ShiftController extends Controller
      *     path="/api/shifts/{id}",
      *     tags={"Shifts"},
      *     summary="Update shift",
-     *     description="Update an existing shift's details",
+     *     description="Update an existing shift's details including date, name, and time",
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(name="id", in="path", required=true, description="Shift ID", @OA\Schema(type="string")),
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
      *             @OA\Property(property="name", type="string", example="Morning Shift"),
-     *             @OA\Property(property="start_time", type="string", example="08:00"),
-     *             @OA\Property(property="end_time", type="string", example="17:00")
+     *             @OA\Property(property="shift_date", type="string", format="date", example="2025-10-06", description="Shift date (nullable)"),
+     *             @OA\Property(property="start_time", type="string", example="08:00", description="Format: HH:MM"),
+     *             @OA\Property(property="end_time", type="string", example="17:00", description="Format: HH:MM")
      *         )
      *     ),
      *     @OA\Response(response=200, description="Shift updated successfully"),

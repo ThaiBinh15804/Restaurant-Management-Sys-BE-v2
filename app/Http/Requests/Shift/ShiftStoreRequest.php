@@ -14,7 +14,8 @@ class ShiftStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:50', 'unique:shifts,name'],
+            'name' => ['required', 'string', 'max:50'],
+            'shift_date' => ['nullable', 'date'],
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
         ];

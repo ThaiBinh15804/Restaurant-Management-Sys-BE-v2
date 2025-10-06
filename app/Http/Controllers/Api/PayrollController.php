@@ -166,9 +166,10 @@ class PayrollController extends Controller
                 }
 
                 $overtimeHours = EmployeeShift::where('employee_id', $employee->id)
-                    ->whereYear('assigned_date', $year)
-                    ->whereMonth('assigned_date', $month)
-                    ->sum('overtime_hours');
+                    ->join('shifts', 'employee_shifts.shift_id', '=', 'shifts.id')
+                    ->whereYear('shifts.shift_date', $year)
+                    ->whereMonth('shifts.shift_date', $month)
+                    ->sum('employee_shifts.overtime_hours');
 
                 $baseSalary = (float) ($employee->base_salary ?? 0);
                 $overtimePay = $this->calculateOvertimePay($baseSalary, (int) $overtimeHours);
