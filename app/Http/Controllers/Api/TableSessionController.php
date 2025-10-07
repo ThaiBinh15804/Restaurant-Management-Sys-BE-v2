@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\TableSession\TableSessionQueryRequest;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 use Illuminate\Support\Facades\DB;
 
@@ -43,17 +42,10 @@ class TableSessionController extends Controller
      * )
      */
     #[Get('/', middleware: ['permission:table-sessions.view'])]
-    public function index(Request $request): JsonResponse
+    public function index(TableSessionQueryRequest $request): JsonResponse
     {
-        // lấy page & limit từ query string
-        $page  = max((int) $request->get('page', 1), 1);
-        $limit = min((int) $request->get('limit', 10), 100);
+        $filters = $request->filters();
 
-        $isActive = $request->get('is_active'); // "1" hoặc "0"
-        $status   = $request->get('session_status');    // optional, ví dụ: "empty", "active" ...
-        $capacity   = $request->get('capacity');
-
-        // Query dữ liệu
         $query = DB::table('dining_tables as dt')
             ->leftJoinSub(function ($sub) {
                 $sub->from('table_session_dining_table as tsdt')
@@ -83,21 +75,21 @@ class TableSessionController extends Controller
             )
             ->orderBy('dt.table_number');
 
-
-        // Lọc theo is_active nếu có
-        if (!is_null($isActive)) {
-            $query->where('dt.is_active', $isActive);
+        // Lọc is_active
+        if (!is_null($filters['is_active'])) {
+            $query->where('dt.is_active', $filters['is_active']);
         }
 
-        if (!is_null($capacity)) {
-            $query->where('dt.capacity', $capacity);
+        // Lọc capacity
+        if (!is_null($filters['capacity'])) {
+            $query->where('dt.capacity', $filters['capacity']);
         }
 
-        // Lọc theo session_status nếu có
-        if (!is_null($status)) {
-            switch ($status) {
+        // Lọc session_status
+        if (!is_null($filters['session_status'])) {
+            switch ($filters['session_status']) {
                 case 'empty':
-                    $query->whereNull('ts.id'); // không có session
+                    $query->whereNull('ts.id');
                     break;
                 case 'pending':
                     $query->where('ts.status', 0);
@@ -117,16 +109,24 @@ class TableSessionController extends Controller
             }
         }
 
-        // Phân trang thủ công để dùng cả page + limit
-        $sessions = $query->paginate(
-            perPage: $limit,
-            page: $page
+        // Phân trang
+        $paginator = $query->paginate(
+            $request->perPage(),
+            ['*'],
+            'page',
+            $request->page()
         );
+        $paginator->withQueryString();
 
-        return $this->successResponse(
-            $sessions,
-            'Table sessions retrieved successfully'
-        );
+        return $this->successResponse([
+            'items' => $paginator->items(),
+            'meta'  => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+        ], 'Table sessions retrieved successfully');
     }
 
     /**

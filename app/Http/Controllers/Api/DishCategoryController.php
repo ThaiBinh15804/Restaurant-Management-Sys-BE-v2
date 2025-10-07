@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\DishCategory\DishCategoryQueryRequest;
 use App\Models\DishCategory;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -12,7 +13,6 @@ use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Put;
 use Spatie\RouteAttributes\Attributes\Delete;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
 /**
@@ -83,35 +83,43 @@ class DishCategoryController extends Controller
      *     )
      * )
      */
-   
+
     #[Get('/', middleware: ['permission:table-sessions.view'])]
-    public function index(Request $request): JsonResponse
+    public function index(DishCategoryQueryRequest $request): JsonResponse
     {
-        $page  = max((int) $request->get('page', 1), 1);
-        $limit = min((int) $request->get('limit', 5), 100);
+        $query = DishCategory::withCount('dishes')
+            ->orderBy('created_at', 'desc');
 
-        $query = DishCategory::withCount('dishes');
+        $filters = $request->filters();
 
-        // Nếu có query name thì lọc theo tên
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->get('name') . '%');
+        // 🔍 Lọc theo tên
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
 
-        if ($request->filled('desc')) {
-            $query->where('desc', 'like', '%' . $request->get('desc') . '%');
+        // 🔍 Lọc theo mô tả
+        if (!empty($filters['desc'])) {
+            $query->where('desc', 'like', '%' . $filters['desc'] . '%');
         }
 
-        // Lấy danh mục + đếm số lượng món
-        $categories = $query->orderBy('created_at', 'desc')
-            ->paginate(
-                perPage: $limit,
-                page: $page
-            );
-
-        return $this->successResponse(
-            $categories,
-            'Dish categories retrieved successfully'
+        // ⚙️ Phân trang từ BaseQueryRequest
+        $paginator = $query->paginate(
+            $request->perPage(),
+            ['*'],
+            'page',
+            $request->page()
         );
+        $paginator->withQueryString();
+
+        return $this->successResponse([
+            'items' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+        ], 'Dish categories retrieved successfully');
     }
 
     /**
@@ -228,7 +236,7 @@ class DishCategoryController extends Controller
 
         if ($category->dishes_count > 0) {
             return $this->errorResponse(
-                'Cannot delete category because there are dishes linked to it',
+                'The dish category cannot be deleted because it is being used in a dish.',
                 [],
                 400
             );

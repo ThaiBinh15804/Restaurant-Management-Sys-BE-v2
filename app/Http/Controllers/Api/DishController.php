@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dish\DishQueryRequest;
 use App\Models\Dish;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
@@ -10,7 +11,6 @@ use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Get;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Prefix;
 use Spatie\RouteAttributes\Attributes\Put;
@@ -54,48 +54,57 @@ class DishController extends Controller
      * )
      */
     #[Get('/', middleware: ['permission:table-sessions.view'])]
-    public function index(Request $request): JsonResponse
+    public function index(DishQueryRequest $request): JsonResponse
     {
-        $page  = max((int) $request->get('page', 1), 1);
-        $limit = min((int) $request->get('limit', 5), 100);
-        $isActive = $request->get('is_active');
-        $categoryId = $request->get('category'); // thêm param category_id
-        $cookingTime = $request->get('cooking_time');
-        $minPrice    = $request->get('min_price');
-        $maxPrice    = $request->get('max_price');
+        $query = Dish::with('category')
+            ->orderBy('created_at', 'desc');
 
-        $query = Dish::with('category');
+        $filters = $request->filters();
 
-        // Search theo tên
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->get('name') . '%');
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
 
-        if (!is_null($isActive)) {
-            $query->where('is_active', $isActive);
+        if (!is_null($filters['is_active'] ?? null)) {
+            $query->where('is_active', $filters['is_active']);
         }
 
-        if (!is_null($categoryId)) {
-            $query->where('category_id', $categoryId);
+        if (!is_null($filters['category'] ?? null)) {
+            $query->where('category_id', $filters['category']);
         }
 
-        if (!is_null($cookingTime)) {
-            $query->where('cooking_time', $cookingTime);
+        if (!is_null($filters['cooking_time'] ?? null)) {
+            $query->where('cooking_time', $filters['cooking_time']);
         }
 
-        // Lọc theo khoảng giá
-        if (!is_null($minPrice)) {
-            $query->where('price', '>=', $minPrice);
-        }
-        if (!is_null($maxPrice)) {
-            $query->where('price', '<=', $maxPrice);
+        if (!is_null($filters['min_price'] ?? null)) {
+            $query->where('price', '>=', $filters['min_price']);
         }
 
-        $dishes = $query->orderBy('created_at', 'desc')
-            ->paginate(perPage: $limit, page: $page);
+        if (!is_null($filters['max_price'] ?? null)) {
+            $query->where('price', '<=', $filters['max_price']);
+        }
 
-        return $this->successResponse($dishes, 'Dishes retrieved successfully');
+        $paginator = $query->paginate(
+            $request->perPage(),
+            ['*'],
+            'page',
+            $request->page()
+        );
+
+        $paginator->withQueryString();
+
+        return $this->successResponse([
+            'items' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+        ], 'Dishes retrieved successfully');
     }
+
 
     /**
      * @OA\Post(
@@ -194,12 +203,12 @@ class DishController extends Controller
         $hasOrderItems = OrderItem::where('dish_id', $id)->exists();
 
         if ($hasOrderItems) {
-            return $this->errorResponse('Không thể xóa món ăn vì đang được sử dụng trong đơn hàng.', 400);
+            return $this->errorResponse('The dish cannot be deleted because it is being used in the menu.', 400);
         }
 
         // Nếu không có, tiến hành xóa
         $dish->delete();
 
-        return $this->successResponse(null, 'Xóa món ăn thành công');
+        return $this->successResponse(null, 'Deleted dish successfully.');
     }
 }

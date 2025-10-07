@@ -15,7 +15,7 @@ use DateTime;
 
 class JWTAuthService
 {
-    const ACCESS_TOKEN_TTL = 60;
+    const ACCESS_TOKEN_TTL = 1;
     const REFRESH_TOKEN_TTL = 30;
     const REFRESH_COOKIE_NAME = 'refresh_token';
 
@@ -46,8 +46,8 @@ class JWTAuthService
         return [
             'user' => $user->load('role'),
             'access_token' => $accessToken,
-            'token_type' => 'Bearer', 
-            'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+            'token_type' => 'Bearer',
+            'expires_in' => self::ACCESS_TOKEN_TTL * 1,
         ];
     }
 
@@ -94,7 +94,7 @@ class JWTAuthService
                 'data' => [
                     'access_token' => $accessToken,
                     'token_type' => 'Bearer',
-                    'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+                    'expires_in' => self::ACCESS_TOKEN_TTL * 1,
                 ]
             ];
         } catch (\Exception $e) {
@@ -250,7 +250,7 @@ class JWTAuthService
             'user' => $refreshToken->user->load('role'),
             'access_token' => $newAccessToken,
             'token_type' => 'Bearer',
-            'expires_in' => self::ACCESS_TOKEN_TTL * 60,
+            'expires_in' => self::ACCESS_TOKEN_TTL * 1,
         ];
     }
 
@@ -314,7 +314,7 @@ class JWTAuthService
     private function setRefreshTokenCookie(string $token): void
     {
         $minutes = self::REFRESH_TOKEN_TTL * 24 * 60; // Convert days to minutes
-        
+
         cookie()->queue(
             self::REFRESH_COOKIE_NAME,
             $token,

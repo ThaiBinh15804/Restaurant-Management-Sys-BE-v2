@@ -2956,6 +2956,199 @@
                 }
             }
         },
+        "/api/auth/menus/{id}/items": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Lấy danh sách món ăn trong menu",
+                "operationId": "4f1908621f936341bc33d144e8a9ffdc",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của menu",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn thuộc menu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "menu_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "dish_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "dish_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "is_available": {
+                                                        "type": "boolean"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/menus/{menuId}/items/{itemId}": {
+            "delete": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Xóa một món ăn khỏi menu",
+                "description": "Xóa liên kết giữa món ăn và menu, không xóa món trong cơ sở dữ liệu món ăn",
+                "operationId": "271ae1dbfc2e49b1b8b7d60d34efc4cf",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "ID của menu",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "description": "ID của món ăn trong menu (menu_item_id)",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 12
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa món ăn khỏi menu thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Món ăn đã được xóa khỏi menu."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy menu hoặc món trong menu"
+                    }
+                }
+            }
+        },
+        "/api/auth/menus/{menuId}/available-dishes": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Lấy danh sách món ăn chưa có trong menu",
+                "description": "Trả về danh sách các món ăn chưa xuất hiện trong menu để thêm mới",
+                "operationId": "3e8c7623156d1423bb2ec48b89ec5431",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "ID của menu",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MN001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn chưa có trong menu",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Danh sách món ăn chưa có trong menu."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "D001"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Cơm chiên hải sản"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 45000
+                                                    },
+                                                    "image": {
+                                                        "type": "string",
+                                                        "example": "/uploads/dishes/com-chien.jpg"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy menu"
+                    },
+                    "500": {
+                        "description": "Lỗi server"
+                    }
+                }
+            }
+        },
         "/api/auth/order-items/status": {
             "put": {
                 "tags": [
@@ -5532,6 +5725,82 @@
                 ]
             }
         },
+        "/api/auth/uploads/image-user": {
+            "post": {
+                "tags": [
+                    "Uploads"
+                ],
+                "summary": "Upload ảnh người dùng",
+                "operationId": "868d13584d4bb04fb848a7d468dac54b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file",
+                                    "user_id"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "user_id": {
+                                        "type": "string",
+                                        "example": "123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "User image uploaded successfully"
+                    }
+                }
+            }
+        },
+        "/api/auth/uploads/image-dish": {
+            "post": {
+                "tags": [
+                    "Uploads"
+                ],
+                "summary": "Upload ảnh món ăn",
+                "operationId": "585a37bc95366132d666ecebe6f11d53",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file",
+                                    "dish_id"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    },
+                                    "dish_id": {
+                                        "type": "string",
+                                        "example": "45"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Dish image uploaded successfully"
+                    }
+                }
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -5956,6 +6225,10 @@
         {
             "name": "TableSessions",
             "description": "TableSessions"
+        },
+        {
+            "name": "Uploads",
+            "description": "Uploads"
         }
     ]
 }

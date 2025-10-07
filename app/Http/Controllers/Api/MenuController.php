@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Menu\MenuQueryRequest;
+use App\Models\Dish;
 use App\Models\Menu;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
@@ -10,7 +12,6 @@ use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Get;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Prefix;
 use Spatie\RouteAttributes\Attributes\Put;
@@ -54,26 +55,42 @@ class MenuController extends Controller
      * )
      */
     #[Get('/', middleware: ['permission:table-sessions.view'])]
-    public function index(Request $request): JsonResponse
+    public function index(MenuQueryRequest $request): JsonResponse
     {
-        $page  = max((int) $request->get('page', 1), 1);
-        $limit = min((int) $request->get('limit', 10), 100);
-        $isActive = $request->get('is_active');
+        $filters = $request->filters();
 
         $query = Menu::query()->withCount('items');
 
-        if ($request->filled('name')) {
-            $query->where('name', 'like', '%' . $request->get('name') . '%');
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
         }
 
-        if (!is_null($isActive)) {
-            $query->where('is_active', $isActive);
+        if (!empty($filters['desc'])) {
+            $query->where('description', 'like', '%' . $filters['desc'] . '%');
         }
 
-        $menus = $query->orderBy('created_at', 'desc')
-            ->paginate(perPage: $limit, page: $page);
+        if (!is_null($filters['is_active'])) {
+            $query->where('is_active', $filters['is_active']);
+        }
 
-        return $this->successResponse($menus, 'Menus retrieved successfully');
+        $paginator = $query->orderBy('created_at', 'desc')
+            ->paginate(
+                $request->perPage(),
+                ['*'],
+                'page',
+                $request->page()
+            );
+        $paginator->withQueryString();
+
+        return $this->successResponse([
+            'items' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'per_page'     => $paginator->perPage(),
+                'total'        => $paginator->total(),
+                'last_page'    => $paginator->lastPage(),
+            ],
+        ], 'Menus retrieved successfully');
     }
 
     /**
@@ -110,7 +127,7 @@ class MenuController extends Controller
 
             if ($activeMenuExists) {
                 return $this->errorResponse(
-                    'Hiện đã có một menu đang được áp dụng. Chỉ được kích hoạt một menu tại một thời điểm.',
+                    'There is currently one menu in use. Only one menu can be active at a time.',
                     400
                 );
             }
@@ -120,7 +137,6 @@ class MenuController extends Controller
 
         return $this->successResponse($menu, 'Menu created successfully', 201);
     }
-
 
     /**
      * @OA\Put(
@@ -160,9 +176,8 @@ class MenuController extends Controller
 
             if ($existingActive) {
                 return $this->errorResponse(
-                    'Chỉ có thể có 1 menu được kích hoạt tại một thời điểm.
-                 Menu hiện tại đang hoạt động là: ' . $existingActive->name,
-                    422
+                    'Only 1 menu can be active at a time. The currently active menu is: ' . $existingActive->name,
+                    400
                 );
             }
         }
@@ -171,7 +186,6 @@ class MenuController extends Controller
 
         return $this->successResponse($menu, 'Menu updated successfully');
     }
-
 
     /**
      * @OA\Delete(
@@ -187,15 +201,196 @@ class MenuController extends Controller
     {
         $menu = Menu::findOrFail($id);
 
-        // Không được xóa nếu menu có item
-        $hasItems = MenuItem::where('menu_id', $id)->exists();
-
-        if ($hasItems) {
-            return $this->errorResponse('Không thể xóa menu vì có món ăn bên trong.', 400);
+        // Không được xóa nếu menu đang hoạt động
+        if ($menu->is_active) {
+            return $this->errorResponse('Cannot delete active menu.', 400);
         }
 
+        // Nếu menu không hoạt động, tiến hành xóa các item liên quan
+        MenuItem::where('menu_id', $menu->id)->delete();
+
+        // Sau đó xóa menu
         $menu->delete();
 
-        return $this->successResponse(null, 'Xóa menu thành công');
+        return $this->successResponse(null, 'Delete menu and related dishes successfully.');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/menus/{id}/items",
+     *     tags={"Menus"},
+     *     summary="Lấy danh sách món ăn trong menu",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách món ăn thuộc menu",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="items", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="menu_id", type="integer"),
+     *                     @OA\Property(property="dish_id", type="integer"),
+     *                     @OA\Property(property="dish_name", type="string"),
+     *                     @OA\Property(property="price", type="number", format="float"),
+     *                     @OA\Property(property="is_available", type="boolean")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/{id}/items', middleware: ['permission:table-sessions.view'])]
+    public function getMenuItems(string $id): JsonResponse
+    {
+        $menu = Menu::findOrFail($id);
+
+        // Eager load danh sách món ăn
+        $items = MenuItem::with('dish') // nếu có quan hệ dish()
+            ->where('menu_id', $menu->id)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id'           => $item->id,
+                    'menu_id'      => $item->menu_id,
+                    'dish_id'      => $item->dish_id,
+                    'dish_name'    => $item->dish->name ?? null,
+                    'price'        => $item->price,
+                    'notes'        => $item->notes,
+                    'dish_image'   => $item->dish->image,
+                ];
+            });
+
+        return $this->successResponse([
+            'menu'  => [
+                'id'   => $menu->id,
+                'name' => $menu->name,
+            ],
+            'items' => $items,
+        ], 'The list of dishes in the menu was successfully retrieved.');
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/auth/menus/{menuId}/items/{itemId}",
+     *     tags={"Menus"},
+     *     summary="Xóa một món ăn khỏi menu",
+     *     description="Xóa liên kết giữa món ăn và menu, không xóa món trong cơ sở dữ liệu món ăn",
+     *     @OA\Parameter(
+     *         name="menuId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu",
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="itemId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của món ăn trong menu (menu_item_id)",
+     *         @OA\Schema(type="integer", example=12)
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Xóa món ăn khỏi menu thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Món ăn đã được xóa khỏi menu.")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Không tìm thấy menu hoặc món trong menu"
+     *     )
+     * )
+     */
+    #[Delete('/{menuId}/items/{itemId}', middleware: ['permission:table-sessions.delete'])]
+    public function deleteMenuItem(string $menuId, string $itemId): JsonResponse
+    {
+        $menu = Menu::find($menuId);
+
+        if (!$menu) {
+            return $this->errorResponse('Menu not found.', 404);
+        }
+
+        $menuItem = MenuItem::where('menu_id', $menuId)
+            ->where('id', $itemId)
+            ->first();
+
+        if (!$menuItem) {
+            return $this->errorResponse('The dish was not found in the menu..', 404);
+        }
+
+        $menuItem->delete();
+
+        return $this->successResponse(null, 'The dish has been removed from the menu.');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/menus/{menuId}/available-dishes",
+     *     tags={"Menus"},
+     *     summary="Lấy danh sách món ăn chưa có trong menu",
+     *     description="Trả về danh sách các món ăn chưa xuất hiện trong menu để thêm mới",
+     *     @OA\Parameter(
+     *         name="menuId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu",
+     *         @OA\Schema(type="string", example="MN001")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách món ăn chưa có trong menu",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Danh sách món ăn chưa có trong menu."),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="string", example="D001"),
+     *                     @OA\Property(property="name", type="string", example="Cơm chiên hải sản"),
+     *                     @OA\Property(property="price", type="number", format="float", example=45000),
+     *                     @OA\Property(property="image", type="string", example="/uploads/dishes/com-chien.jpg")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Không tìm thấy menu"),
+     *     @OA\Response(response=500, description="Lỗi server")
+     * )
+     */
+    #[Get('/{menuId}/available-dishes', middleware: ['permission:table-sessions.view'])]
+    public function getAvailableDishes(string $menuId): JsonResponse
+    {
+        $menu = Menu::find($menuId);
+
+        if (!$menu) {
+            return $this->errorResponse('Menu not found.', 404);
+        }
+
+        $existingDishIds = MenuItem::where('menu_id', $menuId)
+            ->pluck('dish_id')
+            ->toArray();
+
+        // Lấy danh sách món ăn chưa có trong menu
+        $query = Dish::select('id', 'name', 'price', 'image');
+
+        if (!empty($existingDishIds)) {
+            $query->whereNotIn('id', $existingDishIds);
+        }
+
+        $availableDishes = $query->orderBy('name', 'asc')->get();
+
+        return $this->successResponse(
+            $availableDishes,
+            'Danh sách món ăn chưa có trong menu.'
+        );
     }
 }
