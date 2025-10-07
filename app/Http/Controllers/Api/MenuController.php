@@ -276,6 +276,82 @@ class MenuController extends Controller
     }
 
     /**
+     * @OA\Post(
+     *     path="/api/auth/menus/{menuId}/items",
+     *     tags={"Menus"},
+     *     summary="Thêm món ăn vào menu",
+     *     description="Tạo mới liên kết giữa menu và món ăn, không cho phép trùng món trong cùng menu",
+     *     @OA\Parameter(
+     *         name="menuId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"dish_id", "price"},
+     *             @OA\Property(property="dish_id", type="string", example="D001"),
+     *             @OA\Property(property="price", type="number", format="float", example=45000),
+     *             @OA\Property(property="notes", type="string", example="Món thêm topping trứng"),
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="Món ăn được thêm vào menu thành công"),
+     *     @OA\Response(response=400, description="Món đã tồn tại trong menu hoặc dữ liệu không hợp lệ"),
+     *     @OA\Response(response=404, description="Không tìm thấy menu hoặc món ăn")
+     * )
+     */
+    #[Post('/{menuId}/items', middleware: ['permission:table-sessions.create'])]
+    public function addMenuItem(Request $request, string $menuId): JsonResponse
+    {
+        $menu = Menu::find($menuId);
+
+        if (!$menu) {
+            return $this->errorResponse('Menu not found.', 404);
+        }
+
+        $validated = $request->validate([
+            'dish_id' => 'required|string|exists:dishes,id',
+            'price'   => 'required|numeric|min:0',
+            'notes'   => 'nullable|string|max:255',
+        ]);
+
+        // Kiểm tra món đã tồn tại trong menu chưa
+        $exists = MenuItem::where('menu_id', $menuId)
+            ->where('dish_id', $validated['dish_id'])
+            ->exists();
+
+        if ($exists) {
+            return $this->errorResponse('This dish already exists in the menu.', 400);
+        }
+
+        // Tạo mới menu item
+        $menuItem = MenuItem::create([
+            'menu_id' => $menuId,
+            'dish_id' => $validated['dish_id'],
+            'price'   => $validated['price'],
+            'notes'   => $validated['notes'] ?? null,
+        ]);
+
+        // Lấy lại kèm thông tin món
+        $menuItem->load('dish');
+
+        return $this->successResponse(
+            [
+                'id'         => $menuItem->id,
+                'dish_id'    => $menuItem->dish_id,
+                'dish_name'  => $menuItem->dish->name ?? null,
+                'price'      => $menuItem->price,
+                'notes'      => $menuItem->notes,
+                'dish_image' => $menuItem->dish->image ?? null,
+            ],
+            'Dish added to menu successfully.',
+            201
+        );
+    }
+
+    /**
      * @OA\Delete(
      *     path="/api/auth/menus/{menuId}/items/{itemId}",
      *     tags={"Menus"},
