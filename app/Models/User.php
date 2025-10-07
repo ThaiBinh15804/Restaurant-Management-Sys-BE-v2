@@ -68,6 +68,7 @@ class User extends BaseAuthenticatable implements JWTSubject
 
     protected $appends = [
         'status_label',
+        'name',
     ];
 
     /**
@@ -345,5 +346,31 @@ class User extends BaseAuthenticatable implements JWTSubject
             'role_id' => $this->role_id,
             'status' => $this->status,
         ];
+    }
+
+    /**
+     * Get the name based on related profile (customer or employee).
+     *
+     * @return string|null
+     */
+    public function getNameAttribute(): ?string
+    {
+        if ($this->relationLoaded('customerProfile') && $this->customerProfile) {
+            return $this->customerProfile->full_name ?? null;
+        }
+
+        if ($this->relationLoaded('employeeProfile') && $this->employeeProfile) {
+            return $this->employeeProfile->full_name ?? null;
+        }
+
+        if ($this->customerProfile()->exists()) {
+            return $this->customerProfile->full_name ?? null;
+        }
+
+        if ($this->employeeProfile()->exists()) {
+            return $this->employeeProfile->full_name ?? null;
+        }
+
+        return null;
     }
 }
