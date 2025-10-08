@@ -79,7 +79,7 @@ class UserController extends Controller
     {
         $perPage = $request->get('per_page');
 
-        $users = User::with('role')
+        $users = User::with(['role', 'customerProfile', 'employeeProfile'])
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 
@@ -130,7 +130,7 @@ class UserController extends Controller
     #[Get('/{id}', middleware: ['permission:users.view'])]
     public function show(string $id): JsonResponse
     {
-        $user = User::with('role')->find($id);
+        $user = User::with(['role', 'customerProfile', 'employeeProfile'])->find($id);
 
         if (!$user) {
             return $this->errorResponse(

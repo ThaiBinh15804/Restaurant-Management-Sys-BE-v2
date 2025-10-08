@@ -24,7 +24,7 @@ class CheckPermission
     {
         if (!Auth::check()) {
             return $this->errorResponse(
-                'Unauthenticated - Retry with valid credentials',
+                'Unauthenticated.',
                 [],
                 401
             );
