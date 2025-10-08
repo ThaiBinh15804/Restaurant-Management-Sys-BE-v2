@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 
 class SocialAuthService
 {
@@ -42,7 +43,6 @@ class SocialAuthService
      */
     public function handleGoogleCallback(): array
     {
-        // Log callback session info
         Log::info('Processing Google OAuth callback', [
             'session_id' => session()->getId(),
             'session_started' => session()->isStarted(),
@@ -50,14 +50,50 @@ class SocialAuthService
             'request_code' => request('code') ? 'present' : 'missing',
             'query_params' => request()->query(),
         ]);
-        
+
         DB::beginTransaction();
-        
+
         try {
-            // Get user info from Google
-            $googleUser = Socialite::driver('google')->user();
-            
-            if (!$googleUser || !$googleUser->getEmail()) {
+            // Tạo Guzzle client với cacert.pem
+            $client = new Client([
+                'verify' => 'C:/laragon/bin/php/php-8.3.16-Win32-vs16-x64/extras/ssl/cacert.pem'
+            ]);
+
+            // Lấy code từ query params
+            $code = request('code');
+            if (!$code) {
+                DB::rollBack();
+                return [
+                    'success' => false,
+                    'message' => 'Missing authorization code',
+                    'errors' => []
+                ];
+            }
+
+            // Gọi Google OAuth token endpoint thủ công
+            $response = $client->post('https://www.googleapis.com/oauth2/v4/token', [
+                'form_params' => [
+                    'code' => $code,
+                    'client_id' => config('services.google.client_id'),
+                    'client_secret' => config('services.google.client_secret'),
+                    'redirect_uri' => config('services.google.redirect'),
+                    'grant_type' => 'authorization_code',
+                ]
+            ]);
+
+            $tokenData = json_decode($response->getBody()->getContents(), true);
+
+            // Lấy thông tin người dùng từ Google
+            $userResponse = $client->get('https://www.googleapis.com/oauth2/v2/userinfo', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $tokenData['access_token']
+                ]
+            ]);
+
+            $googleUser = json_decode($userResponse->getBody()->getContents());
+
+            if (!$googleUser || !$googleUser->email) {
+                DB::rollBack();
                 return [
                     'success' => false,
                     'message' => 'Failed to get user information from Google',
@@ -65,12 +101,12 @@ class SocialAuthService
                 ];
             }
 
-            $existingUser = User::where('email', $googleUser->getEmail())->first();
-            
+            $existingUser = User::where('email', $googleUser->email)->first();
+
             if ($existingUser) {
-                $result = $this->loginExistingUser($existingUser, $googleUser);
+                $result = $this->loginExistingUser($existingUser, (object) $googleUser);
             } else {
-                $result = $this->registerNewUser($googleUser);
+                $result = $this->registerNewUser((object) $googleUser);
             }
 
             if ($result['success']) {
@@ -83,7 +119,7 @@ class SocialAuthService
 
         } catch (InvalidStateException $e) {
             DB::rollBack();
-            
+
             Log::warning('Google OAuth invalid state - regenerating session', [
                 'error' => $e->getMessage(),
                 'session_id' => session()->getId(),
@@ -101,7 +137,7 @@ class SocialAuthService
 
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Google OAuth callback failed', [
                 'error' => $e->getMessage()
             ]);
@@ -109,7 +145,7 @@ class SocialAuthService
             return [
                 'success' => false,
                 'message' => 'OAuth authentication failed. Please try again.',
-                'errors' => []
+                'errors' => [$e->getMessage()]
             ];
         }
     }
@@ -182,17 +218,17 @@ class SocialAuthService
 
             // Create new user
             $user = User::create([
-                'email' => $googleUser->getEmail(),
+                'email' => $googleUser->email,
                 'password' => bcrypt(uniqid()),
                 'status' => User::STATUS_ACTIVE,
                 'role_id' => $defaultRole?->id,
-                'avatar' => $googleUser->getAvatar(),
+                'avatar' => $googleUser->avatar ?? null,
                 'email_verified_at' => Carbon::now(),
             ]);
 
-            $customer = $user->customerProfile()->create([
-                'full_name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
-            ]);
+            // $customer = $user->customerProfile()->create([
+            //     'full_name' => $googleUser->getName() ?: $googleUser->getNickname() ?: 'Google User',
+            // ]);
 
             $tokenData = $this->jwtAuthService->generateTokenForUser($user);
             
@@ -245,7 +281,7 @@ class SocialAuthService
         $updates = [];
 
         if (!$user->avatar && $googleUser->getAvatar()) {
-            $updates['avatar'] = $googleUser->getAvatar();
+            $updates['avatar'] = $googleUser->getAvatar() ?? null;
         }
 
         if (!$user->email_verified_at) {

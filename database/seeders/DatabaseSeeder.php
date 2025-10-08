@@ -4,24 +4,31 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Role;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        $this->call(RolePermissionSeeder::class);
+        // Tạo người dùng mặc định trước
         $this->createDefaultUsers();
-        $this->call(EmployeeManagementSeeder::class);
+
+        // Gọi các seeder
+        $this->call([
+            RolePermissionSeeder::class,
+            EmployeeManagementSeeder::class,
+            DishCategorySeeder::class,
+            DishSeeder::class,
+            MenuSeeder::class,
+            MenuItemSeeder::class,
+            PromotionSeeder::class,
+            DiningTableSeeder::class,
+            ReservationSeeder::class,
+            ReviewSeeder::class,
+            NotificationSeeder::class,
+        ]);
     }
 
-    /**
-     * Create default users with roles
-     */
     private function createDefaultUsers(): void
     {
         $superAdminRole = Role::where('name', 'Super Administrator')->first();
