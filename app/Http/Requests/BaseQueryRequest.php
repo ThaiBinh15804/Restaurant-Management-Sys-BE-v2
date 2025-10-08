@@ -14,7 +14,7 @@ abstract class BaseQueryRequest extends FormRequest
     /**
      * Maximum number of records allowed per page.
      */
-    protected int $maxPerPage = 100;
+    protected int $maxPerPage = 9999;
 
     public function authorize(): bool
     {

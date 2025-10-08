@@ -53,7 +53,9 @@ class ShiftController extends Controller
     public function index(ShiftQueryRequest $request): JsonResponse
     {
         $filters = $request->filters();
-        $query = Shift::query()->orderBy('shift_date')->orderBy('start_time');
+        $query = Shift::query()
+            ->with('employeeAssignments')
+            ->orderBy('shift_date')->orderBy('start_time');
 
         if (!empty($filters['name'])) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');

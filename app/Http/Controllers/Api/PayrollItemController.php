@@ -171,6 +171,10 @@ class PayrollItemController extends Controller
         $data = $request->validated();
         $payroll = $item->payroll;
 
+        if ($payroll->status === Payroll::STATUS_PAID) {
+            return $this->errorResponse('Cannot update items for a finalized payroll', [], 422);
+        }
+
         DB::transaction(function () use ($item, $data, $payroll) {
             $item->update($data);
             $this->recalculatePayroll($payroll);
@@ -203,6 +207,10 @@ class PayrollItemController extends Controller
         }
 
         $payroll = $item->payroll;
+
+        if ($payroll->status === Payroll::STATUS_PAID) {
+            return $this->errorResponse('Cannot update items for a finalized payroll', [], 422);
+        }
 
         DB::transaction(function () use ($item, $payroll) {
             $item->delete();
