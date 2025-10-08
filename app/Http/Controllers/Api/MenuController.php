@@ -94,6 +94,72 @@ class MenuController extends Controller
     }
 
     /**
+     * @OA\Get(
+     *     path="/api/auth/menus/active/items",
+     *     tags={"Menus"},
+     *     summary="Lấy danh sách món ăn của menu đang hoạt động (is_active = 1)",
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách món ăn của menu đang được sử dụng",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="menu", type="object",
+     *                 @OA\Property(property="id", type="integer"),
+     *                 @OA\Property(property="name", type="string")
+     *             ),
+     *             @OA\Property(property="items", type="array",
+     *                 @OA\Items(
+     *                     @OA\Property(property="id", type="integer"),
+     *                     @OA\Property(property="menu_id", type="integer"),
+     *                     @OA\Property(property="dish_id", type="integer"),
+     *                     @OA\Property(property="dish_name", type="string"),
+     *                     @OA\Property(property="price_base", type="number", format="float"),
+     *                     @OA\Property(property="dish_image", type="string"),
+     *                     @OA\Property(property="price", type="number", format="float"),
+     *                     @OA\Property(property="notes", type="string")
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/active/items', middleware: ['permission:table-sessions.view'])]
+    public function getActiveMenuItems(): JsonResponse
+    {
+        // Lấy menu đang hoạt động
+        $menu = Menu::where('is_active', 1)->first();
+
+        // Nếu không có menu nào active thì trả về lỗi nhẹ
+        if (!$menu) {
+            return $this->errorResponse('Không có menu nào đang hoạt động.', 404);
+        }
+
+        // Lấy danh sách món trong menu đang hoạt động
+        $items = MenuItem::with('dish')
+            ->where('menu_id', $menu->id)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id'           => $item->id,
+                    'menu_id'      => $item->menu_id,
+                    'dish_id'      => $item->dish_id,
+                    'dish_name'    => $item->dish->name ?? null,
+                    'price_base'   => $item->dish->price ?? 0,
+                    'dish_image'   => $item->dish->image,
+                    'price'        => $item->price,
+                    'notes'        => $item->notes,
+                ];
+            });
+
+        return $this->successResponse([
+            'menu' => [
+                'id'   => $menu->id,
+                'name' => $menu->name,
+            ],
+            'items' => $items,
+        ], 'The list of dishes in the active menu was retrieved successfully.');
+    }
+
+    /**
      * @OA\Post(
      *     path="/api/auth/menus",
      *     tags={"Menus"},
@@ -250,7 +316,6 @@ class MenuController extends Controller
     {
         $menu = Menu::findOrFail($id);
 
-        // Eager load danh sách món ăn
         $items = MenuItem::with('dish') // nếu có quan hệ dish()
             ->where('menu_id', $menu->id)
             ->get()
@@ -260,9 +325,10 @@ class MenuController extends Controller
                     'menu_id'      => $item->menu_id,
                     'dish_id'      => $item->dish_id,
                     'dish_name'    => $item->dish->name ?? null,
+                    'price_base'   => $item->dish->price ?? 0,
+                    'dish_image'   => $item->dish->image,
                     'price'        => $item->price,
                     'notes'        => $item->notes,
-                    'dish_image'   => $item->dish->image,
                 ];
             });
 
@@ -348,6 +414,130 @@ class MenuController extends Controller
             ],
             'Dish added to menu successfully.',
             201
+        );
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/menus/{menuId}/items/{itemId}",
+     *     summary="Cập nhật món ăn trong menu",
+     *     description="Cập nhật thông tin món ăn (price, notes, dish_id) trong menu.",
+     *     operationId="updateMenuItem",
+     *     tags={"Menu Items"},
+     *     security={{"bearerAuth": {}}},
+     *
+     *     @OA\Parameter(
+     *         name="menuId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu chứa món ăn",
+     *         @OA\Schema(type="string", example="MN001")
+     *     ),
+     *     @OA\Parameter(
+     *         name="itemId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của menu item cần cập nhật",
+     *         @OA\Schema(type="string", example="MI001")
+     *     ),
+     *
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"dish_id", "price"},
+     *             @OA\Property(property="dish_id", type="string", example="D001", description="ID món ăn mới"),
+     *             @OA\Property(property="price", type="number", format="float", example=45000, description="Giá áp dụng trong menu"),
+     *             @OA\Property(property="notes", type="string", nullable=true, example="Món đặc biệt trong tuần", description="Ghi chú thêm"),
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Menu item updated successfully",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Menu item updated successfully."),
+     *             @OA\Property(property="data", type="object",
+     *                 @OA\Property(property="id", type="string", example="MI001"),
+     *                 @OA\Property(property="menu_id", type="string", example="MN001"),
+     *                 @OA\Property(property="dish_id", type="string", example="D001"),
+     *                 @OA\Property(property="dish_name", type="string", example="Cơm chiên hải sản"),
+     *                 @OA\Property(property="price", type="number", example=45000),
+     *                 @OA\Property(property="price_base", type="number", example=40000),
+     *                 @OA\Property(property="notes", type="string", example="Món đặc biệt trong tuần"),
+     *                 @OA\Property(property="dish_image", type="string", example="/uploads/dishes/comchien.jpg")
+     *             )
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=400,
+     *         description="This dish already exists in the menu."
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Menu or Menu Item not found."
+     *     ),
+     * )
+     */
+    #[Put('/{menuId}/items/{itemId}', middleware: ['permission:table-sessions.edit'])]
+    public function updateMenuItem(Request $request, string $menuId, string $itemId): JsonResponse
+    {
+        // Kiểm tra menu tồn tại
+        $menu = Menu::find($menuId);
+        if (!$menu) {
+            return $this->errorResponse('Menu not found.', 404);
+        }
+
+        // Kiểm tra item có thuộc menu đó không
+        $menuItem = MenuItem::where('menu_id', $menuId)
+            ->where('id', $itemId)
+            ->first();
+
+        if (!$menuItem) {
+            return $this->errorResponse('Menu item not found.', 404);
+        }
+
+        // Validate dữ liệu
+        $validated = $request->validate([
+            'dish_id' => 'required|string|exists:dishes,id',
+            'price'   => 'required|numeric|min:0',
+            'notes'   => 'nullable|string|max:255',
+        ]);
+
+        // Kiểm tra nếu dish_id thay đổi và trùng với món khác trong cùng menu
+        $exists = MenuItem::where('menu_id', $menuId)
+            ->where('dish_id', $validated['dish_id'])
+            ->where('id', '!=', $itemId)
+            ->exists();
+
+        if ($exists) {
+            return $this->errorResponse('This dish already exists in the menu.', 400);
+        }
+
+        // Cập nhật dữ liệu
+        $menuItem->update([
+            'dish_id' => $validated['dish_id'],
+            'price'   => $validated['price'],
+            'notes'   => $validated['notes'] ?? null,
+            'updated_at' => now(),
+        ]);
+
+        // Load lại thông tin món ăn
+        $menuItem->load('dish');
+
+        return $this->successResponse(
+            [
+                'id'          => $menuItem->id,
+                'menu_id'     => $menuItem->menu_id,
+                'dish_id'     => $menuItem->dish_id,
+                'dish_name'   => $menuItem->dish->name ?? null,
+                'price'       => $menuItem->price,
+                'notes'       => $menuItem->notes,
+                'dish_image'  => $menuItem->dish->image ?? null,
+                'price_base'  => $menuItem->dish->price ?? null, // thêm base price từ bảng dish
+            ],
+            'Menu item updated successfully.'
         );
     }
 

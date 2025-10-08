@@ -2886,6 +2886,74 @@
                 }
             }
         },
+        "/api/auth/menus/active/items": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Lấy danh sách món ăn của menu đang hoạt động (is_active = 1)",
+                "operationId": "6349eed18540fa4e11caa8a2f49b2bd3",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn của menu đang được sử dụng",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "menu": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "integer"
+                                                },
+                                                "name": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "items": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "menu_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "dish_id": {
+                                                        "type": "integer"
+                                                    },
+                                                    "dish_name": {
+                                                        "type": "string"
+                                                    },
+                                                    "price_base": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "dish_image": {
+                                                        "type": "string"
+                                                    },
+                                                    "price": {
+                                                        "type": "number",
+                                                        "format": "float"
+                                                    },
+                                                    "notes": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/auth/menus/{id}": {
             "put": {
                 "tags": [
@@ -3015,6 +3083,202 @@
                         }
                     }
                 }
+            }
+        },
+        "/api/auth/menus/{menuId}/items": {
+            "post": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Thêm món ăn vào menu",
+                "description": "Tạo mới liên kết giữa menu và món ăn, không cho phép trùng món trong cùng menu",
+                "operationId": "475774959570178836a7b6f50edf0ebe",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "ID của menu",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "dish_id",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "dish_id": {
+                                        "type": "string",
+                                        "example": "D001"
+                                    },
+                                    "price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 45000
+                                    },
+                                    "notes": {
+                                        "type": "string",
+                                        "example": "Món thêm topping trứng"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Món ăn được thêm vào menu thành công"
+                    },
+                    "400": {
+                        "description": "Món đã tồn tại trong menu hoặc dữ liệu không hợp lệ"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy menu hoặc món ăn"
+                    }
+                }
+            }
+        },
+        "/api/menus/{menuId}/items/{itemId}": {
+            "put": {
+                "tags": [
+                    "Menu Items"
+                ],
+                "summary": "Cập nhật món ăn trong menu",
+                "description": "Cập nhật thông tin món ăn (price, notes, dish_id) trong menu.",
+                "operationId": "updateMenuItem",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "ID của menu chứa món ăn",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MN001"
+                        }
+                    },
+                    {
+                        "name": "itemId",
+                        "in": "path",
+                        "description": "ID của menu item cần cập nhật",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "MI001"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "dish_id",
+                                    "price"
+                                ],
+                                "properties": {
+                                    "dish_id": {
+                                        "description": "ID món ăn mới",
+                                        "type": "string",
+                                        "example": "D001"
+                                    },
+                                    "price": {
+                                        "description": "Giá áp dụng trong menu",
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 45000
+                                    },
+                                    "notes": {
+                                        "description": "Ghi chú thêm",
+                                        "type": "string",
+                                        "example": "Món đặc biệt trong tuần",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Menu item updated successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Menu item updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "MI001"
+                                                },
+                                                "menu_id": {
+                                                    "type": "string",
+                                                    "example": "MN001"
+                                                },
+                                                "dish_id": {
+                                                    "type": "string",
+                                                    "example": "D001"
+                                                },
+                                                "dish_name": {
+                                                    "type": "string",
+                                                    "example": "Cơm chiên hải sản"
+                                                },
+                                                "price": {
+                                                    "type": "number",
+                                                    "example": 45000
+                                                },
+                                                "price_base": {
+                                                    "type": "number",
+                                                    "example": 40000
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Món đặc biệt trong tuần"
+                                                },
+                                                "dish_image": {
+                                                    "type": "string",
+                                                    "example": "/uploads/dishes/comchien.jpg"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "This dish already exists in the menu."
+                    },
+                    "404": {
+                        "description": "Menu or Menu Item not found."
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/auth/menus/{menuId}/items/{itemId}": {
@@ -3228,6 +3492,169 @@
                                         },
                                         "type": "object"
                                     }
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validate lỗi input"
+                    },
+                    "403": {
+                        "description": "Không có quyền"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/order-items/add-order": {
+            "post": {
+                "tags": [
+                    "Orders"
+                ],
+                "summary": "Thêm order mới cùng danh sách món",
+                "operationId": "de5ae79acb6085ba889e1d0039a8294e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "order_id",
+                                    "items"
+                                ],
+                                "properties": {
+                                    "order_id": {
+                                        "description": "ID của order",
+                                        "type": "string"
+                                    },
+                                    "items": {
+                                        "description": "Danh sách món ăn trong order",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "dish_id",
+                                                "name_dish",
+                                                "price",
+                                                "quantity"
+                                            ],
+                                            "properties": {
+                                                "dish_id": {
+                                                    "description": "ID món ăn",
+                                                    "type": "string"
+                                                },
+                                                "name_dish": {
+                                                    "description": "Tên món ăn",
+                                                    "type": "string"
+                                                },
+                                                "price": {
+                                                    "description": "Đơn giá món",
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "quantity": {
+                                                    "description": "Số lượng",
+                                                    "type": "integer"
+                                                },
+                                                "status": {
+                                                    "description": "Trạng thái món (0=Open,1=In-progress,2=Served,3=Cancelled)",
+                                                    "type": "integer",
+                                                    "enum": [
+                                                        0,
+                                                        1,
+                                                        2,
+                                                        3
+                                                    ],
+                                                    "nullable": true
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Order và các món đã được tạo thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "order": {
+                                                    "properties": {
+                                                        "id": {
+                                                            "type": "string"
+                                                        },
+                                                        "status": {
+                                                            "type": "integer"
+                                                        },
+                                                        "total_amount": {
+                                                            "type": "number",
+                                                            "format": "float"
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "items": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "description": "OrderItem ID",
+                                                                "type": "string"
+                                                            },
+                                                            "dish_id": {
+                                                                "type": "string"
+                                                            },
+                                                            "name_dish": {
+                                                                "type": "string"
+                                                            },
+                                                            "price": {
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "quantity": {
+                                                                "type": "integer"
+                                                            },
+                                                            "total_price": {
+                                                                "type": "number",
+                                                                "format": "float"
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "enum": [
+                                                                    0,
+                                                                    1,
+                                                                    2,
+                                                                    3
+                                                                ]
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Order và các món đã được tạo thành công."
+                                        }
+                                    },
+                                    "type": "object"
                                 }
                             }
                         }
@@ -4162,6 +4589,67 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/auth/reservations": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Lấy danh sách đặt bàn",
+                "operationId": "3dbf1fcc7d0f2bf1e7a3a5b7b9fbbe37",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Trang hiện tại",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Số item mỗi trang",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Trạng thái đặt bàn: 0=Pending, 1=Confirmed, 2=Cancelled, 3=Completed",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    },
+                    {
+                        "name": "customer_name",
+                        "in": "query",
+                        "description": "Tìm theo tên khách hàng (partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách reservations với thông tin customer"
+                    }
+                }
             }
         },
         "/api/roles": {
@@ -6219,8 +6707,20 @@
             "description": "Health"
         },
         {
+            "name": "Menu Items",
+            "description": "Menu Items"
+        },
+        {
             "name": "OrderItems",
             "description": "OrderItems"
+        },
+        {
+            "name": "Orders",
+            "description": "Orders"
+        },
+        {
+            "name": "Reservations",
+            "description": "Reservations"
         },
         {
             "name": "TableSessions",
