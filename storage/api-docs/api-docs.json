@@ -6250,82 +6250,6 @@
                 ]
             }
         },
-        "/api/auth/uploads/image-user": {
-            "post": {
-                "tags": [
-                    "Uploads"
-                ],
-                "summary": "Upload ảnh người dùng",
-                "operationId": "868d13584d4bb04fb848a7d468dac54b",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "file",
-                                    "user_id"
-                                ],
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "user_id": {
-                                        "type": "string",
-                                        "example": "123"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "User image uploaded successfully"
-                    }
-                }
-            }
-        },
-        "/api/auth/uploads/image-dish": {
-            "post": {
-                "tags": [
-                    "Uploads"
-                ],
-                "summary": "Upload ảnh món ăn",
-                "operationId": "585a37bc95366132d666ecebe6f11d53",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "multipart/form-data": {
-                            "schema": {
-                                "required": [
-                                    "file",
-                                    "dish_id"
-                                ],
-                                "properties": {
-                                    "file": {
-                                        "type": "string",
-                                        "format": "binary"
-                                    },
-                                    "dish_id": {
-                                        "type": "string",
-                                        "example": "45"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Dish image uploaded successfully"
-                    }
-                }
-            }
-        },
         "/api/users": {
             "get": {
                 "tags": [
@@ -6762,10 +6686,6 @@
         {
             "name": "TableSessions",
             "description": "TableSessions"
-        },
-        {
-            "name": "Uploads",
-            "description": "Uploads"
         }
     ]
 }
