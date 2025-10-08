@@ -97,14 +97,11 @@ class TableSessionController extends Controller
                 case 'active':
                     $query->where('ts.status', 1);
                     break;
-                case 'paying':
+                case 'completed':
                     $query->where('ts.status', 2);
                     break;
-                case 'completed':
-                    $query->where('ts.status', 3);
-                    break;
                 case 'cancelled':
-                    $query->where('ts.status', 4);
+                    $query->where('ts.status', 3);
                     break;
             }
         }
@@ -435,7 +432,7 @@ class TableSessionController extends Controller
             ->leftJoin('reservations as r', 'r.id', '=', 'tsr.reservation_id')
             ->leftJoin('customers as c', 'c.id', '=', 'r.customer_id') // join thêm bảng customer
             ->where('dt.id', $idDiningTable)
-            ->whereIn('ts.status', [3, 4]) // chỉ lấy Completed / Cancelled
+            ->whereIn('ts.status', [2, 3]) // chỉ lấy Completed / Cancelled
             ->select(
                 'dt.id as dining_table_id',
                 'dt.table_number',
@@ -554,7 +551,7 @@ class TableSessionController extends Controller
             ->leftJoin('dishes as d', 'd.id', '=', 'oi.dish_id')
             ->where('dt.id', $idDiningTable)
             ->where('ts.id', $sessionId)
-            ->whereIn('ts.status', [3, 4])
+            ->whereIn('ts.status', [2, 3])
             ->select(
                 'dt.id as dining_table_id',
                 'dt.table_number',
