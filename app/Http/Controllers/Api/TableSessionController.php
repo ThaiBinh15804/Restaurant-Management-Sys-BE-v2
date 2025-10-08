@@ -106,24 +106,10 @@ class TableSessionController extends Controller
             }
         }
 
-        // Phân trang
-        $paginator = $query->paginate(
-            $request->perPage(),
-            ['*'],
-            'page',
-            $request->page()
-        );
-        $paginator->withQueryString();
+        $perPage = $request->perPage();
+        $paginator = $query->paginate($perPage);
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta'  => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-            ],
-        ], 'Table sessions retrieved successfully');
+        return $this->successResponse($paginator, 'Table sessions retrieved successfully');
     }
 
     /**

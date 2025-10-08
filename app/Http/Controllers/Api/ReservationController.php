@@ -82,18 +82,10 @@ class ReservationController extends Controller
             $query->where('status', $filters['status']);
         }
 
+        $perPage = $request->perPage();
         $paginator = $query->orderBy('reserved_at', 'desc')
-            ->paginate($request->perPage(), ['*'], 'page', $request->page());
-        $paginator->withQueryString();
+            ->paginate($perPage);
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-            ],
-        ], 'Reservations retrieved successfully');
+        return $this->successResponse($paginator, 'Reservations retrieved successfully');
     }
 }

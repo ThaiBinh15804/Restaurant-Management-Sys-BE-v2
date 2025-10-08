@@ -102,24 +102,12 @@ class DishCategoryController extends Controller
             $query->where('desc', 'like', '%' . $filters['desc'] . '%');
         }
 
-        // ⚙️ Phân trang từ BaseQueryRequest
+        $perPage = $request->perPage();
         $paginator = $query->paginate(
-            $request->perPage(),
-            ['*'],
-            'page',
-            $request->page()
+            $perPage
         );
-        $paginator->withQueryString();
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-            ],
-        ], 'Dish categories retrieved successfully');
+        return $this->successResponse($paginator, 'Dish categories retrieved successfully');
     }
 
     /**
