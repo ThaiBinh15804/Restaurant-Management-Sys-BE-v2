@@ -46,7 +46,7 @@ class JWTAuthService
         return [
             'user' => $user->load('role'),
             'access_token' => $accessToken,
-            'token_type' => 'Bearer', 
+            'token_type' => 'Bearer',
             'expires_in' => self::ACCESS_TOKEN_TTL * 60,
         ];
     }
@@ -314,7 +314,7 @@ class JWTAuthService
     private function setRefreshTokenCookie(string $token): void
     {
         $minutes = self::REFRESH_TOKEN_TTL * 24 * 60; // Convert days to minutes
-        
+
         cookie()->queue(
             self::REFRESH_COOKIE_NAME,
             $token,

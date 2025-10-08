@@ -16,7 +16,6 @@ use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Get;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Patch;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Prefix;
@@ -251,8 +250,8 @@ class EmployeeController extends Controller
      *             @OA\Property(property="contract_type", type="integer", enum={0, 1}, example=0, description="0: Full-time, 1: Part-time"),
      *             @OA\Property(property="base_salary", type="number", format="float", example=2500.00),
      *             @OA\Property(property="hire_date", type="string", format="date", example="2025-01-01"),
-     *             @OA\Property(property="is_active", type="boolean", example=true),    
-     * 
+     *             @OA\Property(property="is_active", type="boolean", example=true),
+     *
      *             @OA\Property(property="email", type="string", format="email", example="john.updated@restaurant.com", description="Update user email"),
      *             @OA\Property(property="password", type="string", format="password", example="newpassword123", description="Update user password (optional)"),
      *             @OA\Property(property="password_confirmation", type="string", format="password", example="newpassword123"),
