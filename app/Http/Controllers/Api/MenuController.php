@@ -635,7 +635,7 @@ class MenuController extends Controller
             ->toArray();
 
         // Lấy danh sách món ăn chưa có trong menu
-        $query = Dish::select('id', 'name', 'price', 'image');
+        $query = Dish::select('id', 'name', 'price', 'image')->where("is_active", 1);
 
         if (!empty($existingDishIds)) {
             $query->whereNotIn('id', $existingDishIds);

@@ -663,7 +663,7 @@ class TableSessionController extends Controller
             ->leftJoin('dishes as d', 'd.id', '=', 'oi.dish_id')
             ->where('dt.id', $idDiningTable)
             ->where('ts.id', $sessionId)
-            ->whereIn('ts.status', [2, 3])
+            ->whereIn('ts.status', [0, 2, 3])
             ->select(
                 'dt.id as dining_table_id',
                 'dt.table_number',

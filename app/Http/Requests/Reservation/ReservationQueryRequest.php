@@ -9,17 +9,18 @@ class ReservationQueryRequest extends BaseQueryRequest
     protected function queryRules(): array
     {
         return [
-            'status'  => ['sometimes', 'boolean'],
+            'customer_name' => ['sometimes', 'string', 'max:255'],
+            'customer_phone' => ['sometimes', 'string', 'max:11'],
+            'reserved_at' => ['sometimes', 'date_format:Y-m-d H:i:s'],
         ];
     }
 
-    /**
-     * Trả về danh sách filter hợp lệ từ request query.
-     */
     public function filters(): array
     {
-        return [
-            'status'  => $this->query('is_active', null),
-        ];
+        return $this->safe()->only([
+            'customer_name',
+            'customer_phone',
+            'reserved_at',
+        ]);
     }
 }
