@@ -73,24 +73,13 @@ class MenuController extends Controller
             $query->where('is_active', $filters['is_active']);
         }
 
+        $perPage = $request->perPage();
         $paginator = $query->orderBy('created_at', 'desc')
             ->paginate(
-                $request->perPage(),
-                ['*'],
-                'page',
-                $request->page()
+                $perPage
             );
-        $paginator->withQueryString();
 
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-            ],
-        ], 'Menus retrieved successfully');
+        return $this->successResponse($paginator, 'Menus retrieved successfully');
     }
 
     /**

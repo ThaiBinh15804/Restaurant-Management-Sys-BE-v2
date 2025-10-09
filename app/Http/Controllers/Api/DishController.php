@@ -85,24 +85,12 @@ class DishController extends Controller
             $query->where('price', '<=', $filters['max_price']);
         }
 
+        $perPage = $request->perPage();
         $paginator = $query->paginate(
-            $request->perPage(),
-            ['*'],
-            'page',
-            $request->page()
+            $perPage
         );
 
-        $paginator->withQueryString();
-
-        return $this->successResponse([
-            'items' => $paginator->items(),
-            'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-            ],
-        ], 'Dishes retrieved successfully');
+        return $this->successResponse($paginator, 'Dishes retrieved successfully');
     }
 
 
