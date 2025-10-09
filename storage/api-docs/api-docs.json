@@ -1950,6 +1950,32 @@
                 }
             }
         },
+        "/api/auth/dishes/popular": {
+            "get": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Lấy danh sách món ăn phổ biến nhất",
+                "operationId": "fcd50a3a0e381ebb1bf444a0e9b13e0b",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Số lượng món ăn trả về",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn phổ biến"
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -2365,6 +2391,25 @@
                     },
                     "404": {
                         "description": "Employee not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees/chefs": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Lấy danh sách nhân viên là chef",
+                "operationId": "fe07e8aff1a46b575629eebb19f09b25",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách chef"
                     }
                 },
                 "security": [
@@ -3405,6 +3450,71 @@
                         "description": "Lỗi server"
                     }
                 }
+            }
+        },
+        "/api/active/categories": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Get active menu categories with dishes",
+                "description": "Retrieve dish categories with up to 4 active dishes from the current menu",
+                "operationId": "8daaad933e8961f9aa944f8282fc55ef",
+                "parameters": [
+                    {
+                        "name": "menu_id",
+                        "in": "query",
+                        "description": "Filter by specific menu ID (optional)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit_dishes",
+                        "in": "query",
+                        "description": "Limit number of dishes per category (default: 4)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    },
+                    {
+                        "name": "category_name",
+                        "in": "query",
+                        "description": "Filter categories by name (optional, supports partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Món chính"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status of category (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Categories with dishes retrieved successfully"
+                    },
+                    "404": {
+                        "description": "No menu found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/auth/order-items/status": {
@@ -5668,6 +5778,100 @@
                 ]
             }
         },
+        "/api/home/statistics": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Get general statistics",
+                "description": "Retrieve general statistics for the restaurant system including counts of employees, customers, orders, reservations, active table sessions, and total revenue.",
+                "operationId": "1d46bb15f17b3d671bc95d65eedaa346",
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statistics retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_employees": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "total_customers": {
+                                                    "type": "integer",
+                                                    "example": 200
+                                                },
+                                                "total_orders": {
+                                                    "type": "integer",
+                                                    "example": 1000
+                                                },
+                                                "total_reservations": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "active_table_sessions": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total_revenue": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve statistics"
+                                        },
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": []
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/table-sessions": {
             "get": {
                 "tags": [
@@ -6069,7 +6273,7 @@
                 ]
             }
         },
-        "/api/dining-tables/{idDiningTable}/session-history": {
+        "/api/table-sessions/{idDiningTable}/session-history": {
             "get": {
                 "tags": [
                     "DiningTables"
@@ -6166,6 +6370,117 @@
                     },
                     "404": {
                         "description": "Không tìm thấy lịch sử phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions/{idDiningTable}/session-pending": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Lấy các phiên bàn đang chờ theo Dining Table",
+                "description": "Trả về danh sách các phiên bàn có trạng thái đang chờ (status = 0), kèm thông tin reservation nếu có",
+                "operationId": "getActiveTableSessions",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của dining table",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active sessions retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "session_id": {
+                                                "type": "string"
+                                            },
+                                            "table_id": {
+                                                "type": "string"
+                                            },
+                                            "table_number": {
+                                                "type": "string"
+                                            },
+                                            "session_type": {
+                                                "description": "0-Offline,1-Merge,2-Reservation,3-Split",
+                                                "type": "integer"
+                                            },
+                                            "session_status": {
+                                                "description": "0-Active",
+                                                "type": "integer"
+                                            },
+                                            "started_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "customer_id": {
+                                                "type": "string"
+                                            },
+                                            "employee_id": {
+                                                "type": "string"
+                                            },
+                                            "reservation": {
+                                                "properties": {
+                                                    "reservation_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "reservation_customer_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "reservation_time": {
+                                                        "type": "string",
+                                                        "format": "date-time"
+                                                    },
+                                                    "number_of_people": {
+                                                        "type": "integer"
+                                                    },
+                                                    "reservation_status": {
+                                                        "description": "0-Pending,1-Confirmed,...",
+                                                        "type": "integer"
+                                                    },
+                                                    "notes": {
+                                                        "type": "string",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy phiên bàn đang hoạt động",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6658,6 +6973,10 @@
         {
             "name": "Shifts",
             "description": "API Endpoints for Shift Management"
+        },
+        {
+            "name": "Statistics",
+            "description": "API Endpoints for General Statistics"
         },
         {
             "name": "Users",

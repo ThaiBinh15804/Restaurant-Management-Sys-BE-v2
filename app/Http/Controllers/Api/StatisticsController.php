@@ -31,7 +31,9 @@ class StatisticsController extends Controller
      *     path="/api/home/statistics",
      *     tags={"Statistics"},
      *     summary="Get general statistics",
-     *     description="Retrieve general statistics for the restaurant system including counts of employees, customers, orders, reservations, and active table sessions",
+     *     description="Retrieve general statistics for the restaurant system including counts of employees, customers, orders, reservations, active table sessions, and total revenue.",
+     *     security={{"bearerAuth":{}}},
+     *
      *     @OA\Response(
      *         response=200,
      *         description="Statistics retrieved successfully",
@@ -50,13 +52,19 @@ class StatisticsController extends Controller
      *             )
      *         )
      *     ),
+     *
      *     @OA\Response(
      *         response=500,
      *         description="Failed to retrieve statistics",
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="error"),
      *             @OA\Property(property="message", type="string", example="Failed to retrieve statistics"),
-     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example=[])
+     *             @OA\Property(
+     *                 property="errors",
+     *                 type="array",
+     *                 @OA\Items(type="string"),
+     *                 example={}
+     *             )
      *         )
      *     )
      * )
@@ -69,7 +77,7 @@ class StatisticsController extends Controller
                 'total_customers' => Customer::count(),
                 'total_orders' => Order::count(),
                 'total_reservations' => Reservation::count(),
-                'active_table_sessions' => TableSession::where('status', 1)->count(), 
+                'active_table_sessions' => TableSession::where('status', 1)->count(),
             ];
 
             return $this->successResponse($statistics, 'Statistics retrieved successfully');

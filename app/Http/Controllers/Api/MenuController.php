@@ -657,33 +657,37 @@ class MenuController extends Controller
      *     summary="Get active menu categories with dishes",
      *     description="Retrieve dish categories with up to 4 active dishes from the current menu",
      *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Menu categories retrieved successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Danh mục và món ăn trong menu active"),
-     *             @OA\Property(property="data", type="array", @OA\Items(
-     *                 @OA\Property(property="id", type="string"),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="desc", type="string"),
-     *                 @OA\Property(property="dishes", type="array", @OA\Items(
-     *                     @OA\Property(property="id", type="string"),
-     *                     @OA\Property(property="name", type="string"),
-     *                     @OA\Property(property="price", type="number", format="float")
-     *                 ))
-     *             ))
-     *         )
+     *
+     *     @OA\Parameter(
+     *         name="menu_id",
+     *         in="query",
+     *         description="Filter by specific menu ID (optional)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
      *     ),
-     *     @OA\Response(
-     *         response=404,
-     *         description="No active menu found",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="error"),
-     *             @OA\Property(property="message", type="string", example="Không có menu nào đang hoạt động."),
-     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example=[])
-     *         )
-     *     )
+     *     @OA\Parameter(
+     *         name="limit_dishes",
+     *         in="query",
+     *         description="Limit number of dishes per category (default: 4)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=4)
+     *     ),
+     *     @OA\Parameter(
+     *         name="category_name",
+     *         in="query",
+     *         description="Filter categories by name (optional, supports partial match)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Món chính")
+     *     ),
+     *     @OA\Parameter(
+     *         name="is_active",
+     *         in="query",
+     *         description="Filter by active status of category (true/false)",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Response(response=200, description="Categories with dishes retrieved successfully"),
+     *     @OA\Response(response=404, description="No menu found")
      * )
      */
     #[Get('/active/categories', middleware: ['permission:table-sessions.view'])]
@@ -697,11 +701,11 @@ class MenuController extends Controller
         $categories = DishCategory::whereHas('dishes', function ($q) use ($dishIds) {
             $q->whereIn('id', $dishIds)->where('is_active', true);
         })
-        ->with(['dishes' => function ($q) use ($dishIds) {
-            $q->whereIn('id', $dishIds)
-            ->take(4);
-        }])
-        ->get();
+            ->with(['dishes' => function ($q) use ($dishIds) {
+                $q->whereIn('id', $dishIds)
+                    ->take(4);
+            }])
+            ->get();
 
         return $this->successResponse($categories, 'Danh mục và món ăn trong menu active');
     }
