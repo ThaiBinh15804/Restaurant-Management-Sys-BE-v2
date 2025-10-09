@@ -56,7 +56,7 @@ class StatisticsController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="error"),
      *             @OA\Property(property="message", type="string", example="Failed to retrieve statistics"),
-     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example=[])
+     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example={})
      *         )
      *     )
      * )

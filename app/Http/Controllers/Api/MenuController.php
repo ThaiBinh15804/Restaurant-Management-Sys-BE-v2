@@ -681,7 +681,7 @@ class MenuController extends Controller
      *         @OA\JsonContent(
      *             @OA\Property(property="status", type="string", example="error"),
      *             @OA\Property(property="message", type="string", example="Không có menu nào đang hoạt động."),
-     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example=[])
+     *             @OA\Property(property="errors", type="array", @OA\Items(type="string"), example={})
      *         )
      *     )
      * )
