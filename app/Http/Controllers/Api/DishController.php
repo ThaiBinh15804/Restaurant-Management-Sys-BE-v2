@@ -199,4 +199,36 @@ class DishController extends Controller
 
         return $this->successResponse(null, 'Deleted dish successfully.');
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/dishes/popular",
+     *     tags={"Dishes"},
+     *     summary="Lấy danh sách món ăn phổ biến nhất",
+     *     @OA\Parameter(
+     *         name="limit",
+     *         in="query",
+     *         required=false,
+     *         description="Số lượng món ăn trả về",
+     *         @OA\Schema(type="integer", default=5)
+     *     ),
+     *     @OA\Response(response=200, description="Danh sách món ăn phổ biến")
+     * )
+     */
+    #[Get('/popular', middleware: ['permission:table-sessions.view'])]
+    public function popular(Request $request): JsonResponse
+    {
+        $limit = $request->query('limit', 5);
+
+        $popularDishes = Dish::with('category')
+            ->select('dishes.*')
+            ->leftJoin('order_items', 'dishes.id', '=', 'order_items.dish_id')
+            ->selectRaw('COUNT(order_items.id) as order_count')
+            ->groupBy('dishes.id')
+            ->orderByDesc('order_count')
+            ->limit($limit)
+            ->get();
+
+        return $this->successResponse($popularDishes, 'Popular dishes retrieved successfully');
+    }
 }

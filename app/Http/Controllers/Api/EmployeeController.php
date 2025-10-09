@@ -399,4 +399,34 @@ class EmployeeController extends Controller
 
         return $this->successResponse([], 'Employee deleted successfully');
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/employees/chefs",
+     *     tags={"Employees"},
+     *     summary="Lấy danh sách nhân viên là chef",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Danh sách chef")
+     * )
+     */
+    #[Get('/find/chefs', middleware: 'permission:employees.view')]
+    public function chefs(): JsonResponse
+    {
+        $chefs = Employee::whereHas('user.role', function ($q) {
+            $q->where('name', 'Kitchen Staff');
+        })
+        ->where('is_active', true)
+        ->with(['user.role'])
+        ->get();
+
+        if ($chefs->isEmpty()) {
+            return $this->errorResponse(
+                'Không tìm thấy nhân viên nào có vai trò Kitchen Staff',
+                [],
+                404
+            );
+        }
+
+        return $this->successResponse($chefs, 'Danh sách chef');
+    }
 }

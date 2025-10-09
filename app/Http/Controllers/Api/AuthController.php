@@ -470,7 +470,7 @@ class AuthController extends BaseController
      * )
      */
     #[Get('verify-email')]
-    public function verifyEmail(Request $request): JsonResponse
+    public function verifyEmail(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'token' => 'required|string|size:64',
@@ -487,17 +487,10 @@ class AuthController extends BaseController
         $result = $this->registrationService->completeRegistration($request->token);
 
         if ($result['success']) {
-            return $this->successResponse(
-                $result['data'],
-                $result['message']
-            );
+        return redirect('http://localhost:4200/login?verify=success');
+        } else {
+            return redirect('http://localhost:4200/login?verify=fail');
         }
-
-        return $this->errorResponse(
-            $result['message'],
-            $result['errors'],
-            400
-        );
     }
 
     /**
