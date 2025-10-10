@@ -1050,13 +1050,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Customers"
                 ],
                 "summary": "Update customer and user account",
-                "description": "Update customer profile and optionally update their user account (email, password)",
-                "operationId": "32da1527afa82d1a6b0e034146f1032d",
+                "description": "Update customer profile and optionally update their user avatar. Note: Use POST method with _method=PUT for file upload support.",
+                "operationId": "9029a480cd57e68ed657f037e3b5cbe6",
                 "parameters": [
                     {
                         "name": "id",
@@ -1071,33 +1071,44 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "full_name": {
+                                        "description": "Full name of the customer",
                                         "type": "string",
-                                        "example": "Jane Doe Updated"
+                                        "example": ""
                                     },
                                     "phone": {
+                                        "description": "Customer phone number",
                                         "type": "string",
-                                        "example": "0987654321"
+                                        "example": ""
                                     },
                                     "gender": {
+                                        "description": "Gender: male, female, or other",
                                         "type": "string",
                                         "enum": [
                                             "male",
                                             "female",
                                             "other"
                                         ],
-                                        "example": "female"
+                                        "example": ""
                                     },
                                     "address": {
+                                        "description": "Customer address",
                                         "type": "string",
-                                        "example": "456 Customer Ave"
+                                        "example": ""
                                     },
                                     "membership_level": {
+                                        "description": "1=Bronze, 2=Silver, 3=Gold, 4=Titanium",
                                         "type": "integer",
-                                        "example": 2
+                                        "example": ""
+                                    },
+                                    "avatar": {
+                                        "description": "Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": ""
                                     }
                                 },
                                 "type": "object"
@@ -2204,13 +2215,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Employees"
                 ],
                 "summary": "Update employee and user account",
-                "description": "Update employee information and optionally update their user account (email, password, role)",
-                "operationId": "55e1ceec679a0d1436c869735e984a83",
+                "description": "Update employee information and optionally update their user account (email, password, role, avatar). Note: Use POST method with _method=PUT for file upload support.",
+                "operationId": "bf70e7f9f8541ec0297cbc20e0f5de92",
                 "parameters": [
                     {
                         "name": "id",
@@ -2225,28 +2236,29 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "full_name": {
                                         "type": "string",
-                                        "example": "John Smith Updated"
+                                        "example": ""
                                     },
                                     "phone": {
                                         "type": "string",
-                                        "example": "0123456789"
+                                        "example": ""
                                     },
                                     "gender": {
+                                        "description": "male|female|other",
                                         "type": "string",
-                                        "example": "male|female|other"
+                                        "example": ""
                                     },
                                     "address": {
                                         "type": "string",
-                                        "example": "123 Main St"
+                                        "example": ""
                                     },
                                     "bank_account": {
                                         "type": "string",
-                                        "example": "1234567890"
+                                        "example": ""
                                     },
                                     "contract_type": {
                                         "description": "0: Full-time, 1: Part-time",
@@ -2255,43 +2267,49 @@
                                             0,
                                             1
                                         ],
-                                        "example": 0
+                                        "example": ""
                                     },
                                     "base_salary": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 2500
+                                        "example": ""
                                     },
                                     "hire_date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2025-01-01"
+                                        "example": ""
                                     },
                                     "is_active": {
                                         "type": "boolean",
-                                        "example": true
+                                        "example": ""
                                     },
                                     "email": {
                                         "description": "Update user email",
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john.updated@restaurant.com"
+                                        "example": ""
                                     },
                                     "password": {
                                         "description": "Update user password (optional)",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "newpassword123"
+                                        "example": ""
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "newpassword123"
+                                        "example": ""
                                     },
                                     "role_id": {
                                         "description": "Update user role",
                                         "type": "string",
-                                        "example": "R-123456"
+                                        "example": ""
+                                    },
+                                    "avatar": {
+                                        "description": "Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": ""
                                     }
                                 },
                                 "type": "object"
@@ -2305,6 +2323,9 @@
                     },
                     "404": {
                         "description": "Employee not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
