@@ -47,6 +47,7 @@ class EmployeeController extends Controller
      *     @OA\Parameter(name="gender", in="query", description="Filter by gender", @OA\Schema(type="string")),
      *     @OA\Parameter(name="hire_date_from", in="query", description="Filter hire date from", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="hire_date_to", in="query", description="Filter hire date to", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="role_id", in="query", description="Role of user", @OA\Schema(type="string")),
      *     @OA\Response(
      *         response=200,
      *         description="Employees retrieved successfully"
@@ -90,6 +91,13 @@ class EmployeeController extends Controller
                 $filters['hire_date_to'] ?? null,
                 fn($q, $v) =>
                 $q->whereDate('hire_date', '<=', $v)
+            )
+            ->when(
+                $filters['role_id'] ?? null,
+                fn($q, $v) =>
+                $q->whereHas('user.role', function ($q) use ($v) {
+                    $q->where('id', $v);
+                })
             );
 
         $perPage = $request->perPage();

@@ -72,6 +72,10 @@ class User extends BaseAuthenticatable implements JWTSubject
         'name',
     ];
 
+    protected $with = [
+        'role',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
