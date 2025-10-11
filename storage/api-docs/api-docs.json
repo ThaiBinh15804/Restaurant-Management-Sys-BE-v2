@@ -5194,14 +5194,16 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/roles/{id}/permissions/assign": {
             "post": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Assign permissions to role",
                 "description": "Assign specific permissions to a role",
-                "operationId": "849c3c1071e3590a96bdbae84f270ad8",
+                "operationId": "3e4cb53e8477be2493197b59abe12a10",
                 "parameters": [
                     {
                         "name": "id",
@@ -5271,14 +5273,16 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/roles/{id}/permissions/remove": {
             "delete": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Remove permissions from role",
                 "description": "Remove specific permissions from a role",
-                "operationId": "561b6573b056efff67165c59238b0a4e",
+                "operationId": "ce5c9cb38d00637b2c8a4ea18f7ac5ee",
                 "parameters": [
                     {
                         "name": "id",
