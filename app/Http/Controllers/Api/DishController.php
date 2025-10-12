@@ -21,12 +21,12 @@ use Spatie\RouteAttributes\Attributes\Put;
  *     description="API Endpoints for Dish Management"
  * )
  */
-#[Prefix('auth/dishes')]
+#[Prefix('dishes')]
 class DishController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/auth/dishes",
+     *     path="/api/dishes",
      *     tags={"Dishes"},
      *     summary="Lấy danh sách món ăn",
      *     @OA\Parameter(
@@ -93,10 +93,9 @@ class DishController extends Controller
         return $this->successResponse($paginator, 'Dishes retrieved successfully');
     }
 
-
     /**
      * @OA\Post(
-     *     path="/api/auth/dishes",
+     *     path="/api/dishes",
      *     tags={"Dishes"},
      *     summary="Tạo mới món ăn",
      *     @OA\RequestBody(
@@ -133,7 +132,7 @@ class DishController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/auth/dishes/{id}",
+     *     path="/api/dishes/{id}",
      *     tags={"Dishes"},
      *     summary="Cập nhật món ăn",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
@@ -174,7 +173,7 @@ class DishController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/auth/dishes/{id}",
+     *     path="/api/dishes/{id}",
      *     tags={"Dishes"},
      *     summary="Xóa món ăn",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),

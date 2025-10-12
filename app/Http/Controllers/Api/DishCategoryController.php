@@ -21,12 +21,12 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for Dish Category Management"
  * )
  */
-#[Prefix('auth/dish-categories')]
+#[Prefix('dish-categories')]
 class DishCategoryController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/auth/dish-categories",
+     *     path="/api/dish-categories",
      *     tags={"DishCategories"},
      *     summary="Get all dish categories",
      *     description="Retrieve all dish categories with pagination and optional search by name",
@@ -112,7 +112,7 @@ class DishCategoryController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/dish-categories",
+     *     path="/api/dish-categories",
      *     tags={"DishCategories"},
      *     summary="Create new dish category",
      *     description="Create a new dish category",
@@ -148,7 +148,7 @@ class DishCategoryController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/auth/dish-categories/{id}",
+     *     path="/api/dish-categories/{id}",
      *     tags={"DishCategories"},
      *     summary="Update dish category",
      *     description="Update an existing dish category",
@@ -196,7 +196,7 @@ class DishCategoryController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/auth/dish-categories/{id}",
+     *     path="/api/dish-categories/{id}",
      *     tags={"DishCategories"},
      *     summary="Delete dish category",
      *     description="Delete a dish category. If any dishes are linked, deletion is prevented.",
@@ -237,7 +237,7 @@ class DishCategoryController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/auth/dish-categories/get-name-list-dish-category",
+     *     path="/api/dish-categories/get-name-list-dish-category",
      *     tags={"DishCategories"},
      *     summary="Lấy danh sách tên danh mục món ăn",
      *     description="Trả về danh sách {id, name} của các danh mục món ăn",

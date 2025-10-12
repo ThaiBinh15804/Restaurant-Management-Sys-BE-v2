@@ -20,12 +20,12 @@ use Illuminate\Http\Request;
  *     description="API Endpoints for Reservation Management"
  * )
  */
-#[Prefix('auth/reservations')]
+#[Prefix('reservations')]
 class ReservationController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/auth/reservations",
+     *     path="/api/reservations",
      *     tags={"Reservations"},
      *     summary="Lấy danh sách đặt bàn",
      *     @OA\Parameter(
@@ -97,16 +97,14 @@ class ReservationController extends Controller
             $query->where('reserved_at', '=', $filters['reserved_at']);
         }
 
-        $perPage = $request->perPage();
-        $paginator = $query->orderBy('reserved_at', 'desc')
-            ->paginate($perPage);
+        $reservations = $query->orderBy('reserved_at', 'desc')->get();
 
-        return $this->successResponse($paginator, 'Reservations retrieved successfully');
+        return $this->successResponse($reservations, 'Reservations retrieved successfully');
     }
 
     /**
      * @OA\Put(
-     *     path="/api/auth/reservations/{id}/status",
+     *     path="/api/reservations/{id}/status",
      *     tags={"Reservations"},
      *     summary="Cập nhật trạng thái đặt bàn",
      *     description="Cho phép admin hoặc nhân viên có quyền thay đổi trạng thái của một đặt bàn (Pending, Confirmed, Cancelled, Completed)",
@@ -159,8 +157,8 @@ class ReservationController extends Controller
      *     )
      * )
      */
-    #[Put('/{id}/status', middleware: ['permission:reservations.edit'])]
-    public function updateStatus(string $id, Request $request): JsonResponse
+    #[Put('/{id}', middleware: ['permission:reservations.edit'])]
+    public function update(string $id, Request $request): JsonResponse
     {
         $reservation = Reservation::find($id);
 
@@ -168,23 +166,29 @@ class ReservationController extends Controller
             return $this->errorResponse('Reservation not found.', 404);
         }
 
+        // Validate linh hoạt: chỉ validate field nào có gửi xuống
         $validated = $request->validate([
-            'status' => 'required|integer|in:1,2,3',
+            'status' => 'sometimes|integer|in:1,2,3',
+            'reserved_at' => 'sometimes|date',
+            'number_of_people' => 'sometimes|integer|min:1',
         ]);
 
-        // Cập nhật trạng thái & ghi chú
-        $reservation->status = $validated['status'];
+        // Cập nhật các field có trong request
+        foreach ($validated as $key => $value) {
+            $reservation->$key = $value;
+        }
+
         $reservation->save();
 
         return $this->successResponse(
             $reservation,
-            'Reservation status updated successfully.'
+            'Reservation updated successfully.'
         );
     }
 
     /**
      * @OA\Get(
-     *     path="/api/auth/reservations/check-assigned-tables",
+     *     path="/api/reservations/check-assigned-tables",
      *     tags={"Reservations"},
      *     summary="Kiểm tra các đặt bàn đã được xếp bàn hay chưa",
      *     description="Lấy danh sách các reservation có status = 1 (Confirmed), kiểm tra xem đã có bàn được xếp hay chưa thông qua các bảng liên kết table_session_reservations và table_session_dining_table.",
@@ -248,6 +252,10 @@ class ReservationController extends Controller
 
             $result[] = [
                 'reservation_id' => $reservation->id,
+                'reservation_status' => $reservation->status,
+                'reservation_notes' => $reservation->notes,
+                'reservation_reserved_at' => $reservation->reserved_at,
+                'reservation_number_of_people' => $reservation->number_of_people,
                 'customer_name' => $reservation->customer->full_name ?? null,
                 'session_id' => $sessionId,
                 'dining_table_id' => $diningTableId,

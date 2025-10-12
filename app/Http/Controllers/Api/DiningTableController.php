@@ -6,13 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\DiningTable;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Put;
 use Spatie\RouteAttributes\Attributes\Delete;
-use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
 /**
@@ -21,12 +21,12 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  *     description="API Endpoints for Dining Table Management"
  * )
  */
-#[Prefix('auth/dining-tables')]
+#[Prefix('dining-tables')]
 class DiningTableController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/auth/dining-tables",
+     *     path="/api/dining-tables",
      *     tags={"DiningTables"},
      *     summary="Get all dining tables",
      *     description="Retrieve all dining tables with pagination",
@@ -90,7 +90,7 @@ class DiningTableController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/auth/dining-tables/{id}",
+     *     path="/api/dining-tables/{id}",
      *     tags={"DiningTables"},
      *     summary="Get dining table by ID",
      *     description="Retrieve a specific dining table by ID",
@@ -133,7 +133,7 @@ class DiningTableController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/dining-tables",
+     *     path="/api/dining-tables",
      *     tags={"DiningTables"},
      *     summary="Create new dining table",
      *     description="Create a new dining table",
@@ -185,7 +185,7 @@ class DiningTableController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/auth/dining-tables/{id}",
+     *     path="/api/dining-tables/{id}",
      *     tags={"DiningTables"},
      *     summary="Update dining table",
      *     description="Update an existing dining table",
@@ -248,7 +248,7 @@ class DiningTableController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/auth/dining-tables/{id}",
+     *     path="/api/dining-tables/{id}",
      *     tags={"DiningTables"},
      *     summary="Delete dining table",
      *     description="Delete a dining table",
@@ -289,5 +289,64 @@ class DiningTableController extends Controller
             [],
             'Dining table deleted successfully'
         );
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/dining-tables/{idDiningTable}/reservations",
+     *     tags={"TableSessions"},
+     *     summary="Lấy danh sách các đặt bàn đã có phiên cho một bàn cụ thể",
+     *     description="Trả về danh sách tất cả các đặt bàn đã có phiên bàn (table_session) của một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="idDiningTable",
+     *         in="path",
+     *         required=true,
+     *         description="ID của bàn ăn (dining_table_id)",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách đặt bàn được lấy thành công",
+     *         @OA\JsonContent(type="array", @OA\Items(type="object"))
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Không tìm thấy bàn hoặc không có đặt bàn nào"
+     *     )
+     * )
+     */
+    #[Get('/{idDiningTable}/reservations', middleware: ['permission:dining-tables.view'])]
+    public function getReservationsByDiningTable(string $idDiningTable): JsonResponse
+    {
+        $reservations = DB::table('dining_tables as dt')
+            ->join('table_session_dining_table as tsdt', 'dt.id', '=', 'tsdt.dining_table_id')
+            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+            ->join('table_session_reservations as tsr', 'ts.id', '=', 'tsr.table_session_id')
+            ->join('reservations as r', 'tsr.reservation_id', '=', 'r.id')
+            ->leftJoin('customers as c', 'r.customer_id', '=', 'c.id')
+            ->where('dt.id', $idDiningTable)
+            ->whereIn('ts.status', [0, 1, 2, 3]) // Lấy tất cả trạng thái phiên bàn
+            ->select(
+                'r.id as reservation_id',
+                'r.reserved_at',
+                'r.number_of_people',
+                'r.status as reservation_status',
+                'r.notes',
+                'c.full_name as customer_name',
+                'c.phone as customer_phone',
+                'ts.id as table_session_id',
+                'ts.status as table_session_status',
+                'ts.started_at',
+                'ts.ended_at'
+            )
+            ->orderBy('r.reserved_at', 'desc')
+            ->get();
+
+        if ($reservations->isEmpty()) {
+            return $this->successResponse([], 'Không tìm thấy đặt bàn nào cho bàn này.');
+        }
+
+        return $this->successResponse($reservations, 'The table reservation list was successfully retrieved.');
     }
 }

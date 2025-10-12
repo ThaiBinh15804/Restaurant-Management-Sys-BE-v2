@@ -1209,14 +1209,14 @@
                 ]
             }
         },
-        "/api/auth/dining-tables": {
+        "/api/dining-tables": {
             "get": {
                 "tags": [
                     "DiningTables"
                 ],
                 "summary": "Get all dining tables",
                 "description": "Retrieve all dining tables with pagination",
-                "operationId": "c7a2c719935f10e5301beb68112f5324",
+                "operationId": "4a1129114126281176d5499bf6f09039",
                 "parameters": [
                     {
                         "name": "page",
@@ -1315,7 +1315,7 @@
                 ],
                 "summary": "Create new dining table",
                 "description": "Create a new dining table",
-                "operationId": "ff12136906499febd175df822b491a17",
+                "operationId": "614fb302cc3c68f16fe7db1bb6548307",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1359,14 +1359,14 @@
                 ]
             }
         },
-        "/api/auth/dining-tables/{id}": {
+        "/api/dining-tables/{id}": {
             "get": {
                 "tags": [
                     "DiningTables"
                 ],
                 "summary": "Get dining table by ID",
                 "description": "Retrieve a specific dining table by ID",
-                "operationId": "efc819ea6a824888cf98851a0b647ad3",
+                "operationId": "1a1975b8dffbba7663038b317e6d396d",
                 "parameters": [
                     {
                         "name": "id",
@@ -1398,7 +1398,7 @@
                 ],
                 "summary": "Update dining table",
                 "description": "Update an existing dining table",
-                "operationId": "ec139060fa0f40ad6ccb7afa133a91dd",
+                "operationId": "c14b6d661d7515097dbac1f5f64a600d",
                 "parameters": [
                     {
                         "name": "id",
@@ -1451,7 +1451,7 @@
                 ],
                 "summary": "Delete dining table",
                 "description": "Delete a dining table",
-                "operationId": "c634b6b7741425ce9608a70fd5b1d644",
+                "operationId": "16e6f81ee11dec72766d5c37acb8edb4",
                 "parameters": [
                     {
                         "name": "id",
@@ -1478,14 +1478,58 @@
                 ]
             }
         },
-        "/api/auth/dish-categories": {
+        "/api/dining-tables/{idDiningTable}/reservations": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Lấy danh sách các đặt bàn đã có phiên cho một bàn cụ thể",
+                "description": "Trả về danh sách tất cả các đặt bàn đã có phiên bàn (table_session) của một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
+                "operationId": "2ec5c691dc2c258fb79a184c14e67c88",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của bàn ăn (dining_table_id)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách đặt bàn được lấy thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy bàn hoặc không có đặt bàn nào"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dish-categories": {
             "get": {
                 "tags": [
                     "DishCategories"
                 ],
                 "summary": "Get all dish categories",
                 "description": "Retrieve all dish categories with pagination and optional search by name",
-                "operationId": "3f9f840c91e79d88051d938be3e887a2",
+                "operationId": "96e184150190c30ef32b08feef8d6b4d",
                 "parameters": [
                     {
                         "name": "page",
@@ -1608,7 +1652,7 @@
                 ],
                 "summary": "Create new dish category",
                 "description": "Create a new dish category",
-                "operationId": "975dd96b977688e8db3e3ac1336898c1",
+                "operationId": "00c5ab6fc8db4b3f783d2dedf229b603",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1647,14 +1691,14 @@
                 ]
             }
         },
-        "/api/auth/dish-categories/{id}": {
+        "/api/dish-categories/{id}": {
             "put": {
                 "tags": [
                     "DishCategories"
                 ],
                 "summary": "Update dish category",
                 "description": "Update an existing dish category",
-                "operationId": "fd2a2eb8f6d2495a6e2eb47d1408f1d9",
+                "operationId": "23d8180454aefbac6fee2aa254f3fc4b",
                 "parameters": [
                     {
                         "name": "id",
@@ -1706,7 +1750,7 @@
                 ],
                 "summary": "Delete dish category",
                 "description": "Delete a dish category. If any dishes are linked, deletion is prevented.",
-                "operationId": "c2ff989b42e58a3aca0ac5b7ab61972f",
+                "operationId": "75fe11d99084cd44b49b75606bc09a68",
                 "parameters": [
                     {
                         "name": "id",
@@ -1736,7 +1780,7 @@
                 ]
             }
         },
-        "/api/auth/dish-categories/get-name-list-dish-category": {
+        "/api/dish-categories/get-name-list-dish-category": {
             "get": {
                 "tags": [
                     "DishCategories"
@@ -1776,13 +1820,13 @@
                 ]
             }
         },
-        "/api/auth/dishes": {
+        "/api/dishes": {
             "get": {
                 "tags": [
                     "Dishes"
                 ],
                 "summary": "Lấy danh sách món ăn",
-                "operationId": "8b827576cf8d763c76d07686236a187e",
+                "operationId": "58a29eab9c069960c8ff43b23523c328",
                 "parameters": [
                     {
                         "name": "page",
@@ -1827,7 +1871,7 @@
                     "Dishes"
                 ],
                 "summary": "Tạo mới món ăn",
-                "operationId": "40ff5d1ea32db934545b843765e5dee1",
+                "operationId": "b3d8d834f27286c52a589739e4dc128c",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -1871,13 +1915,13 @@
                 }
             }
         },
-        "/api/auth/dishes/{id}": {
+        "/api/dishes/{id}": {
             "put": {
                 "tags": [
                     "Dishes"
                 ],
                 "summary": "Cập nhật món ăn",
-                "operationId": "2b089d40c47e816fb96673c164745283",
+                "operationId": "7c98edd0646d2311b25eaadfd8376d2c",
                 "parameters": [
                     {
                         "name": "id",
@@ -1932,7 +1976,7 @@
                     "Dishes"
                 ],
                 "summary": "Xóa món ăn",
-                "operationId": "7b19bc5760d57ec8004bb78854315774",
+                "operationId": "8d99defdd758a5929b9317711b3dbd52",
                 "parameters": [
                     {
                         "name": "id",
@@ -2791,13 +2835,178 @@
                 }
             }
         },
-        "/api/auth/menus": {
+        "/api/invoices": {
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Create invoice with payment",
+                "description": "Tạo invoice kèm payment và áp dụng các khuyến mãi nếu có",
+                "operationId": "afab2f2bee05fd353c5d3591b7b34f37",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "table_session_id": {
+                                        "type": "string",
+                                        "example": "TS123"
+                                    },
+                                    "total_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    },
+                                    "discount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "tax": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "final_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99000
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ],
+                                        "example": 2
+                                    },
+                                    "listPromotionApply": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "promotion_id": {
+                                                    "type": "string",
+                                                    "example": "PROMO1"
+                                                },
+                                                "discount_value": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "employee_id": {
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    },
+                                    "method": {
+                                        "description": "0=Cash, 1=Bank transfer",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ],
+                                        "example": 0
+                                    },
+                                    "status_payment": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ],
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Invoice and payment created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "invoice": {
+                                            "type": "object"
+                                        },
+                                        "payment": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Table session not found or invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session không tồn tại!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/menus": {
             "get": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Lấy danh sách menu",
-                "operationId": "ce223a4d50dc74ba2ea3d1b4bcdf7812",
+                "operationId": "54c2d937e1a32b13f880b49ce0444f34",
                 "parameters": [
                     {
                         "name": "page",
@@ -2842,7 +3051,7 @@
                     "Menus"
                 ],
                 "summary": "Tạo mới menu",
-                "operationId": "0b55d65b6225d6ee5995c0c4e7571952",
+                "operationId": "31e1ddbd8da961fb496e3e2d46b53823",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -2880,13 +3089,13 @@
                 }
             }
         },
-        "/api/auth/menus/active/items": {
+        "/api/menus/active/items": {
             "get": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Lấy danh sách món ăn của menu đang hoạt động (is_active = 1)",
-                "operationId": "6349eed18540fa4e11caa8a2f49b2bd3",
+                "operationId": "44f04f51eeac256e3e8cfc24f3e807f1",
                 "responses": {
                     "200": {
                         "description": "Danh sách món ăn của menu đang được sử dụng",
@@ -2948,13 +3157,13 @@
                 }
             }
         },
-        "/api/auth/menus/{id}": {
+        "/api/menus/{id}": {
             "put": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Cập nhật menu",
-                "operationId": "189914c5e5729870447f763dac87814a",
+                "operationId": "88cfe38e1bda9aad62dbca6007b25422",
                 "parameters": [
                     {
                         "name": "id",
@@ -3000,7 +3209,7 @@
                     "Menus"
                 ],
                 "summary": "Xóa menu",
-                "operationId": "030a33226419fe19776c46dfacaf97c2",
+                "operationId": "e367f4eb9f2883c92645c50bbac63925",
                 "parameters": [
                     {
                         "name": "id",
@@ -3018,13 +3227,13 @@
                 }
             }
         },
-        "/api/auth/menus/{id}/items": {
+        "/api/menus/{id}/items": {
             "get": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Lấy danh sách món ăn trong menu",
-                "operationId": "4f1908621f936341bc33d144e8a9ffdc",
+                "operationId": "fa1d98ce6b45ad9d1df1cf3527805d2a",
                 "parameters": [
                     {
                         "name": "id",
@@ -3079,14 +3288,14 @@
                 }
             }
         },
-        "/api/auth/menus/{menuId}/items": {
+        "/api/menus/{menuId}/items": {
             "post": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Thêm món ăn vào menu",
                 "description": "Tạo mới liên kết giữa menu và món ăn, không cho phép trùng món trong cùng menu",
-                "operationId": "475774959570178836a7b6f50edf0ebe",
+                "operationId": "985272c57a76ec8d59f279e3b44db36f",
                 "parameters": [
                     {
                         "name": "menuId",
@@ -3273,16 +3482,14 @@
                         "bearerAuth": []
                     }
                 ]
-            }
-        },
-        "/api/auth/menus/{menuId}/items/{itemId}": {
+            },
             "delete": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Xóa một món ăn khỏi menu",
                 "description": "Xóa liên kết giữa món ăn và menu, không xóa món trong cơ sở dữ liệu món ăn",
-                "operationId": "271ae1dbfc2e49b1b8b7d60d34efc4cf",
+                "operationId": "dd779c4bd86f0c130f85bbd5b8db4d1e",
                 "parameters": [
                     {
                         "name": "menuId",
@@ -3332,14 +3539,14 @@
                 }
             }
         },
-        "/api/auth/menus/{menuId}/available-dishes": {
+        "/api/menus/{menuId}/available-dishes": {
             "get": {
                 "tags": [
                     "Menus"
                 ],
                 "summary": "Lấy danh sách món ăn chưa có trong menu",
                 "description": "Trả về danh sách các món ăn chưa xuất hiện trong menu để thêm mới",
-                "operationId": "3e8c7623156d1423bb2ec48b89ec5431",
+                "operationId": "f60cf0d9b11bae9f54d109f41679350a",
                 "parameters": [
                     {
                         "name": "menuId",
@@ -3407,13 +3614,13 @@
                 }
             }
         },
-        "/api/auth/order-items/status": {
+        "/api/order-items/status": {
             "put": {
                 "tags": [
                     "OrderItems"
                 ],
                 "summary": "Cập nhật trạng thái nhiều OrderItem",
-                "operationId": "f3c123c3213e9525cf6df093016760b0",
+                "operationId": "86819193eab8d421dbdc49414d14712f",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -3504,13 +3711,13 @@
                 ]
             }
         },
-        "/api/auth/order-items/add-order": {
+        "/api/order-items/add-order": {
             "post": {
                 "tags": [
                     "Orders"
                 ],
                 "summary": "Thêm order mới cùng danh sách món",
-                "operationId": "de5ae79acb6085ba889e1d0039a8294e",
+                "operationId": "0e972a7824cf82214e994a94dc0f5ed3",
                 "requestBody": {
                     "required": true,
                     "content": {
@@ -4585,13 +4792,266 @@
                 ]
             }
         },
-        "/api/auth/reservations": {
+        "/api/promotions": {
+            "get": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Get all promotions",
+                "description": "Retrieve all promotions with pagination",
+                "operationId": "56baf0b0433a6f76c637521ac79c057d",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotions retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Create new promotion",
+                "operationId": "72d75eb4a0d6e3b20312f608356b5859",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "discount_value",
+                                    "start_at",
+                                    "end_at"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Promo 10%"
+                                    },
+                                    "discount_value": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "start_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "end_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Promotion created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotions/all": {
+            "get": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Get all promotions",
+                "description": "Retrieve all promotions without pagination",
+                "operationId": "32fa873ddf7cbd90fb9fa39ada5b54f1",
+                "responses": {
+                    "200": {
+                        "description": "Promotions retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Promotions retrieved successfully"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "PROMO001"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Khuyến mãi 10%"
+                                                    },
+                                                    "discountValue": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 10
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/promotions/{id}": {
+            "put": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Update promotion",
+                "operationId": "7c2fcdfd3d51b459942ad6f340019160",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Updated Promo"
+                                    },
+                                    "discount_value": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 15
+                                    },
+                                    "start_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "end_at": {
+                                        "type": "string",
+                                        "format": "date-time"
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Promotion updated successfully"
+                    },
+                    "404": {
+                        "description": "Promotion not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Delete promotion",
+                "operationId": "a86a476fa987ed93c3131839806edab0",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotion deleted successfully"
+                    },
+                    "404": {
+                        "description": "Promotion not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservations": {
             "get": {
                 "tags": [
                     "Reservations"
                 ],
                 "summary": "Lấy danh sách đặt bàn",
-                "operationId": "3dbf1fcc7d0f2bf1e7a3a5b7b9fbbe37",
+                "operationId": "f10e68ff0ce263ef754b2f640eda8d93",
                 "parameters": [
                     {
                         "name": "page",
@@ -4644,6 +5104,190 @@
                         "description": "Danh sách reservations với thông tin customer"
                     }
                 }
+            }
+        },
+        "/api/reservations/{id}/status": {
+            "put": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Cập nhật trạng thái đặt bàn",
+                "description": "Cho phép admin hoặc nhân viên có quyền thay đổi trạng thái của một đặt bàn (Pending, Confirmed, Cancelled, Completed)",
+                "operationId": "22307caa3c7236c3cc24e3f0ea4f30bb",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của reservation cần cập nhật",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "Trạng thái mới: 0=Pending, 1=Confirmed, 2=Cancelled, 3=Completed",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ]
+                                    },
+                                    "notes": {
+                                        "description": "Ghi chú (tùy chọn)",
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật trạng thái thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy reservation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Giá trị status không hợp lệ hoặc không thể cập nhật",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reservations/check-assigned-tables": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Kiểm tra các đặt bàn đã được xếp bàn hay chưa",
+                "description": "Lấy danh sách các reservation có status = 1 (Confirmed), kiểm tra xem đã có bàn được xếp hay chưa thông qua các bảng liên kết table_session_reservations và table_session_dining_table.",
+                "operationId": "54c53f81cf41d9b97f1ccecfd58249a7",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách reservation và trạng thái đã/ chưa xếp bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Check completed successfully."
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "reservation_id": {
+                                                        "type": "string",
+                                                        "example": "abc123"
+                                                    },
+                                                    "customer_name": {
+                                                        "type": "string",
+                                                        "example": "Nguyễn Văn A"
+                                                    },
+                                                    "session_id": {
+                                                        "type": "string",
+                                                        "example": "sess001",
+                                                        "nullable": true
+                                                    },
+                                                    "table_name": {
+                                                        "type": "string",
+                                                        "example": "Bàn 5",
+                                                        "nullable": true
+                                                    },
+                                                    "assigned": {
+                                                        "type": "boolean",
+                                                        "example": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Không có quyền truy cập API này",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string",
+                                            "example": "Forbidden"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
             }
         },
         "/api/roles": {
@@ -5668,13 +6312,13 @@
                 ]
             }
         },
-        "/api/auth/table-sessions": {
+        "/api/table-sessions": {
             "get": {
                 "tags": [
                     "TableSessions"
                 ],
                 "summary": "Danh sách bàn + phiên bàn",
-                "operationId": "5acc82279e457a79675eef8bd7a53ad5",
+                "operationId": "7f4fcb1b3ce8c55e2cd6b05c928457a7",
                 "parameters": [
                     {
                         "name": "page",
@@ -5757,14 +6401,212 @@
                 ]
             }
         },
-        "/api/auth/table-sessions/{idDiningTable}": {
+        "/table-sessions/reservation": {
+            "post": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Tạo mới Table Session kiểu reservation",
+                "description": "Tạo một phiên bàn mới với type = 2 (reservation) và status = 0 (đang chờ), kèm liên kết với reservation.",
+                "operationId": "createTableSession",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "customer_id",
+                                    "employee_id",
+                                    "reservation_id"
+                                ],
+                                "properties": {
+                                    "customer_id": {
+                                        "description": "ID của khách hàng",
+                                        "type": "string",
+                                        "example": "CUST123"
+                                    },
+                                    "employee_id": {
+                                        "description": "ID của nhân viên tạo phiên",
+                                        "type": "string",
+                                        "example": "EMP456"
+                                    },
+                                    "reservation_id": {
+                                        "description": "ID của reservation liên kết",
+                                        "type": "string",
+                                        "example": "RES789"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "TS001"
+                                                },
+                                                "type": {
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "status": {
+                                                    "type": "integer",
+                                                    "example": 0
+                                                },
+                                                "customer_id": {
+                                                    "type": "string",
+                                                    "example": "CUST123"
+                                                },
+                                                "employee_id": {
+                                                    "type": "string",
+                                                    "example": "EMP456"
+                                                },
+                                                "reservation_id": {
+                                                    "type": "string",
+                                                    "example": "RES789"
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation lỗi",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "The customer_id field is required."
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/table-sessions/available-tables": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Lấy danh sách bàn trống cho thời gian đặt cụ thể",
+                "description": "Trả về danh sách các bàn còn trống dựa trên thời gian đặt (reserved_at) và số lượng khách (number_of_people). Một bàn được xem là bận nếu có phiên bàn đang hoạt động (status IN 1,2) và thời gian đặt nằm trong khoảng phục vụ của bàn.",
+                "operationId": "getAvailableTables",
+                "parameters": [
+                    {
+                        "name": "reserved_at",
+                        "in": "query",
+                        "description": "Thời gian đặt bàn (YYYY-MM-DD HH:mm:ss)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-10-07 13:00:00"
+                        }
+                    },
+                    {
+                        "name": "number_of_people",
+                        "in": "query",
+                        "description": "Số lượng khách",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "example": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách bàn trống",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "id": {
+                                                "type": "string"
+                                            },
+                                            "table_number": {
+                                                "type": "integer"
+                                            },
+                                            "capacity": {
+                                                "type": "integer"
+                                            },
+                                            "is_active": {
+                                                "type": "boolean"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Thiếu hoặc sai dữ liệu đầu vào",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions/{idDiningTable}": {
             "get": {
                 "tags": [
                     "TableSessions"
                 ],
                 "summary": "Lấy thông tin phiên bàn theo Dining Table ID",
                 "description": "Trả về phiên bàn (status = 1 - đang phục vụ) kèm thông tin đặt chỗ và khách hàng",
-                "operationId": "fbb65aa04033c53513540ef91bcb1cb7",
+                "operationId": "2d41227436fb0e2dde096a0431e26a30",
                 "parameters": [
                     {
                         "name": "idDiningTable",
@@ -5886,14 +6728,14 @@
                 ]
             }
         },
-        "/api/auth/table-sessions/{tableSessionId}/orders": {
+        "/api/table-sessions/{tableSessionId}/orders": {
             "get": {
                 "tags": [
                     "TableSessions"
                 ],
                 "summary": "Lấy danh sách Order theo Table Session ID",
                 "description": "Trả về danh sách order và chi tiết order_items kèm thông tin món ăn và category",
-                "operationId": "5f756096e3f4e1b645ce2bd733af657b",
+                "operationId": "5fbb40ec6a3894df1ce8677634023255",
                 "parameters": [
                     {
                         "name": "tableSessionId",
@@ -6069,125 +6911,7 @@
                 ]
             }
         },
-        "/api/dining-tables/{idDiningTable}/session-history": {
-            "get": {
-                "tags": [
-                    "DiningTables"
-                ],
-                "summary": "Lấy lịch sử phiên bàn theo Dining Table",
-                "description": "Trả về danh sách các phiên bàn đã hoàn thành hoặc bị hủy, kèm thông tin reservation nếu có",
-                "operationId": "getTableSessionHistory",
-                "parameters": [
-                    {
-                        "name": "idDiningTable",
-                        "in": "path",
-                        "description": "ID của dining table",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lịch sử phiên bàn retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "session_id": {
-                                                "type": "string"
-                                            },
-                                            "table_id": {
-                                                "type": "string"
-                                            },
-                                            "table_number": {
-                                                "type": "string"
-                                            },
-                                            "session_type": {
-                                                "description": "0-Offline,1-Merge,2-Reservation,3-Split",
-                                                "type": "integer"
-                                            },
-                                            "session_status": {
-                                                "description": "3-Completed,4-Cancelled",
-                                                "type": "integer"
-                                            },
-                                            "started_at": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "ended_at": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "customer_id": {
-                                                "type": "string"
-                                            },
-                                            "employee_id": {
-                                                "type": "string"
-                                            },
-                                            "reservations": {
-                                                "type": "array",
-                                                "items": {
-                                                    "properties": {
-                                                        "reservation_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "reservation_customer_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "reservation_time": {
-                                                            "type": "string",
-                                                            "format": "date-time"
-                                                        },
-                                                        "number_of_people": {
-                                                            "type": "integer"
-                                                        },
-                                                        "reservation_status": {
-                                                            "description": "0-Pending,1-Confirmed,2-Cancelled,3-Completed",
-                                                            "type": "integer"
-                                                        },
-                                                        "notes": {
-                                                            "type": "string",
-                                                            "nullable": true
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Không tìm thấy lịch sử phiên bàn",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/auth/table-sessions/{idDiningTable}/session-history/{sessionId}": {
+        "/api/table-sessions/{idDiningTable}/session-history/{sessionId}": {
             "get": {
                 "tags": [
                     "TableSessions"
@@ -6664,8 +7388,16 @@
             "description": "API Endpoints for User Management"
         },
         {
+            "name": "TableSessions",
+            "description": "TableSessions"
+        },
+        {
             "name": "Health",
             "description": "Health"
+        },
+        {
+            "name": "Invoices",
+            "description": "Invoices"
         },
         {
             "name": "Menu Items",
@@ -6680,12 +7412,12 @@
             "description": "Orders"
         },
         {
-            "name": "Reservations",
-            "description": "Reservations"
+            "name": "Promotions",
+            "description": "Promotions"
         },
         {
-            "name": "TableSessions",
-            "description": "TableSessions"
+            "name": "Reservations",
+            "description": "Reservations"
         }
     ]
 }

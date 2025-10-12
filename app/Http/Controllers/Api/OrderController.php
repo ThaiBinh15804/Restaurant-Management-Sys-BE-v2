@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
-#[Prefix('auth/orders')]
+#[Prefix('orders')]
 class OrderController extends Controller
 {
     /**

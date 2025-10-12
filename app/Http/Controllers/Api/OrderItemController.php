@@ -12,7 +12,7 @@ use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Put;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
-#[Prefix('auth/order-items')]
+#[Prefix('order-items')]
 class OrderItemController extends Controller
 {
 
@@ -43,7 +43,7 @@ class OrderItemController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/auth/order-items/status",
+     *     path="/api/order-items/status",
      *     summary="Cập nhật trạng thái nhiều OrderItem",
      *     tags={"OrderItems"},
      *     security={{"bearerAuth":{}}},
@@ -153,7 +153,7 @@ class OrderItemController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/order-items/add-order",
+     *     path="/api/order-items/add-order",
      *     summary="Thêm order mới cùng danh sách món",
      *     tags={"Orders"},
      *     security={{"bearerAuth":{}}},

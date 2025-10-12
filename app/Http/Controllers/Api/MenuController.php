@@ -22,12 +22,12 @@ use Spatie\RouteAttributes\Attributes\Put;
  *     description="API Endpoints for Menu Management"
  * )
  */
-#[Prefix('auth/menus')]
+#[Prefix('menus')]
 class MenuController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/api/auth/menus",
+     *     path="/api/menus",
      *     tags={"Menus"},
      *     summary="Lấy danh sách menu",
      *     @OA\Parameter(
@@ -84,7 +84,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/auth/menus/active/items",
+     *     path="/api/menus/active/items",
      *     tags={"Menus"},
      *     summary="Lấy danh sách món ăn của menu đang hoạt động (is_active = 1)",
      *     @OA\Response(
@@ -150,7 +150,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/menus",
+     *     path="/api/menus",
      *     tags={"Menus"},
      *     summary="Tạo mới menu",
      *     @OA\RequestBody(
@@ -195,7 +195,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Put(
-     *     path="/api/auth/menus/{id}",
+     *     path="/api/menus/{id}",
      *     tags={"Menus"},
      *     summary="Cập nhật menu",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
@@ -244,7 +244,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/auth/menus/{id}",
+     *     path="/api/menus/{id}",
      *     tags={"Menus"},
      *     summary="Xóa menu",
      *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="string")),
@@ -272,7 +272,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/auth/menus/{id}/items",
+     *     path="/api/menus/{id}/items",
      *     tags={"Menus"},
      *     summary="Lấy danh sách món ăn trong menu",
      *     @OA\Parameter(
@@ -332,7 +332,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/auth/menus/{menuId}/items",
+     *     path="/api/menus/{menuId}/items",
      *     tags={"Menus"},
      *     summary="Thêm món ăn vào menu",
      *     description="Tạo mới liên kết giữa menu và món ăn, không cho phép trùng món trong cùng menu",
@@ -532,7 +532,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/auth/menus/{menuId}/items/{itemId}",
+     *     path="/api/menus/{menuId}/items/{itemId}",
      *     tags={"Menus"},
      *     summary="Xóa một món ăn khỏi menu",
      *     description="Xóa liên kết giữa món ăn và menu, không xóa món trong cơ sở dữ liệu món ăn",
@@ -588,7 +588,7 @@ class MenuController extends Controller
 
     /**
      * @OA\Get(
-     *     path="/api/auth/menus/{menuId}/available-dishes",
+     *     path="/api/menus/{menuId}/available-dishes",
      *     tags={"Menus"},
      *     summary="Lấy danh sách món ăn chưa có trong menu",
      *     description="Trả về danh sách các món ăn chưa xuất hiện trong menu để thêm mới",
