@@ -29,8 +29,7 @@ class DatabaseSeeder extends Seeder
         $this->createDefaultUsers();
         $this->call(EmployeeManagementSeeder::class);
         $this->createDefaultTableDiskMenuData();
-
-        // Then create default users
+        $this->call(InventoryManagementSeeder::class);
     }
 
     /**

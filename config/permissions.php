@@ -434,33 +434,71 @@ return [
             ],
         ],
 
-        'inventory' => [
-            'name' => 'Inventory Management',
-            'description' => 'Permissions related to inventory and stock management',
+        'ingredients' => [
+            'name' => 'Ingredient Management',
+            'description' => 'Permissions related to ingredient master data management',
             'permissions' => [
-                'inventory.view' => [
-                    'name' => 'View Inventory',
-                    'description' => 'Permission to view inventory items and stock levels',
+                'ingredients.view' => [
+                    'name' => 'View Ingredients',
+                    'description' => 'Permission to view ingredient listings and details',
                 ],
-                'inventory.create' => [
-                    'name' => 'Create Inventory Items',
-                    'description' => 'Permission to create new inventory items',
+                'ingredients.create' => [
+                    'name' => 'Create Ingredients',
+                    'description' => 'Permission to create new ingredients',
                 ],
-                'inventory.edit' => [
-                    'name' => 'Edit Inventory',
-                    'description' => 'Permission to edit inventory item details',
+                'ingredients.edit' => [
+                    'name' => 'Edit Ingredients',
+                    'description' => 'Permission to edit existing ingredients',
                 ],
-                'inventory.delete' => [
-                    'name' => 'Delete Inventory Items',
-                    'description' => 'Permission to delete inventory items',
+                'ingredients.delete' => [
+                    'name' => 'Delete Ingredients',
+                    'description' => 'Permission to delete ingredients',
                 ],
-                'inventory.adjust' => [
-                    'name' => 'Adjust Inventory Levels',
-                    'description' => 'Permission to adjust inventory stock levels',
+            ],
+        ],
+
+        'suppliers' => [
+            'name' => 'Supplier Management',
+            'description' => 'Permissions related to supplier management',
+            'permissions' => [
+                'suppliers.view' => [
+                    'name' => 'View Suppliers',
+                    'description' => 'Permission to view supplier listings and details',
                 ],
-                'inventory.reports' => [
-                    'name' => 'View Inventory Reports',
-                    'description' => 'Permission to view inventory and stock reports',
+                'suppliers.create' => [
+                    'name' => 'Create Suppliers',
+                    'description' => 'Permission to create new suppliers',
+                ],
+                'suppliers.edit' => [
+                    'name' => 'Edit Suppliers',
+                    'description' => 'Permission to edit existing suppliers',
+                ],
+                'suppliers.delete' => [
+                    'name' => 'Delete Suppliers',
+                    'description' => 'Permission to delete suppliers',
+                ],
+            ],
+        ],
+
+        'stocks' => [
+            'name' => 'Stock Management',
+            'description' => 'Permissions related to stock import, export, and loss management',
+            'permissions' => [
+                'stocks.view' => [
+                    'name' => 'View Stocks',
+                    'description' => 'Permission to view stock imports, exports, and losses',
+                ],
+                'stocks.create' => [
+                    'name' => 'Create Stock Records',
+                    'description' => 'Permission to create stock imports, exports, and losses',
+                ],
+                'stocks.edit' => [
+                    'name' => 'Edit Stock Records',
+                    'description' => 'Permission to edit stock imports, exports, and losses',
+                ],
+                'stocks.delete' => [
+                    'name' => 'Delete Stock Records',
+                    'description' => 'Permission to delete stock imports, exports, and losses',
                 ],
             ],
         ],
@@ -584,12 +622,18 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
-                'inventory.view',
-                'inventory.create',
-                'inventory.edit',
-                'inventory.delete',
-                'inventory.adjust',
-                'inventory.reports',
+                'ingredients.view',
+                'ingredients.create',
+                'ingredients.edit',
+                'ingredients.delete',
+                'suppliers.view',
+                'suppliers.create',
+                'suppliers.edit',
+                'suppliers.delete',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
+                'stocks.delete',
                 'reports.sales',
                 'reports.inventory',
                 'reports.financial',
@@ -630,10 +674,15 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
-                'inventory.view',
-                'inventory.edit',
-                'inventory.adjust',
-                'inventory.reports',
+                'ingredients.view',
+                'ingredients.create',
+                'ingredients.edit',
+                'suppliers.view',
+                'suppliers.create',
+                'suppliers.edit',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
                 'reports.sales',
                 'reports.inventory',
                 'reports.financial',
@@ -655,7 +704,7 @@ return [
                 'reservations.view',
                 'reservations.create',
                 'reservations.edit',
-                'inventory.view',
+                'ingredients.view',
             ],
         ],
 
@@ -685,8 +734,9 @@ return [
                 'orders.view',
                 'orders.process',
                 'orders.complete',
-                'inventory.view',
-                'inventory.adjust',
+                'ingredients.view',
+                'stocks.view',
+                'stocks.create',
             ],
         ],
 

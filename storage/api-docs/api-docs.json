@@ -2865,6 +2865,358 @@
                 }
             }
         },
+        "/api/ingredients": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "List ingredients",
+                "description": "Retrieve a paginated list of ingredients with optional filters",
+                "operationId": "ca30a55ef34259f063c742b684cc4bff",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by ingredient name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "unit",
+                        "in": "query",
+                        "description": "Filter by unit",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "low_stock",
+                        "in": "query",
+                        "description": "Filter ingredients below minimum stock",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredients retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Create ingredient",
+                "description": "Create a new ingredient",
+                "operationId": "c2d68c40741ce26dfd17624c54639c04",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "unit",
+                                    "min_stock"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tomato"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "kg"
+                                    },
+                                    "current_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0
+                                    },
+                                    "min_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "max_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ingredient created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/{id}": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Get ingredient details",
+                "description": "Retrieve detailed information about a specific ingredient by ID",
+                "operationId": "31ceea6e0627b6ebd10d683e8ae3af69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredient retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Update ingredient",
+                "description": "Update ingredient information",
+                "operationId": "644a667784d857e8a6a8074285b1eb5b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tomato"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "kg"
+                                    },
+                                    "current_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25
+                                    },
+                                    "min_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "max_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredient updated successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Delete ingredient",
+                "description": "Delete an ingredient by ID",
+                "operationId": "f058c3992f4ae8a7e0fbfa77a5450545",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredient deleted successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    },
+                    "409": {
+                        "description": "Cannot delete ingredient with existing stock movements"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Activate or deactivate ingredient",
+                "description": "Toggle the active status of an ingredient",
+                "operationId": "49f849a8df82c4dcf5920f5cb9b2e7a8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "description": "Set to true to activate, false to deactivate",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredient status updated successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/low-stock/list": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Get low stock ingredients",
+                "description": "Retrieve list of ingredients below minimum stock level",
+                "operationId": "d699cf278272f717e4faa4789524c66c",
+                "responses": {
+                    "200": {
+                        "description": "Low stock ingredients retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/menus": {
             "get": {
                 "tags": [
@@ -5905,6 +6257,1228 @@
                 ]
             }
         },
+        "/api/stocks/imports": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock imports",
+                "description": "Retrieve a paginated list of stock imports with optional filters",
+                "operationId": "73515253ea3e4f6ac9f561688713348a",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter from date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter to date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "supplier_id",
+                        "in": "query",
+                        "description": "Filter by supplier",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock imports retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Create stock import",
+                "description": "Create a new stock import with details",
+                "operationId": "19d22d8ef3a5242990f63f0bff183a96",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "import_date",
+                                    "details"
+                                ],
+                                "properties": {
+                                    "import_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "supplier_id": {
+                                        "type": "string",
+                                        "example": "SUP-000001"
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "ingredient_id",
+                                                "ordered_quantity",
+                                                "received_quantity",
+                                                "unit_price"
+                                            ],
+                                            "properties": {
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING-000001"
+                                                },
+                                                "ordered_quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "received_quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 15000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock import created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/imports/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock import details",
+                "description": "Retrieve detailed information about a specific stock import",
+                "operationId": "31badbf139e4e77a23475ac667f99fc5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock import retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock import",
+                "description": "Update stock import information",
+                "operationId": "0c3143f0ecad9a9e0c6a553d03680067",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "import_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "supplier_id": {
+                                        "type": "string"
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Detail ID (for update)",
+                                                    "type": "string"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string"
+                                                },
+                                                "ordered_quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "received_quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "delete": {
+                                                    "description": "Mark for deletion",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock import updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock import",
+                "description": "Delete a stock import and rollback stock changes",
+                "operationId": "7606653f6b3126a4db22f1a2a41b9bb3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock import deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock exports",
+                "description": "Retrieve a paginated list of stock exports with optional filters",
+                "operationId": "fa887314f2a0bd90b7802a2d025e8be3",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "0=Draft, 1=Approved, 2=Completed",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock exports retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Create stock export",
+                "description": "Create a new stock export with details",
+                "operationId": "c1dd305dc0943515e6f3a982ec3de0eb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "export_date",
+                                    "details"
+                                ],
+                                "properties": {
+                                    "export_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "purpose": {
+                                        "type": "string",
+                                        "example": "Kitchen operations"
+                                    },
+                                    "status": {
+                                        "description": "0=Draft, 1=Approved, 2=Completed",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ],
+                                        "example": 0
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "ingredient_id",
+                                                "quantity"
+                                            ],
+                                            "properties": {
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING-000001"
+                                                },
+                                                "quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock export created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock export details",
+                "description": "Retrieve detailed information about a specific stock export",
+                "operationId": "f7a5695eb680d24b9aa42ac8d17c935b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock export retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock export",
+                "description": "Update stock export information",
+                "operationId": "5a55ba8ca6aa114ab1b3e89567439c2b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "export_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "purpose": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ]
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string"
+                                                },
+                                                "quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "delete": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock export updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock export",
+                "description": "Delete a stock export and rollback stock if completed",
+                "operationId": "c3b675e6817b9e8a744db04052898073",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock export deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Change stock export status",
+                "description": "Change the status of a stock export (Draft/Approved/Completed)",
+                "operationId": "bfbf1c6b3ce5c8ce2a94db1a971120d7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "0=Draft, 1=Approved, 2=Completed",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/losses": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock losses",
+                "description": "Retrieve a paginated list of stock losses",
+                "operationId": "48b8388f4c2f016cf9cf29029b5f54fe",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "ingredient_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock losses retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Record stock loss",
+                "description": "Record a new stock loss",
+                "operationId": "57015fcfb29b0832445071bbdaf2956e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ingredient_id",
+                                    "quantity",
+                                    "loss_date"
+                                ],
+                                "properties": {
+                                    "ingredient_id": {
+                                        "type": "string",
+                                        "example": "ING-000001"
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Expired"
+                                    },
+                                    "loss_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "employee_id": {
+                                        "type": "string",
+                                        "example": "EMP-000001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock loss recorded successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/losses/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock loss details",
+                "description": "Retrieve detailed information about a specific stock loss",
+                "operationId": "7d52b273c513af19070fb90e56615d53",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock loss retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock loss",
+                "description": "Update stock loss information",
+                "operationId": "3729d38e7fcc9228262df6a07b7d7dc5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ingredient_id": {
+                                        "type": "string"
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    },
+                                    "loss_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "employee_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock loss updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock loss",
+                "description": "Delete a stock loss record and restore stock",
+                "operationId": "7f6fb4d5d1b6f695f37adb7a81b1e7f7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock loss deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "List suppliers",
+                "description": "Retrieve a paginated list of suppliers with optional filters",
+                "operationId": "6207e57dd1dcd1d6e7125fe144607196",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by supplier name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter by email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "Filter by phone",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppliers retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Create supplier",
+                "description": "Create a new supplier",
+                "operationId": "dc5dc7ccb140cd5b81cab6f42b396691",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Fresh Food Suppliers Co."
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "contact_person_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "contact_person_phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@freshfood.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main Street, City"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Get supplier details",
+                "description": "Retrieve detailed information about a specific supplier by ID",
+                "operationId": "7fc447855461518ce36bdeb5a44310a3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Update supplier",
+                "description": "Update supplier information",
+                "operationId": "22145931fdda85497cf90c73c5406747",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Fresh Food Suppliers Co."
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "contact_person_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "contact_person_phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@freshfood.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main Street, City"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier updated successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Delete supplier",
+                "description": "Delete a supplier by ID",
+                "operationId": "2fe04361f0f1581a9f5dbb4094b634b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier deleted successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    },
+                    "409": {
+                        "description": "Cannot delete supplier with existing stock imports"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Activate or deactivate supplier",
+                "description": "Toggle the active status of a supplier",
+                "operationId": "5745cf86dddb7713034bc3a37e795ae9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "description": "Set to true to activate, false to deactivate",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier status updated successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/active/list": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Get active suppliers",
+                "description": "Retrieve list of active suppliers",
+                "operationId": "b79e147a1b73431ca15837cd39f7b6ab",
+                "responses": {
+                    "200": {
+                        "description": "Active suppliers retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/auth/table-sessions": {
             "get": {
                 "tags": [
@@ -6984,6 +8558,10 @@
             "description": "API Endpoints for Employee Shift Assignments"
         },
         {
+            "name": "Ingredients",
+            "description": "API Endpoints for Ingredient Management"
+        },
+        {
             "name": "Menus",
             "description": "API Endpoints for Menu Management"
         },
@@ -7010,6 +8588,14 @@
         {
             "name": "Statistics",
             "description": "API Endpoints for General Statistics"
+        },
+        {
+            "name": "Stock Management",
+            "description": "API Endpoints for Stock Import, Export, and Loss Management"
+        },
+        {
+            "name": "Suppliers",
+            "description": "API Endpoints for Supplier Management"
         },
         {
             "name": "Users",
