@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TableSession\TableSessionQueryRequest;
+use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\TableSession;
 use App\Models\TableSessionDiningTable;
@@ -15,6 +16,7 @@ use Spatie\RouteAttributes\Attributes\Prefix;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Spatie\RouteAttributes\Attributes\Post;
+use Spatie\RouteAttributes\Attributes\Put;
 
 #[Prefix('table-sessions')]
 class TableSessionController extends Controller
@@ -119,6 +121,67 @@ class TableSessionController extends Controller
     }
 
     /**
+     * @OA\Put(
+     *     path="/api/table-sessions/{tableSession}",
+     *     summary="Cập nhật trạng thái table session",
+     *     description="Cập nhật trạng thái table session thành 'đang phục vụ' (1)",
+     *     tags={"TableSessions"},
+     *     @OA\Parameter(
+     *         name="tableSession",
+     *         in="path",
+     *         description="ID của table session cần cập nhật",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Cập nhật thành công",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="string", example="TS123"),
+     *             @OA\Property(property="status", type="integer", example=1),
+     *             @OA\Property(property="message", type="string", example="Table session status updated to active")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Table session không tồn tại",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Table session not found")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Lỗi server",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Internal server error")
+     *         )
+     *     )
+     * )
+     */
+    #[Put('/{tableSession}', middleware: ['permission:table-sessions.edit'])]
+    public function updateStatus(Request $request, string $tableSession): JsonResponse
+    {
+        $session = TableSession::find($tableSession);
+
+        if (!$session) {
+            return response()->json(['message' => 'Table session not found'], 404);
+        }
+
+        $session->status = 1; // Đang phục vụ
+        $session->started_at = now();
+        $session->save();
+
+        return response()->json([
+            'id' => $session->id,
+            'status' => $session->status,
+            'message' => 'Table session status updated to active'
+        ], 200);
+    }
+
+    /**
      * @OA\Post(
      *     path="/table-sessions/reservation",
      *     summary="Tạo mới Table Session kiểu reservation",
@@ -174,6 +237,7 @@ class TableSessionController extends Controller
             'employee_id' => 'required|exists:employees,id',
             'reservation_id' => 'required|exists:reservations,id',
             'dining_table_id' => 'required|exists:dining_tables,id', // thêm validate cho bàn
+            'pre_order' => 'nullable|string|in:yes,no', // 🟢 thêm validate cho pre_order
         ]);
 
         // Tạo TableSession
@@ -213,9 +277,27 @@ class TableSessionController extends Controller
             $reservation->save();
         }
 
+        // 🟢 Nếu pre_order = yes => tạo Order và lưu lại order_id
+        $orderId = null;
+        if ($request->pre_order === 'yes') {
+            $order = Order::create([
+                'table_session_id' => $tableSession->id,
+                'status' => 0, // open
+                'total_amount' => 0,
+                'created_by' => $request->employee_id,
+                'updated_by' => $request->employee_id,
+            ]);
+
+            $orderId = $order->id;
+        }
+
+        // ✅ Trả về cả session và order_id nếu có
         return response()->json([
             'success' => true,
-            'data' => $tableSession
+            'data' => [
+                'table_session' => $tableSession,
+                'order_id' => $orderId,
+            ],
         ], 200);
     }
 
@@ -433,6 +515,132 @@ class TableSessionController extends Controller
         return $this->successResponse(
             $session,
             'Table session retrieved successfully'
+        );
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/table-sessions/{idDiningTable}/session-pending",
+     *     summary="Lấy các phiên bàn đang chờ theo Dining Table",
+     *     tags={"DiningTables"},
+     *     description="Trả về danh sách các phiên bàn có trạng thái đang chờ (status = 0), kèm thông tin reservation nếu có",
+     *     operationId="getActiveTableSessions",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="idDiningTable",
+     *         in="path",
+     *         description="ID của dining table",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Active sessions retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="session_id", type="string"),
+     *                 @OA\Property(property="table_id", type="string"),
+     *                 @OA\Property(property="table_number", type="string"),
+     *                 @OA\Property(property="session_type", type="integer", description="0-Offline,1-Merge,2-Reservation,3-Split"),
+     *                 @OA\Property(property="session_status", type="integer", description="0-Active"),
+     *                 @OA\Property(property="started_at", type="string", format="date-time"),
+     *                 @OA\Property(property="customer_id", type="string"),
+     *                 @OA\Property(property="employee_id", type="string"),
+     *                 @OA\Property(
+     *                     property="reservation",
+     *                     type="object",
+     *                     @OA\Property(property="reservation_id", type="string"),
+     *                     @OA\Property(property="reservation_customer_id", type="string"),
+     *                     @OA\Property(property="reservation_time", type="string", format="date-time"),
+     *                     @OA\Property(property="number_of_people", type="integer"),
+     *                     @OA\Property(property="reservation_status", type="integer", description="0-Pending,1-Confirmed,..."),
+     *                     @OA\Property(property="notes", type="string", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Không tìm thấy phiên bàn đang hoạt động",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="error", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/{idDiningTable}/session-pending', middleware: ['permission:table-sessions.view'])]
+    public function getActiveTableSessions(string $idDiningTable): JsonResponse
+    {
+        $sessions = DB::table('dining_tables as dt')
+            ->leftJoin('table_session_dining_table as tsdt', 'tsdt.dining_table_id', '=', 'dt.id')
+            ->leftJoin('table_sessions as ts', 'ts.id', '=', 'tsdt.table_session_id')
+            ->leftJoin('table_session_reservations as tsr', 'tsr.table_session_id', '=', 'ts.id')
+            ->leftJoin('reservations as r', 'r.id', '=', 'tsr.reservation_id')
+            ->leftJoin('customers as c', 'c.id', '=', 'r.customer_id')
+            ->where('dt.id', $idDiningTable)
+            ->where('ts.status', 0) // chỉ lấy phiên đang hoạt động
+            ->select(
+                'dt.id as dining_table_id',
+                'dt.table_number',
+                'dt.capacity',
+                'dt.is_active',
+                'ts.id as session_id',
+                'ts.type as session_type',
+                'ts.status as session_status',
+                'ts.started_at',
+                'ts.customer_id',
+                'ts.employee_id',
+                'r.id as reservation_id',
+                'r.customer_id as reservation_customer_id',
+                'r.reserved_at as reservation_time',
+                'r.number_of_people as reservation_number_of_people',
+                'r.status as reservation_status',
+                'r.notes as reservation_notes',
+                'c.full_name as customer_name',
+                'c.phone as customer_phone',
+                'c.gender as customer_gender',
+                'c.address as customer_address'
+            )
+            ->orderBy('r.reserved_at', 'asc')
+            ->get();
+
+        if ($sessions->isEmpty()) {
+            return $this->errorResponse(
+                'Không tìm thấy phiên bàn đang hoạt động cho Dining Table: ' . $idDiningTable,
+                404
+            );
+        }
+
+        $formatted = $sessions->map(function ($session) {
+            return [
+                'session_id' => $session->session_id,
+                'table_id' => $session->dining_table_id,
+                'table_number' => $session->table_number,
+                'table_capacity' => $session->capacity,
+                'session_type' => $session->session_type,
+                'session_status' => $session->session_status,
+                'started_at' => $session->started_at,
+                'customer_id' => $session->customer_id,
+                'employee_id' => $session->employee_id,
+                'reservation' => [
+                    'reservation_id' => $session->reservation_id,
+                    'customer_id' => $session->reservation_customer_id,
+                    'reserved_at' => $session->reservation_time,
+                    'number_of_people' => $session->reservation_number_of_people,
+                    'status' => $session->reservation_status,
+                    'notes' => $session->reservation_notes,
+                    'customer_name' => $session->customer_name,
+                    'customer_phone' => $session->customer_phone,
+                    'customer_gender' => $session->customer_gender,
+                    'customer_address' => $session->customer_address
+                ]
+            ];
+        });
+
+        return $this->successResponse(
+            $formatted,
+            'Active sessions retrieved successfully'
         );
     }
 

@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use OpenApi\Attributes as OA;
 use App\Http\Controllers\Controller;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Put;
 use Spatie\RouteAttributes\Attributes\Prefix;
@@ -91,36 +93,65 @@ class OrderItemController extends Controller
             'items' => 'required|array',
             'items.*.status' => 'nullable|integer|in:0,1,2,3',
             'items.*.quantity' => 'nullable|numeric|min:1',
+            'items.*.notes' => 'nullable|string', // 🆕 thêm validate ghi chú
         ]);
 
         $items = $data['items'];
         $updatedItems = [];
         $orderId = null;
 
+        /** @var array<int|string, string> $errors */
+        $errors = [];
+
         foreach ($items as $orderItemId => $itemData) {
             if (!is_array($itemData)) continue;
 
             $status = $itemData['status'] ?? null;
             $quantity = $itemData['quantity'] ?? null;
+            $notes = $itemData['notes'] ?? null; // 🆕 lấy ghi chú
 
             $orderItem = OrderItem::find($orderItemId);
 
-            if ($orderItem) {
-                if ($status !== null && in_array($status, [0, 1, 2, 3])) {
-                    $orderItem->status = $status;
+            if (!$orderItem) {
+                $errors[$orderItemId] = "OrderItem $orderItemId không tồn tại.";
+                continue;
+            }
+
+            // Kiểm tra trạng thái hợp lệ trước khi cập nhật
+            if ($status !== null) {
+                if ($orderItem->status === 2 && $status === 3) {
+                    $errors[$orderItemId] = "Món {$orderItem->dish_id} đã phục vụ, không thể hủy.";
+                    continue;
                 }
 
-                if (is_numeric($quantity) && $quantity > 0) {
-                    $orderItem->quantity = $quantity;
-                    $orderItem->total_price = $orderItem->price * $quantity;
+                if ($orderItem->status === 3 && $status !== 3) {
+                    $errors[$orderItemId] = "Món {$orderItem->dish_id} đã hủy, không thể thay đổi trạng thái.";
+                    continue;
                 }
 
-                $orderItem->save();
-                $updatedItems[] = $orderItem;
+                $orderItem->status = $status;
 
-                if (!$orderId) {
-                    $orderId = $orderItem->order_id;
+                // Ghi thời điểm Served
+                if ($status == 2 && !$orderItem->served_at) {
+                    $orderItem->served_at = now();
                 }
+            }
+
+            // 🆕 Cập nhật ghi chú nếu có
+            if ($notes !== null) {
+                $orderItem->notes = $notes;
+            }
+
+            if (is_numeric($quantity) && $quantity > 0) {
+                $orderItem->quantity = $quantity;
+                $orderItem->total_price = $orderItem->price * $quantity;
+            }
+
+            $orderItem->save();
+            $updatedItems[] = $orderItem;
+
+            if (!$orderId) {
+                $orderId = $orderItem->order_id;
             }
         }
 
@@ -140,9 +171,21 @@ class OrderItemController extends Controller
                 };
 
                 $order->status = $orderStatus;
-                $order->total_amount = $order->items->sum('total_price');
+                // Chỉ cộng tổng tiền các món chưa bị hủy
+                $order->total_amount = $order->items
+                    ->where('status', '!=', 3)
+                    ->sum('total_price');
                 $order->save();
             }
+        }
+
+        // Nếu có lỗi từng món, trả về mảng lỗi
+        if (!empty($errors)) {
+            return $this->errorResponse(
+                'Một số món không thể cập nhật trạng thái', // message string
+                $errors, // mảng lỗi chi tiết
+                422
+            );
         }
 
         return $this->successResponse(
@@ -226,24 +269,40 @@ class OrderItemController extends Controller
     {
         // Validate dữ liệu
         $data = $request->validate([
-            'order_id' => 'required|string',
-            'items' => 'required|array',
+            'order_id' => 'nullable|string', // có thể null nếu là order mới
+            'table_session_id' => 'nullable|string|required_without:order_id',
+            'invoice_id' => 'nullable|string', // id hóa đơn, nếu có
+            'items' => 'required|array|min:1',
             'items.*.dish_id' => 'required|string',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.status' => 'nullable|integer|in:0,1,2,3',
+            'items.*.notes' => 'nullable|string',
         ]);
 
-        $orderId = $data['order_id'];
+        DB::beginTransaction();
+
+        $orderId = $data['order_id'] ?? null;
+        $tableSessionId = $data['table_session_id'] ?? null;
         $newItems = $data['items'];
 
-        // Lấy hoặc tạo order
-        $order = Order::with('items')->firstOrCreate(
-            ['id' => $orderId],
-            ['status' => 0, 'total_amount' => 0]
-        );
+        // 🟢 Nếu chưa có order_id → tạo mới Order
+        if (!$orderId) {
+            $order = Order::create([
+                'table_session_id' => $tableSessionId,
+                'status' => 0, // open
+                'total_amount' => 0
+            ]);
+            $orderId = $order->id;
+        } else {
+            // 🟢 Nếu có order_id → lấy lại Order
+            $order = Order::with('items')->firstOrCreate(
+                ['id' => $orderId],
+                ['status' => 0, 'total_amount' => 0]
+            );
+        }
 
-        // Lấy danh sách món hiện tại của order
+        // Lấy danh sách món hiện có
         $existingItems = $order->items->keyBy('dish_id');
         $createdOrUpdatedItems = [];
 
@@ -252,19 +311,23 @@ class OrderItemController extends Controller
             $quantity = $itemData['quantity'];
             $price = $itemData['price'];
             $totalPrice = $quantity * $price;
+            $notes = $itemData['notes'] ?? null; // 🆕 Lấy ghi chú nếu có
 
             if ($existingItems->has($dishId)) {
-                // Món đã tồn tại → cộng số lượng & total_price
+                // Nếu món đã tồn tại → cộng dồn
                 $existingItem = $existingItems[$dishId];
                 $existingItem->quantity += $quantity;
                 $existingItem->total_price += $totalPrice;
                 if (isset($itemData['status'])) {
                     $existingItem->status = $itemData['status'];
                 }
+                if (isset($itemData['notes'])) {
+                    $existingItem->notes = $notes; // 🆕 cập nhật ghi chú
+                }
                 $existingItem->save();
                 $createdOrUpdatedItems[] = $existingItem;
             } else {
-                // Món mới → tạo mới
+                // Nếu món mới → thêm mới
                 $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'dish_id' => $dishId,
@@ -272,15 +335,19 @@ class OrderItemController extends Controller
                     'price' => $price,
                     'total_price' => $totalPrice,
                     'status' => $itemData['status'] ?? 0,
+                    'notes' => $notes, // 🆕 Lưu ghi chú
                 ]);
                 $createdOrUpdatedItems[] = $orderItem;
             }
         }
 
-        // Cập nhật tổng tiền
+        // 🧮 Cập nhật tổng tiền
         $order->total_amount = $order->items()->sum('total_price');
+        $order->save();
 
-        // Cập nhật trạng thái order dựa trên trạng thái các món
+        // Sau khi thêm xong tất cả items
+
+        // 🧩 Cập nhật trạng thái order
         $statuses = $order->items->pluck('status')->unique()->sort()->values()->all();
 
         $order->status = match (true) {
@@ -291,14 +358,29 @@ class OrderItemController extends Controller
             default => 1, // Mixed
         };
 
-        $order->save();
+        if (!empty($data['invoice_id'])) {
+            $invoice = Invoice::find($data['invoice_id']);
+            if ($invoice) {
+                $totalAmount = $order->total_amount;
+                $totalAfterDiscount = $totalAmount * (1 - ($invoice->discount / 100));
+                $finalAmount = $totalAfterDiscount * (1 + ($invoice->tax / 100));
+
+                $invoice->total_amount = $totalAmount;
+                $invoice->final_amount = $finalAmount;
+                $invoice->save();
+            }
+        }
+
+        $order->load('items'); // 🟢 Refresh lại dữ liệu
+
+        DB::commit();
 
         return $this->successResponse(
             [
                 'order' => $order,
                 'items' => $createdOrUpdatedItems,
             ],
-            'Order và các món đã được thêm/cập nhật thành công.'
+            'Order and items have been added/updated successfully.'
         );
     }
 }

@@ -32,25 +32,16 @@ class Promotion extends BaseModel
         'updated_at' => 'datetime',
     ];
 
-    /**
-     * Scope: chỉ lấy các promotion đang hoạt động
-     */
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
     }
 
-    /**
-     * Quan hệ: một promotion có thể được áp dụng cho nhiều hóa đơn
-     */
     public function invoicePromotions()
     {
         return $this->hasMany(InvoicePromotion::class, 'promotion_id');
     }
 
-    /**
-     * Kiểm tra xem promotion hiện có hiệu lực không (theo ngày)
-     */
     public function isCurrentlyValid(): bool
     {
         $today = now()->toDateString();
