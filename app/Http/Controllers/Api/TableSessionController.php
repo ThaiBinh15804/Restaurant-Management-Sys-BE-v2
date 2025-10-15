@@ -301,6 +301,45 @@ class TableSessionController extends Controller
         ], 200);
     }
 
+    #[Post('/offline', middleware: ['permission:table-sessions.create'])]
+    public function createTableSessionOffline(Request $request)
+    {
+        $data = $request->validate([
+            'dining_table_id' => 'required|string|exists:dining_tables,id',
+            'employee_id' => 'required|exists:employees,id',
+        ]);
+
+        $diningTableId = $data['dining_table_id'];
+
+        // 🧩 1. Tạo session mới
+        $session = TableSession::create([
+            'type' => 0, // Offline
+            'status' => 0, // Pending
+            'parent_session_id' => null,
+            'merged_into_session_id' => null,
+            'started_at' => null,
+            'ended_at' => null,
+            'customer_id' => 'CUOJO15Z5I', // khách mặc định
+            'employee_id' => $request->employee_id,
+            'created_by' => $request->employee_id,
+            'updated_by' => $request->employee_id,
+        ]);
+
+        // 🧩 2. Gắn vào bảng table_session_dining_table
+        TableSessionDiningTable::create([
+            'dining_table_id' => $diningTableId,
+            'table_session_id' => $session->id,
+            'created_by' => $request->employee_id,
+            'updated_by' => $request->employee_id,
+        ]);
+
+        // 🧩 3. Trả về thông tin session vừa tạo
+        return response()->json([
+            'message' => 'Successfully created offline session',
+            'data' => $session
+        ], 201);
+    }
+
     /**
      * - Có trong bảng table_session_dining_table
      * - Và table_session.status IN (1, 2)

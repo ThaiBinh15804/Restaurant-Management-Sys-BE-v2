@@ -136,6 +136,16 @@ class DatabaseSeeder extends Seeder
         $customerProfile2 = $customerUser2->customerProfile()->create([
             'full_name' => 'Customer User 2',
         ]);
+
+        $customerUserOffline = User::create([
+            'email' => 'customerOffline@restaurant.com',
+            'password' => 'password123',
+            'status' => User::STATUS_ACTIVE,
+            'role_id' => $customer?->id,
+        ]);
+        $customerProfileOffline = $customerUserOffline->customerProfile()->create([
+            'full_name' => 'Customer User Offline',
+        ]);
     }
 
     private function createDefaultTableDiskMenuData(): void

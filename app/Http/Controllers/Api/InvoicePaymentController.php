@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Invoice\InvoiceQueryRequest;
 use App\Models\Invoice;
 use App\Models\InvoicePromotion;
+use App\Models\Order;
 use App\Models\Payment;
 use App\Models\TableSession;
 use Illuminate\Http\Request;
@@ -420,6 +421,10 @@ class InvoicePaymentController extends Controller
             } else {
                 $tableSession->status = 2; // Hoàn thành
                 $tableSession->ended_at = now();
+
+                // 🔹 Update tất cả orders thuộc table session => Đã trả (status = 3)
+                Order::where('table_session_id', $request->table_session_id)
+                    ->update(['status' => 3]);
             }
             $tableSession->save();
 
@@ -495,6 +500,7 @@ class InvoicePaymentController extends Controller
     public function payRemainingInvoice(Request $request, string $invoice_id)
     {
         $request->validate([
+            'table_session_id' => 'required|string|exists:table_sessions,id', // 🆕 thêm dòng này
             'amount' => 'required|numeric|min:0',
             'method' => 'required|integer|in:0,1',
             'status_payment' => 'required|integer|in:0,1,2,3',
@@ -531,6 +537,11 @@ class InvoicePaymentController extends Controller
                 $invoice->tableSession->ended_at = now();
                 $invoice->tableSession->save();
             }
+
+            // 🆕 Cập nhật toàn bộ Order của table_session về status = 3 (đã trả)
+            Order::where('table_session_id', $request->table_session_id)
+                ->where('status', '!=', 4) // nếu bạn muốn bỏ qua các order đã hủy
+                ->update(['status' => 3]);
 
             DB::commit();
             return response()->json([
