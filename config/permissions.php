@@ -434,33 +434,94 @@ return [
             ],
         ],
 
-        'inventory' => [
-            'name' => 'Inventory Management',
-            'description' => 'Permissions related to inventory and stock management',
+        'ingredient_categories' => [
+            'name' => 'Ingredient Category Management',
+            'description' => 'Permissions related to ingredient category management',
             'permissions' => [
-                'inventory.view' => [
-                    'name' => 'View Inventory',
-                    'description' => 'Permission to view inventory items and stock levels',
+                'ingredient_categories.view' => [
+                    'name' => 'View Ingredient Categories',
+                    'description' => 'Permission to view ingredient category listings and details',
                 ],
-                'inventory.create' => [
-                    'name' => 'Create Inventory Items',
-                    'description' => 'Permission to create new inventory items',
+                'ingredient_categories.create' => [
+                    'name' => 'Create Ingredient Categories',
+                    'description' => 'Permission to create new ingredient categories',
                 ],
-                'inventory.edit' => [
-                    'name' => 'Edit Inventory',
-                    'description' => 'Permission to edit inventory item details',
+                'ingredient_categories.edit' => [
+                    'name' => 'Edit Ingredient Categories',
+                    'description' => 'Permission to edit existing ingredient categories',
                 ],
-                'inventory.delete' => [
-                    'name' => 'Delete Inventory Items',
-                    'description' => 'Permission to delete inventory items',
+                'ingredient_categories.delete' => [
+                    'name' => 'Delete Ingredient Categories',
+                    'description' => 'Permission to delete ingredient categories',
                 ],
-                'inventory.adjust' => [
-                    'name' => 'Adjust Inventory Levels',
-                    'description' => 'Permission to adjust inventory stock levels',
+            ],
+        ],
+
+        'ingredients' => [
+            'name' => 'Ingredient Management',
+            'description' => 'Permissions related to ingredient master data management',
+            'permissions' => [
+                'ingredients.view' => [
+                    'name' => 'View Ingredients',
+                    'description' => 'Permission to view ingredient listings and details',
                 ],
-                'inventory.reports' => [
-                    'name' => 'View Inventory Reports',
-                    'description' => 'Permission to view inventory and stock reports',
+                'ingredients.create' => [
+                    'name' => 'Create Ingredients',
+                    'description' => 'Permission to create new ingredients',
+                ],
+                'ingredients.edit' => [
+                    'name' => 'Edit Ingredients',
+                    'description' => 'Permission to edit existing ingredients',
+                ],
+                'ingredients.delete' => [
+                    'name' => 'Delete Ingredients',
+                    'description' => 'Permission to delete ingredients',
+                ],
+            ],
+        ],
+
+        'suppliers' => [
+            'name' => 'Supplier Management',
+            'description' => 'Permissions related to supplier management',
+            'permissions' => [
+                'suppliers.view' => [
+                    'name' => 'View Suppliers',
+                    'description' => 'Permission to view supplier listings and details',
+                ],
+                'suppliers.create' => [
+                    'name' => 'Create Suppliers',
+                    'description' => 'Permission to create new suppliers',
+                ],
+                'suppliers.edit' => [
+                    'name' => 'Edit Suppliers',
+                    'description' => 'Permission to edit existing suppliers',
+                ],
+                'suppliers.delete' => [
+                    'name' => 'Delete Suppliers',
+                    'description' => 'Permission to delete suppliers',
+                ],
+            ],
+        ],
+
+        'stocks' => [
+            'name' => 'Stock Management',
+            'description' => 'Permissions related to stock import, export, and loss management',
+            'permissions' => [
+                'stocks.view' => [
+                    'name' => 'View Stocks',
+                    'description' => 'Permission to view stock imports, exports, and losses',
+                ],
+                'stocks.create' => [
+                    'name' => 'Create Stock Records',
+                    'description' => 'Permission to create stock imports, exports, and losses',
+                ],
+                'stocks.edit' => [
+                    'name' => 'Edit Stock Records',
+                    'description' => 'Permission to edit stock imports, exports, and losses',
+                ],
+                'stocks.delete' => [
+                    'name' => 'Delete Stock Records',
+                    'description' => 'Permission to delete stock imports, exports, and losses',
                 ],
             ],
         ],
@@ -584,12 +645,22 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
-                'inventory.view',
-                'inventory.create',
-                'inventory.edit',
-                'inventory.delete',
-                'inventory.adjust',
-                'inventory.reports',
+                'ingredient_categories.view',
+                'ingredient_categories.create',
+                'ingredient_categories.edit',
+                'ingredient_categories.delete',
+                'ingredients.view',
+                'ingredients.create',
+                'ingredients.edit',
+                'ingredients.delete',
+                'suppliers.view',
+                'suppliers.create',
+                'suppliers.edit',
+                'suppliers.delete',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
+                'stocks.delete',
                 'reports.sales',
                 'reports.inventory',
                 'reports.financial',
@@ -630,10 +701,18 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
-                'inventory.view',
-                'inventory.edit',
-                'inventory.adjust',
-                'inventory.reports',
+                'ingredient_categories.view',
+                'ingredient_categories.create',
+                'ingredient_categories.edit',
+                'ingredients.view',
+                'ingredients.create',
+                'ingredients.edit',
+                'suppliers.view',
+                'suppliers.create',
+                'suppliers.edit',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
                 'reports.sales',
                 'reports.inventory',
                 'reports.financial',
@@ -655,7 +734,8 @@ return [
                 'reservations.view',
                 'reservations.create',
                 'reservations.edit',
-                'inventory.view',
+                'ingredient_categories.view',
+                'ingredients.view',
             ],
         ],
 
@@ -685,8 +765,10 @@ return [
                 'orders.view',
                 'orders.process',
                 'orders.complete',
-                'inventory.view',
-                'inventory.adjust',
+                'ingredient_categories.view',
+                'ingredients.view',
+                'stocks.view',
+                'stocks.create',
             ],
         ],
 

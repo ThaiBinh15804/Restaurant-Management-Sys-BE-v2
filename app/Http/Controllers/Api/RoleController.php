@@ -441,7 +441,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Post(
-     *     path="/api/roles/{id}/permissions",
+     *     path="/api/roles/{id}/permissions/assign",
      *     tags={"Roles"},
      *     summary="Assign permissions to role",
      *     description="Assign specific permissions to a role",
@@ -476,7 +476,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Post('/{id}/permissions', middleware: 'permission:roles.edit')]
+    #[Post('/{id}/permissions/assign', middleware: 'permission:roles.edit')]
     public function assignPermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -513,7 +513,7 @@ class RoleController extends Controller
 
     /**
      * @OA\Delete(
-     *     path="/api/roles/{id}/permissions",
+     *     path="/api/roles/{id}/permissions/remove",
      *     tags={"Roles"},
      *     summary="Remove permissions from role",
      *     description="Remove specific permissions from a role",
@@ -548,7 +548,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Delete('/{id}/permissions', middleware: 'permission:roles.edit')]
+    #[Delete('/{id}/permissions/remove', middleware: 'permission:roles.edit')]
     public function removePermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);
@@ -620,7 +620,7 @@ class RoleController extends Controller
      *     )
      * )
      */
-    #[Put('/{id}/permissions', middleware: 'permission:roles.edit')]
+    #[Put('/{id}/permissions/sync', middleware: 'permission:roles.edit')]
     public function syncPermissions(Request $request, string $id): JsonResponse
     {
         $role = Role::find($id);

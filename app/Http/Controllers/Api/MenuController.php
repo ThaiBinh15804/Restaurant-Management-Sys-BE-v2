@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Menu\MenuQueryRequest;
 use App\Models\Dish;
 use App\Models\Menu;
+use App\Models\DishCategory;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -647,5 +648,65 @@ class MenuController extends Controller
             $availableDishes,
             'Danh sách món ăn chưa có trong menu.'
         );
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/active/categories",
+     *     tags={"Statistics"},
+     *     summary="Get active menu categories with dishes",
+     *     description="Retrieve dish categories with up to 4 active dishes from the current menu",
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="menu_id",
+     *         in="query",
+     *         description="Filter by specific menu ID (optional)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=1)
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit_dishes",
+     *         in="query",
+     *         description="Limit number of dishes per category (default: 4)",
+     *         required=false,
+     *         @OA\Schema(type="integer", example=4)
+     *     ),
+     *     @OA\Parameter(
+     *         name="category_name",
+     *         in="query",
+     *         description="Filter categories by name (optional, supports partial match)",
+     *         required=false,
+     *         @OA\Schema(type="string", example="Món chính")
+     *     ),
+     *     @OA\Parameter(
+     *         name="is_active",
+     *         in="query",
+     *         description="Filter by active status of category (true/false)",
+     *         required=false,
+     *         @OA\Schema(type="boolean", example=true)
+     *     ),
+     *     @OA\Response(response=200, description="Categories with dishes retrieved successfully"),
+     *     @OA\Response(response=404, description="No menu found")
+     * )
+     */
+    #[Get('/active/categories', middleware: ['permission:table-sessions.view'])]
+    public function getActiveMenuCategoriesWithDishes(Request $request): JsonResponse
+    {
+        $menu = Menu::where('is_active', 1)->first();
+        if (!$menu) {
+            return $this->errorResponse('Không có menu nào đang hoạt động.', 404);
+        }
+        $dishIds = MenuItem::where('menu_id', $menu->id)->pluck('dish_id');
+        $categories = DishCategory::whereHas('dishes', function ($q) use ($dishIds) {
+            $q->whereIn('id', $dishIds)->where('is_active', true);
+        })
+            ->with(['dishes' => function ($q) use ($dishIds) {
+                $q->whereIn('id', $dishIds)
+                    ->take(4);
+            }])
+            ->get();
+
+        return $this->successResponse($categories, 'Danh mục và món ăn trong menu active');
     }
 }

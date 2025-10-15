@@ -8,6 +8,15 @@ use Illuminate\Validation\Rule;
 
 class EmployeeQueryRequest extends BaseQueryRequest
 {
+    protected function prepareForValidation()
+    {
+        if ($this->has('is_active')) {
+            $this->merge([
+                'is_active' => filter_var($this->query('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
+            ]);
+        }
+    }
+
     protected function queryRules(): array
     {
         return [
@@ -20,6 +29,7 @@ class EmployeeQueryRequest extends BaseQueryRequest
             'gender' => ['sometimes', 'string', 'max:20'],
             'hire_date_from' => ['sometimes', 'date'],
             'hire_date_to' => ['sometimes', 'date', 'after_or_equal:hire_date_from'],
+            'role_id' => ['sometimes', 'nullable', 'string', 'exists:roles,id'],
         ];
     }
 
@@ -32,6 +42,7 @@ class EmployeeQueryRequest extends BaseQueryRequest
             'gender',
             'hire_date_from',
             'hire_date_to',
+            'role_id',
         ]);
     }
 }

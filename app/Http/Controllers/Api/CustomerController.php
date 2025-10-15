@@ -10,6 +10,7 @@ use App\Http\Requests\Customer\CustomerUpdateRequest;
 use App\Models\Customer;
 use App\Models\Role;
 use App\Models\User;
+use App\Traits\HasFileUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +33,7 @@ use Spatie\RouteAttributes\Attributes\Put;
 #[Prefix('customers')]
 class CustomerController extends Controller
 {
+    use HasFileUpload;
     /**
      * @OA\Get(
      *     path="/api/customers",
@@ -57,12 +59,12 @@ class CustomerController extends Controller
     {
         $filters = $request->filters();
         $query = Customer::with('user')
-        ->orderBy('full_name')
-        ->when($filters['full_name'] ?? null, fn($q, $v) => $q->where('full_name', 'like', "%$v%"))
-        ->when($filters['phone'] ?? null, fn($q, $v) => $q->where('phone', 'like', "%$v%"))
-        ->when($filters['gender'] ?? null, fn($q, $v) => $q->where('gender', $v))
-        ->when(isset($filters['membership_level']), fn($q) => $q->where('membership_level', $filters['membership_level']))
-        ->when($filters['user_id'] ?? null, fn($q, $v) => $q->where('user_id', $v));
+            ->orderBy('full_name')
+            ->when($filters['full_name'] ?? null, fn($q, $v) => $q->where('full_name', 'like', "%$v%"))
+            ->when($filters['phone'] ?? null, fn($q, $v) => $q->where('phone', 'like', "%$v%"))
+            ->when($filters['gender'] ?? null, fn($q, $v) => $q->where('gender', $v))
+            ->when(isset($filters['membership_level']), fn($q) => $q->where('membership_level', $filters['membership_level']))
+            ->when($filters['user_id'] ?? null, fn($q, $v) => $q->where('user_id', $v));
 
         $perPage = $request->perPage();
         $paginator = $query->paginate($perPage);
@@ -117,11 +119,11 @@ class CustomerController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/api/customers/{id}",
      *     tags={"Customers"},
      *     summary="Update customer and user account",
-     *     description="Update customer profile and optionally update their user account (email, password)",
+     *     description="Update customer profile and optionally update their user avatar. Note: Use POST method with _method=PUT for file upload support.",
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -132,12 +134,16 @@ class CustomerController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="full_name", type="string", example="Jane Doe Updated"),
-     *             @OA\Property(property="phone", type="string", example="0987654321"),
-     *             @OA\Property(property="gender", type="string", enum={"male", "female", "other"}, example="female"),
-     *             @OA\Property(property="address", type="string", example="456 Customer Ave"),
-     *             @OA\Property(property="membership_level", type="integer", example=2)
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="full_name", type="string", example="", description="Full name of the customer"),
+     *                 @OA\Property(property="phone", type="string", example="", description="Customer phone number"),
+     *                 @OA\Property(property="gender", type="string", enum={"male", "female", "other"}, example="", description="Gender: male, female, or other"),
+     *                 @OA\Property(property="address", type="string", example="", description="Customer address"),
+     *                 @OA\Property(property="membership_level", type="integer", example="", description="1=Bronze, 2=Silver, 3=Gold, 4=Titanium"),
+     *                 @OA\Property(property="avatar", type="string", format="binary", example="", description="Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)"),
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -154,7 +160,7 @@ class CustomerController extends Controller
      *     )
      * )
      */
-    #[Put('/{id}', middleware: 'permission:customers.edit')]
+    #[Post('/{id}', middleware: 'permission:customers.edit')]
     public function update(CustomerUpdateRequest $request, string $id): JsonResponse
     {
         try {
@@ -169,12 +175,36 @@ class CustomerController extends Controller
             }
 
             $data = $request->validated();
-            
-            DB::transaction(function () use ($customer, $data) {
-                $customer->fill($data);
+
+            DB::transaction(function () use ($customer, $data, $request) {
+                $customerData = collect($data)
+                    ->except(['avatar']) 
+                    ->filter(function ($value) {
+                        return !is_null($value);
+                    })
+                    ->toArray();
+
+                $customer->fill($customerData);
                 $customer->save();
+
+                if ($request->hasFile('avatar') && $customer->user) {
+                    $entityType = $this->getEntityTypeFromController();
+                    $oldAvatar = $customer->user->avatar;
+
+                    $avatarPath = $this->uploadFile(
+                        $request->file('avatar'),
+                        $entityType,
+                        $customer->id,
+                        $oldAvatar
+                    );
+
+                    $customer->user->update([
+                        'avatar' => $avatarPath,
+                        'updated_by' => auth('api')->id(),
+                    ]);
+                }
             });
-            
+
             $customer->load('user');
 
             Log::info('Customer updated successfully', [

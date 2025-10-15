@@ -18,28 +18,30 @@ class CustomerUpdateRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $customerId = $this->route('id');
 
         return [
-            // Customer information
-            'full_name' => 'sometimes|required|string|max:255',
+            // Basic information (optional fields)
+            'full_name' => ['sometimes', 'nullable', 'string', 'max:255'],
+
             'phone' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'string',
                 'max:20',
                 Rule::unique('customers', 'phone')->ignore($customerId),
             ],
-            'gender' => 'sometimes|required|string|in:male,female,other',
-            'address' => 'nullable|string|max:500',
+
+            'gender' => ['sometimes', 'nullable', Rule::in(['male', 'female', 'other'])],
+
+            'address' => ['sometimes', 'nullable', 'string', 'max:500'],
+
             'membership_level' => [
                 'sometimes',
-                'required',
+                'nullable',
                 'integer',
                 Rule::in([
                     Customer::MEMBERSHIP_BRONZE,
@@ -48,19 +50,28 @@ class CustomerUpdateRequest extends FormRequest
                     Customer::MEMBERSHIP_TITANIUM,
                 ]),
             ],
+
             'user_id' => [
+                'sometimes',
                 'nullable',
                 'string',
                 'exists:users,id',
                 Rule::unique('customers', 'user_id')->ignore($customerId),
             ],
+
+            // Avatar upload (multipart/form-data)
+            'avatar' => [
+                'sometimes',
+                'nullable',
+                'image',
+                'mimes:jpeg,jpg,png,gif,webp',
+                'max:2048', // 2MB
+            ],
         ];
     }
 
     /**
-     * Get custom attribute names for validator errors.
-     *
-     * @return array<string, string>
+     * Custom attribute labels.
      */
     public function attributes(): array
     {
@@ -71,26 +82,24 @@ class CustomerUpdateRequest extends FormRequest
             'address' => 'address',
             'membership_level' => 'membership level',
             'user_id' => 'user ID',
+            'avatar' => 'avatar image',
         ];
     }
 
     /**
-     * Get custom messages for validator errors.
-     *
-     * @return array<string, string>
+     * Custom error messages.
      */
     public function messages(): array
     {
         return [
-            'full_name.required' => 'The full name is required.',
-            'phone.required' => 'The phone number is required.',
             'phone.unique' => 'This phone number is already registered.',
-            'gender.required' => 'The gender is required.',
             'gender.in' => 'The gender must be male, female, or other.',
-            'membership_level.required' => 'The membership level is required.',
-            'membership_level.in' => 'The membership level must be 0 (Bronze), 1 (Silver), 2 (Gold), or 3 (Titanium). You can also use string labels: Bronze, Silver, Gold, or Titanium.',
+            'membership_level.in' => 'The membership level must be one of: Bronze, Silver, Gold, or Titanium.',
             'user_id.exists' => 'The selected user does not exist.',
             'user_id.unique' => 'This user already has a customer profile.',
+            'avatar.image' => 'The avatar must be an image file.',
+            'avatar.mimes' => 'The avatar must be a file of type: jpeg, jpg, png, gif, or webp.',
+            'avatar.max' => 'The avatar may not be greater than 2MB.',
         ];
     }
 }

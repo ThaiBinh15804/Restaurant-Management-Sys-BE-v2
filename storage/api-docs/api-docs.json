@@ -1050,13 +1050,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Customers"
                 ],
                 "summary": "Update customer and user account",
-                "description": "Update customer profile and optionally update their user account (email, password)",
-                "operationId": "32da1527afa82d1a6b0e034146f1032d",
+                "description": "Update customer profile and optionally update their user avatar. Note: Use POST method with _method=PUT for file upload support.",
+                "operationId": "9029a480cd57e68ed657f037e3b5cbe6",
                 "parameters": [
                     {
                         "name": "id",
@@ -1071,33 +1071,44 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "full_name": {
+                                        "description": "Full name of the customer",
                                         "type": "string",
-                                        "example": "Jane Doe Updated"
+                                        "example": ""
                                     },
                                     "phone": {
+                                        "description": "Customer phone number",
                                         "type": "string",
-                                        "example": "0987654321"
+                                        "example": ""
                                     },
                                     "gender": {
+                                        "description": "Gender: male, female, or other",
                                         "type": "string",
                                         "enum": [
                                             "male",
                                             "female",
                                             "other"
                                         ],
-                                        "example": "female"
+                                        "example": ""
                                     },
                                     "address": {
+                                        "description": "Customer address",
                                         "type": "string",
-                                        "example": "456 Customer Ave"
+                                        "example": ""
                                     },
                                     "membership_level": {
+                                        "description": "1=Bronze, 2=Silver, 3=Gold, 4=Titanium",
                                         "type": "integer",
-                                        "example": 2
+                                        "example": ""
+                                    },
+                                    "avatar": {
+                                        "description": "Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": ""
                                     }
                                 },
                                 "type": "object"
@@ -1994,6 +2005,32 @@
                 }
             }
         },
+        "/api/auth/dishes/popular": {
+            "get": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Lấy danh sách món ăn phổ biến nhất",
+                "operationId": "fcd50a3a0e381ebb1bf444a0e9b13e0b",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "Số lượng món ăn trả về",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 5
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn phổ biến"
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -2067,6 +2104,14 @@
                         "schema": {
                             "type": "string",
                             "format": "date"
+                        }
+                    },
+                    {
+                        "name": "role_id",
+                        "in": "query",
+                        "description": "Role of user",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 ],
@@ -2222,13 +2267,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Employees"
                 ],
                 "summary": "Update employee and user account",
-                "description": "Update employee information and optionally update their user account (email, password, role)",
-                "operationId": "55e1ceec679a0d1436c869735e984a83",
+                "description": "Update employee information and optionally update their user account (email, password, role, avatar). Note: Use POST method with _method=PUT for file upload support.",
+                "operationId": "bf70e7f9f8541ec0297cbc20e0f5de92",
                 "parameters": [
                     {
                         "name": "id",
@@ -2243,28 +2288,29 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
                                     "full_name": {
                                         "type": "string",
-                                        "example": "John Smith Updated"
+                                        "example": ""
                                     },
                                     "phone": {
                                         "type": "string",
-                                        "example": "0123456789"
+                                        "example": ""
                                     },
                                     "gender": {
+                                        "description": "male|female|other",
                                         "type": "string",
-                                        "example": "male|female|other"
+                                        "example": ""
                                     },
                                     "address": {
                                         "type": "string",
-                                        "example": "123 Main St"
+                                        "example": ""
                                     },
                                     "bank_account": {
                                         "type": "string",
-                                        "example": "1234567890"
+                                        "example": ""
                                     },
                                     "contract_type": {
                                         "description": "0: Full-time, 1: Part-time",
@@ -2273,43 +2319,49 @@
                                             0,
                                             1
                                         ],
-                                        "example": 0
+                                        "example": ""
                                     },
                                     "base_salary": {
                                         "type": "number",
                                         "format": "float",
-                                        "example": 2500
+                                        "example": ""
                                     },
                                     "hire_date": {
                                         "type": "string",
                                         "format": "date",
-                                        "example": "2025-01-01"
+                                        "example": ""
                                     },
                                     "is_active": {
                                         "type": "boolean",
-                                        "example": true
+                                        "example": ""
                                     },
                                     "email": {
                                         "description": "Update user email",
                                         "type": "string",
                                         "format": "email",
-                                        "example": "john.updated@restaurant.com"
+                                        "example": ""
                                     },
                                     "password": {
                                         "description": "Update user password (optional)",
                                         "type": "string",
                                         "format": "password",
-                                        "example": "newpassword123"
+                                        "example": ""
                                     },
                                     "password_confirmation": {
                                         "type": "string",
                                         "format": "password",
-                                        "example": "newpassword123"
+                                        "example": ""
                                     },
                                     "role_id": {
                                         "description": "Update user role",
                                         "type": "string",
-                                        "example": "R-123456"
+                                        "example": ""
+                                    },
+                                    "avatar": {
+                                        "description": "Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary",
+                                        "example": ""
                                     }
                                 },
                                 "type": "object"
@@ -2323,6 +2375,9 @@
                     },
                     "404": {
                         "description": "Employee not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
                     }
                 },
                 "security": [
@@ -2409,6 +2464,25 @@
                     },
                     "404": {
                         "description": "Employee not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees/chefs": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Lấy danh sách nhân viên là chef",
+                "operationId": "fe07e8aff1a46b575629eebb19f09b25",
+                "responses": {
+                    "200": {
+                        "description": "Danh sách chef"
                     }
                 },
                 "security": [
@@ -2835,772 +2909,7 @@
                 }
             }
         },
-        "/api/invoices": {
-            "get": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "List invoices",
-                "description": "Retrieve a paginated list of invoices with optional filters such as table session, status, and total amount range.",
-                "operationId": "getInvoices",
-                "parameters": [
-                    {
-                        "name": "page",
-                        "in": "query",
-                        "description": "Page number",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 1
-                        }
-                    },
-                    {
-                        "name": "per_page",
-                        "in": "query",
-                        "description": "Number of items per page (default 15)",
-                        "required": false,
-                        "schema": {
-                            "type": "integer",
-                            "example": 15
-                        }
-                    },
-                    {
-                        "name": "table_session_id",
-                        "in": "query",
-                        "description": "Filter by table session ID",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "TS001"
-                        }
-                    },
-                    {
-                        "name": "status",
-                        "in": "query",
-                        "description": "Filter by invoice status (e.g. pending, active, completed, cancel)",
-                        "required": false,
-                        "schema": {
-                            "type": "string",
-                            "example": "completed"
-                        }
-                    },
-                    {
-                        "name": "total_amount_min",
-                        "in": "query",
-                        "description": "Filter invoices with total amount greater than or equal to this value",
-                        "required": false,
-                        "schema": {
-                            "type": "number",
-                            "format": "float",
-                            "example": 100000
-                        }
-                    },
-                    {
-                        "name": "total_amount_max",
-                        "in": "query",
-                        "description": "Filter invoices with total amount less than or equal to this value",
-                        "required": false,
-                        "schema": {
-                            "type": "number",
-                            "format": "float",
-                            "example": 1000000
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoices retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invoices retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "per_page": {
-                                                    "type": "integer",
-                                                    "example": 15
-                                                },
-                                                "data": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "example": "INV001"
-                                                            },
-                                                            "table_session_id": {
-                                                                "type": "string",
-                                                                "example": "TS001"
-                                                            },
-                                                            "status": {
-                                                                "type": "string",
-                                                                "example": "completed"
-                                                            },
-                                                            "total_amount": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 250000
-                                                            },
-                                                            "created_at": {
-                                                                "type": "string",
-                                                                "format": "date-time",
-                                                                "example": "2025-10-13T12:00:00Z"
-                                                            },
-                                                            "updated_at": {
-                                                                "type": "string",
-                                                                "format": "date-time",
-                                                                "example": "2025-10-13T13:00:00Z"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            },
-            "post": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Create invoice with payment",
-                "description": "Tạo invoice kèm payment và áp dụng các khuyến mãi nếu có",
-                "operationId": "afab2f2bee05fd353c5d3591b7b34f37",
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "table_session_id": {
-                                        "type": "string",
-                                        "example": "TS123"
-                                    },
-                                    "total_amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 100000
-                                    },
-                                    "discount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10
-                                    },
-                                    "tax": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 10
-                                    },
-                                    "final_amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 99000
-                                    },
-                                    "status": {
-                                        "type": "integer",
-                                        "enum": [
-                                            0,
-                                            1,
-                                            2,
-                                            3
-                                        ],
-                                        "example": 2
-                                    },
-                                    "listPromotionApply": {
-                                        "type": "array",
-                                        "items": {
-                                            "properties": {
-                                                "promotion_id": {
-                                                    "type": "string",
-                                                    "example": "PROMO1"
-                                                },
-                                                "discount_value": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 10
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "employee_id": {
-                                        "type": "string",
-                                        "example": "EMP001"
-                                    },
-                                    "method": {
-                                        "description": "0=Cash, 1=Bank transfer",
-                                        "type": "integer",
-                                        "enum": [
-                                            0,
-                                            1
-                                        ],
-                                        "example": 0
-                                    },
-                                    "status_payment": {
-                                        "type": "integer",
-                                        "enum": [
-                                            0,
-                                            1,
-                                            2,
-                                            3
-                                        ],
-                                        "example": 1
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Invoice and payment created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "invoice": {
-                                            "type": "object"
-                                        },
-                                        "payment": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Table session not found or invalid payload",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Table session không tồn tại!"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Internal server error"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/invoices/{id}": {
-            "get": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Get invoice detail with payments",
-                "description": "Retrieve an invoice by its ID along with all related payments.",
-                "operationId": "getInvoiceDetail",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Invoice ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "INV001"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice detail retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invoice detail retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "example": "INV001"
-                                                },
-                                                "table_session_id": {
-                                                    "type": "string",
-                                                    "example": "TS001"
-                                                },
-                                                "status": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "total_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 250000
-                                                },
-                                                "discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50000
-                                                },
-                                                "tax": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 10
-                                                },
-                                                "final_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 275000
-                                                },
-                                                "payments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "example": "PM001"
-                                                            },
-                                                            "amount": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 100000
-                                                            },
-                                                            "method": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "method_label": {
-                                                                "type": "string",
-                                                                "example": "Bank Transfer"
-                                                            },
-                                                            "status": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "status_label": {
-                                                                "type": "string",
-                                                                "example": "Completed"
-                                                            },
-                                                            "paid_at": {
-                                                                "type": "string",
-                                                                "format": "date-time",
-                                                                "example": "2025-10-13T12:00:00Z"
-                                                            },
-                                                            "employee": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "string",
-                                                                        "example": "EMP001"
-                                                                    },
-                                                                    "name": {
-                                                                        "type": "string",
-                                                                        "example": "Nguyen Van A"
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found"
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/invoices/table-session/{id}": {
-            "get": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Get invoice detail by table session ID",
-                "description": "Retrieve the invoice and its payments (with employee info) for a given table session.",
-                "operationId": "getInvoiceByTableSession",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Table session ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "TS001"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Invoice retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invoice detail retrieved successfully"
-                                        },
-                                        "data": {
-                                            "properties": {
-                                                "id": {
-                                                    "type": "string",
-                                                    "example": "INV001"
-                                                },
-                                                "table_session_id": {
-                                                    "type": "string",
-                                                    "example": "TS001"
-                                                },
-                                                "total_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 250000
-                                                },
-                                                "discount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 50000
-                                                },
-                                                "tax": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 10
-                                                },
-                                                "final_amount": {
-                                                    "type": "number",
-                                                    "format": "float",
-                                                    "example": 275000
-                                                },
-                                                "status": {
-                                                    "type": "integer",
-                                                    "example": 1
-                                                },
-                                                "created_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-10-13T12:00:00Z"
-                                                },
-                                                "updated_at": {
-                                                    "type": "string",
-                                                    "format": "date-time",
-                                                    "example": "2025-10-13T13:00:00Z"
-                                                },
-                                                "payments": {
-                                                    "type": "array",
-                                                    "items": {
-                                                        "properties": {
-                                                            "id": {
-                                                                "type": "string",
-                                                                "example": "PM001"
-                                                            },
-                                                            "amount": {
-                                                                "type": "number",
-                                                                "format": "float",
-                                                                "example": 150000
-                                                            },
-                                                            "method": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "status": {
-                                                                "type": "integer",
-                                                                "example": 1
-                                                            },
-                                                            "paid_at": {
-                                                                "type": "string",
-                                                                "format": "date-time",
-                                                                "example": "2025-10-13T14:30:00Z"
-                                                            },
-                                                            "desc_issue": {
-                                                                "type": "string",
-                                                                "example": null
-                                                            },
-                                                            "employee": {
-                                                                "properties": {
-                                                                    "id": {
-                                                                        "type": "string",
-                                                                        "example": "EMP001"
-                                                                    },
-                                                                    "full_name": {
-                                                                        "type": "string",
-                                                                        "example": "Nguyễn Văn A"
-                                                                    },
-                                                                    "phone": {
-                                                                        "type": "string",
-                                                                        "example": "0123456789"
-                                                                    },
-                                                                    "contract_type": {
-                                                                        "type": "integer",
-                                                                        "example": 1
-                                                                    },
-                                                                    "base_salary": {
-                                                                        "type": "number",
-                                                                        "format": "float",
-                                                                        "example": 8000000
-                                                                    },
-                                                                    "is_active": {
-                                                                        "type": "boolean",
-                                                                        "example": true
-                                                                    },
-                                                                    "created_at": {
-                                                                        "type": "string",
-                                                                        "format": "date-time",
-                                                                        "example": "2025-01-01T08:00:00Z"
-                                                                    }
-                                                                },
-                                                                "type": "object"
-                                                            }
-                                                        },
-                                                        "type": "object"
-                                                    }
-                                                }
-                                            },
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Invoice not found",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invoice for this table session not found"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/invoices/{invoice_id}": {
-            "put": {
-                "tags": [
-                    "Invoices"
-                ],
-                "summary": "Pay remaining amount of an invoice",
-                "description": "Cập nhật hóa đơn đã từng thanh toán một phần, tạo payment cho phần còn lại",
-                "operationId": "a50e39dadfd006cafbd2c468cdac53c4",
-                "parameters": [
-                    {
-                        "name": "invoice_id",
-                        "in": "path",
-                        "description": "ID của hóa đơn cần thanh toán",
-                        "required": true,
-                        "schema": {
-                            "type": "string",
-                            "example": "INV001"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "properties": {
-                                    "amount": {
-                                        "type": "number",
-                                        "format": "float",
-                                        "example": 50000
-                                    },
-                                    "method": {
-                                        "description": "0=Cash, 1=Bank transfer",
-                                        "type": "integer",
-                                        "enum": [
-                                            0,
-                                            1
-                                        ],
-                                        "example": 0
-                                    },
-                                    "status_payment": {
-                                        "type": "integer",
-                                        "enum": [
-                                            0,
-                                            1,
-                                            2,
-                                            3
-                                        ],
-                                        "example": 1
-                                    },
-                                    "employee_id": {
-                                        "type": "string",
-                                        "example": "EMP001"
-                                    }
-                                },
-                                "type": "object"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "Payment created successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": true
-                                        },
-                                        "payment": {
-                                            "type": "object"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Invoice not found or invalid payload",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Invoice không tồn tại!"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Server error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "success": {
-                                            "type": "boolean",
-                                            "example": false
-                                        },
-                                        "message": {
-                                            "type": "string",
-                                            "example": "Internal server error"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/menus": {
+        "/api/auth/menus": {
             "get": {
                 "tags": [
                     "Menus"
@@ -4214,7 +3523,7 @@
                 }
             }
         },
-        "/api/order-items/status": {
+        "/api/auth/order-items/status": {
             "put": {
                 "tags": [
                     "OrderItems"
@@ -6412,14 +5721,16 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/roles/{id}/permissions/assign": {
             "post": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Assign permissions to role",
                 "description": "Assign specific permissions to a role",
-                "operationId": "849c3c1071e3590a96bdbae84f270ad8",
+                "operationId": "3e4cb53e8477be2493197b59abe12a10",
                 "parameters": [
                     {
                         "name": "id",
@@ -6489,14 +5800,16 @@
                         "bearerAuth": []
                     }
                 ]
-            },
+            }
+        },
+        "/api/roles/{id}/permissions/remove": {
             "delete": {
                 "tags": [
                     "Roles"
                 ],
                 "summary": "Remove permissions from role",
                 "description": "Remove specific permissions from a role",
-                "operationId": "561b6573b056efff67165c59238b0a4e",
+                "operationId": "ce5c9cb38d00637b2c8a4ea18f7ac5ee",
                 "parameters": [
                     {
                         "name": "id",
@@ -7025,7 +6338,7 @@
                 ]
             }
         },
-        "/api/table-sessions": {
+        "/api/auth/table-sessions": {
             "get": {
                 "tags": [
                     "TableSessions"
@@ -7814,7 +7127,125 @@
                 ]
             }
         },
-        "/api/table-sessions/{idDiningTable}/session-history/{sessionId}": {
+        "/api/dining-tables/{idDiningTable}/session-history": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Lấy lịch sử phiên bàn theo Dining Table",
+                "description": "Trả về danh sách các phiên bàn đã hoàn thành hoặc bị hủy, kèm thông tin reservation nếu có",
+                "operationId": "getTableSessionHistory",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của dining table",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lịch sử phiên bàn retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "session_id": {
+                                                "type": "string"
+                                            },
+                                            "table_id": {
+                                                "type": "string"
+                                            },
+                                            "table_number": {
+                                                "type": "string"
+                                            },
+                                            "session_type": {
+                                                "description": "0-Offline,1-Merge,2-Reservation,3-Split",
+                                                "type": "integer"
+                                            },
+                                            "session_status": {
+                                                "description": "3-Completed,4-Cancelled",
+                                                "type": "integer"
+                                            },
+                                            "started_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "ended_at": {
+                                                "type": "string",
+                                                "format": "date-time"
+                                            },
+                                            "customer_id": {
+                                                "type": "string"
+                                            },
+                                            "employee_id": {
+                                                "type": "string"
+                                            },
+                                            "reservations": {
+                                                "type": "array",
+                                                "items": {
+                                                    "properties": {
+                                                        "reservation_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "reservation_customer_id": {
+                                                            "type": "string"
+                                                        },
+                                                        "reservation_time": {
+                                                            "type": "string",
+                                                            "format": "date-time"
+                                                        },
+                                                        "number_of_people": {
+                                                            "type": "integer"
+                                                        },
+                                                        "reservation_status": {
+                                                            "description": "0-Pending,1-Confirmed,2-Cancelled,3-Completed",
+                                                            "type": "integer"
+                                                        },
+                                                        "notes": {
+                                                            "type": "string",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy lịch sử phiên bàn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "error": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/table-sessions/{idDiningTable}/session-history/{sessionId}": {
             "get": {
                 "tags": [
                     "TableSessions"
@@ -8263,6 +7694,14 @@
             "description": "API Endpoints for Employee Shift Assignments"
         },
         {
+            "name": "Ingredient Categories",
+            "description": "API Endpoints for Ingredient Category Management"
+        },
+        {
+            "name": "Ingredients",
+            "description": "API Endpoints for Ingredient Management"
+        },
+        {
             "name": "Menus",
             "description": "API Endpoints for Menu Management"
         },
@@ -8285,6 +7724,18 @@
         {
             "name": "Shifts",
             "description": "API Endpoints for Shift Management"
+        },
+        {
+            "name": "Statistics",
+            "description": "API Endpoints for General Statistics"
+        },
+        {
+            "name": "Stock Management",
+            "description": "API Endpoints for Stock Import, Export, and Loss Management"
+        },
+        {
+            "name": "Suppliers",
+            "description": "API Endpoints for Supplier Management"
         },
         {
             "name": "Users",

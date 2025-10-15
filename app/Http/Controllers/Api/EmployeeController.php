@@ -9,6 +9,7 @@ use App\Http\Requests\Employee\EmployeeStoreRequest;
 use App\Http\Requests\Employee\EmployeeUpdateRequest;
 use App\Models\Employee;
 use App\Models\User;
+use App\Traits\HasFileUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -30,6 +31,7 @@ use Spatie\RouteAttributes\Attributes\Put;
 #[Prefix('employees')]
 class EmployeeController extends Controller
 {
+    use HasFileUpload;
     /**
      * @OA\Get(
      *     path="/api/employees",
@@ -45,6 +47,7 @@ class EmployeeController extends Controller
      *     @OA\Parameter(name="gender", in="query", description="Filter by gender", @OA\Schema(type="string")),
      *     @OA\Parameter(name="hire_date_from", in="query", description="Filter hire date from", @OA\Schema(type="string", format="date")),
      *     @OA\Parameter(name="hire_date_to", in="query", description="Filter hire date to", @OA\Schema(type="string", format="date")),
+     *     @OA\Parameter(name="role_id", in="query", description="Role of user", @OA\Schema(type="string")),
      *     @OA\Response(
      *         response=200,
      *         description="Employees retrieved successfully"
@@ -88,6 +91,13 @@ class EmployeeController extends Controller
                 $filters['hire_date_to'] ?? null,
                 fn($q, $v) =>
                 $q->whereDate('hire_date', '<=', $v)
+            )
+            ->when(
+                $filters['role_id'] ?? null,
+                fn($q, $v) =>
+                $q->whereHas('user.role', function ($q) use ($v) {
+                    $q->where('id', $v);
+                })
             );
 
         $perPage = $request->perPage();
@@ -226,11 +236,11 @@ class EmployeeController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/api/employees/{id}",
      *     tags={"Employees"},
      *     summary="Update employee and user account",
-     *     description="Update employee information and optionally update their user account (email, password, role)",
+     *     description="Update employee information and optionally update their user account (email, password, role, avatar). Note: Use POST method with _method=PUT for file upload support.",
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
@@ -241,28 +251,32 @@ class EmployeeController extends Controller
      *     ),
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="full_name", type="string", example="John Smith Updated"),
-     *             @OA\Property(property="phone", type="string", example="0123456789"),
-     *             @OA\Property(property="gender", type="string", example="male|female|other"),
-     *             @OA\Property(property="address", type="string", example="123 Main St"),
-     *             @OA\Property(property="bank_account", type="string", example="1234567890"),
-     *             @OA\Property(property="contract_type", type="integer", enum={0, 1}, example=0, description="0: Full-time, 1: Part-time"),
-     *             @OA\Property(property="base_salary", type="number", format="float", example=2500.00),
-     *             @OA\Property(property="hire_date", type="string", format="date", example="2025-01-01"),
-     *             @OA\Property(property="is_active", type="boolean", example=true),
-     *
-     *             @OA\Property(property="email", type="string", format="email", example="john.updated@restaurant.com", description="Update user email"),
-     *             @OA\Property(property="password", type="string", format="password", example="newpassword123", description="Update user password (optional)"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="newpassword123"),
-     *             @OA\Property(property="role_id", type="string", example="R-123456", description="Update user role")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 @OA\Property(property="full_name", type="string", example=""),
+     *                 @OA\Property(property="phone", type="string", example=""),
+     *                 @OA\Property(property="gender", type="string", example="", description="male|female|other"),
+     *                 @OA\Property(property="address", type="string", example=""),
+     *                 @OA\Property(property="bank_account", type="string", example=""),
+     *                 @OA\Property(property="contract_type", type="integer", enum={0, 1}, example="", description="0: Full-time, 1: Part-time"),
+     *                 @OA\Property(property="base_salary", type="number", format="float", example=""),
+     *                 @OA\Property(property="hire_date", type="string", format="date", example=""),
+     *                 @OA\Property(property="is_active", type="boolean", example=""),
+     *                 @OA\Property(property="email", type="string", format="email", example="", description="Update user email"),
+     *                 @OA\Property(property="password", type="string", format="password", example="", description="Update user password (optional)"),
+     *                 @OA\Property(property="password_confirmation", type="string", format="password", example=""),
+     *                 @OA\Property(property="role_id", type="string", example="", description="Update user role"),
+     *                 @OA\Property(property="avatar", type="string", format="binary", example="", description="Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)"),
+     *             )
      *         )
      *     ),
      *     @OA\Response(response=200, description="Employee updated successfully"),
-     *     @OA\Response(response=404, description="Employee not found")
+     *     @OA\Response(response=404, description="Employee not found"),
+     *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    #[Put('/{id}', middleware: 'permission:employees.edit')]
+    #[Post('/{id}', middleware: 'permission:employees.edit')]
     public function update(EmployeeUpdateRequest $request, string $id): JsonResponse
     {
         try {
@@ -274,27 +288,43 @@ class EmployeeController extends Controller
 
             $data = $request->validated();
 
-            DB::transaction(function () use ($employee, $data) {
-                $employeeData = array_filter($data, function ($key) {
-                    return !in_array($key, ['email', 'password', 'password_confirmation', 'role_id']);
-                }, ARRAY_FILTER_USE_KEY);
+            DB::transaction(function () use ($employee, $data, $request) {
+                $employeeData = collect($data)
+                    ->except(['email', 'password', 'password_confirmation', 'role_id', 'avatar'])
+                    ->reject(fn($value, $key) => is_null($value))
+                    ->toArray();
+                if (!empty($employeeData)) {
+                    $employee->fill($employeeData);
+                    $employee->save();
+                }
 
-                $employee->fill($employeeData);
-                $employee->save();
-
-                if ($employee->user && (isset($data['email']) || isset($data['password']) || isset($data['role_id']))) {
+                if ($employee->user) {
                     $userUpdates = [];
 
-                    if (isset($data['email'])) {
-                        $userUpdates['email'] = $data['email'];
+                    if (array_key_exists('email', $data)) {
+                        $userUpdates['email'] = $data['email'] ?: null;
                     }
 
                     if (!empty($data['password'])) {
                         $userUpdates['password'] = Hash::make($data['password']);
                     }
 
-                    if (isset($data['role_id'])) {
-                        $userUpdates['role_id'] = $data['role_id'];
+                    if (array_key_exists('role_id', $data)) {
+                        $userUpdates['role_id'] = $data['role_id'] ?: null;
+                    }
+
+                    if ($request->hasFile('avatar')) {
+                        $entityType = $this->getEntityTypeFromController();
+                        $oldAvatar = $employee->user->avatar;
+
+                        $avatarPath = $this->uploadFile(
+                            $request->file('avatar'),
+                            $entityType,
+                            $employee->id,
+                            $oldAvatar
+                        );
+
+                        $userUpdates['avatar'] = $avatarPath;
                     }
 
                     if (!empty($userUpdates)) {
@@ -398,5 +428,35 @@ class EmployeeController extends Controller
         Log::info('Employee deleted', ['employee_id' => $id]);
 
         return $this->successResponse([], 'Employee deleted successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/employees/chefs",
+     *     tags={"Employees"},
+     *     summary="Lấy danh sách nhân viên là chef",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Danh sách chef")
+     * )
+     */
+    #[Get('/find/chefs', middleware: 'permission:employees.view')]
+    public function chefs(): JsonResponse
+    {
+        $chefs = Employee::whereHas('user.role', function ($q) {
+            $q->where('name', 'Kitchen Staff');
+        })
+            ->where('is_active', true)
+            ->with(['user.role'])
+            ->get();
+
+        if ($chefs->isEmpty()) {
+            return $this->errorResponse(
+                'Không tìm thấy nhân viên nào có vai trò Kitchen Staff',
+                [],
+                404
+            );
+        }
+
+        return $this->successResponse($chefs, 'Danh sách chef');
     }
 }
