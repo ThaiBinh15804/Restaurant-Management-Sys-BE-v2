@@ -3,14 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TableSession\MergeTablesRequest;
+use App\Http\Requests\TableSession\SplitInvoiceRequest;
 use App\Http\Requests\TableSession\TableSessionQueryRequest;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\TableSession;
 use App\Models\TableSessionDiningTable;
 use App\Models\TableSessionReservation;
+use App\Services\TableSessionService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
+use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Prefix;
 use Illuminate\Support\Facades\DB;
@@ -21,6 +25,13 @@ use Spatie\RouteAttributes\Attributes\Put;
 #[Prefix('table-sessions')]
 class TableSessionController extends Controller
 {
+    protected TableSessionService $tableSessionService;
+
+    public function __construct(TableSessionService $tableSessionService)
+    {
+        $this->tableSessionService = $tableSessionService;
+    }
+
     /**
      * @OA\Get(
      *     path="/api/table-sessions",
@@ -1002,6 +1013,301 @@ class TableSessionController extends Controller
         return $this->successResponse(
             $grouped->first(),
             'Chi tiết phiên bàn retrieved successfully'
+        );
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/table-sessions/merge",
+     *     tags={"TableSessions"},
+     *     summary="Gộp nhiều bàn vào một bàn chính",
+     *     description="Gộp nhiều table sessions vào một target session, tạo invoice tổng và chuyển tất cả orders",
+     *     operationId="mergeTables",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"source_session_ids", "target_session_id", "employee_id"},
+     *             @OA\Property(
+     *                 property="source_session_ids",
+     *                 type="array",
+     *                 description="Danh sách ID các session cần gộp",
+     *                 @OA\Items(type="string", example="TS001")
+     *             ),
+     *             @OA\Property(
+     *                 property="target_session_id",
+     *                 type="string",
+     *                 description="ID session đích (bàn chính)",
+     *                 example="TS002"
+     *             ),
+     *             @OA\Property(
+     *                 property="employee_id",
+     *                 type="string",
+     *                 description="ID nhân viên thực hiện",
+     *                 example="EMP001"
+     *             ),
+     *             @OA\Property(
+     *                 property="note",
+     *                 type="string",
+     *                 description="Ghi chú (tùy chọn)",
+     *                 example="Gộp bàn theo yêu cầu khách"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Gộp bàn thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Tables merged successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="merged_invoice", type="object"),
+     *                 @OA\Property(property="merged_from_sessions", type="array", @OA\Items(type="string")),
+     *                 @OA\Property(property="target_session", type="object")
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation failed hoặc không thể gộp",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=500,
+     *         description="Lỗi server",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Post('/merge', middleware: ['permission:table-sessions.merge'])]
+    public function mergeTables(MergeTablesRequest $request): JsonResponse
+    {
+        $result = $this->tableSessionService->mergeTables(
+            $request->validated()['source_session_ids'],
+            $request->validated()['target_session_id'],
+            $request->validated()['employee_id']
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse(
+                $result['message'],
+                $result['errors'] ?? [],
+                400
+            );
+        }
+
+        return $this->successResponse(
+            $result['data'],
+            $result['message']
+        );
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/table-sessions/split-invoice",
+     *     tags={"TableSessions"},
+     *     summary="Tách hóa đơn thành nhiều hóa đơn con",
+     *     description="Chia một invoice thành nhiều invoice con theo order items được chọn",
+     *     operationId="splitInvoice",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"invoice_id", "splits", "employee_id"},
+     *             @OA\Property(
+     *                 property="invoice_id",
+     *                 type="string",
+     *                 description="ID hóa đơn cần tách",
+     *                 example="IN001"
+     *             ),
+     *             @OA\Property(
+     *                 property="splits",
+     *                 type="array",
+     *                 description="Danh sách các phần tách",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     @OA\Property(
+     *                         property="order_item_ids",
+     *                         type="array",
+     *                         description="Danh sách ID các order items",
+     *                         @OA\Items(type="string", example="OI001")
+     *                     ),
+     *                     @OA\Property(
+     *                         property="note",
+     *                         type="string",
+     *                         description="Ghi chú cho phần tách",
+     *                         example="Khách A"
+     *                     )
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="employee_id",
+     *                 type="string",
+     *                 description="ID nhân viên thực hiện",
+     *                 example="EMP001"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tách hóa đơn thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Invoice split successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="parent_invoice", type="object"),
+     *                 @OA\Property(
+     *                     property="child_invoices",
+     *                     type="array",
+     *                     @OA\Items(type="object")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation failed hoặc không thể tách",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Invoice không tồn tại",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Post('/split-invoice', middleware: ['permission:table-sessions.split'])]
+    public function splitInvoice(SplitInvoiceRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        
+        $result = $this->tableSessionService->splitInvoice(
+            $validated['invoice_id'],
+            $validated['splits'],
+            $validated['employee_id']
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse(
+                $result['message'],
+                $result['errors'] ?? [],
+                400
+            );
+        }
+
+        return $this->successResponse(
+            $result['data'],
+            $result['message']
+        );
+    }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/table-sessions/unmerge/{mergedSessionId}",
+     *     tags={"TableSessions"},
+     *     summary="Hủy gộp bàn (rollback merge)",
+     *     description="Khôi phục các session đã được gộp về trạng thái trước khi gộp",
+     *     operationId="unmergeTables",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(
+     *         name="mergedSessionId",
+     *         in="path",
+     *         description="ID của session đã gộp",
+     *         required=true,
+     *         @OA\Schema(type="string", example="TS002")
+     *     ),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"employee_id"},
+     *             @OA\Property(
+     *                 property="employee_id",
+     *                 type="string",
+     *                 description="ID nhân viên thực hiện",
+     *                 example="EMP001"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Hủy gộp thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Tables unmerged successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(
+     *                     property="restored_sessions",
+     *                     type="array",
+     *                     @OA\Items(type="string")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Không thể hủy gộp",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Session không tồn tại",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Delete('/unmerge/{mergedSessionId}', middleware: ['permission:table-sessions.unmerge'])]
+    public function unmergeTables(string $mergedSessionId, Request $request): JsonResponse
+    {
+        $request->validate([
+            'employee_id' => 'required|string|exists:employees,id'
+        ]);
+
+        $result = $this->tableSessionService->unmerge(
+            $mergedSessionId,
+            $request->input('employee_id')
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse(
+                $result['message'],
+                $result['errors'] ?? [],
+                400
+            );
+        }
+
+        return $this->successResponse(
+            $result['data'],
+            $result['message']
         );
     }
 }

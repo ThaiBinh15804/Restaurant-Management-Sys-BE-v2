@@ -404,6 +404,18 @@ return [
                     'name' => 'Delete Table Sessions',
                     'description' => 'Permission to delete table sessions',
                 ],
+                'table-sessions.merge' => [
+                    'name' => 'Merge Table Sessions',
+                    'description' => 'Permission to merge multiple table sessions into one',
+                ],
+                'table-sessions.split' => [
+                    'name' => 'Split Table Sessions',
+                    'description' => 'Permission to split a table session into multiple sessions',
+                ],
+                'table-sessions.unmerge' => [
+                    'name' => 'Unmerge Table Sessions',
+                    'description' => 'Permission to unmerge previously merged table sessions',
+                ],
             ],
         ],
 

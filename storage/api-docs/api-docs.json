@@ -2909,7 +2909,1435 @@
                 }
             }
         },
-        "/api/auth/menus": {
+        "/api/ingredient-categories": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy danh sách danh mục nguyên liệu",
+                "description": "Trả về danh sách danh mục nguyên liệu có phân trang và tìm kiếm",
+                "operationId": "c93731bb84957fc0f810ed45415bca26",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Số trang",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Số bản ghi mỗi trang",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Tìm kiếm theo tên",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Lọc theo trạng thái",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách danh mục lấy thành công"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Tạo danh mục nguyên liệu mới",
+                "description": "Tạo một danh mục nguyên liệu mới trong hệ thống",
+                "operationId": "ba4ebb5f0ab5afbf2b9f4d1708893171",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Rau củ"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo danh mục thành công"
+                    },
+                    "422": {
+                        "description": "Lỗi validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/{id}": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy chi tiết danh mục nguyên liệu",
+                "description": "Trả về thông tin chi tiết của một danh mục nguyên liệu",
+                "operationId": "a5526945af48475161dd2ab4e9ebdbc6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy thông tin danh mục thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Cập nhật danh mục nguyên liệu",
+                "description": "Cập nhật thông tin danh mục nguyên liệu theo ID",
+                "operationId": "5cb498d0160cd6f8a6e92aff1a201f93",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Rau củ quả"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật danh mục thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    },
+                    "422": {
+                        "description": "Lỗi validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Xóa danh mục nguyên liệu",
+                "description": "Xóa danh mục nguyên liệu theo ID (chỉ xóa nếu không có nguyên liệu nào thuộc danh mục này)",
+                "operationId": "64fe82a6256ec85f47c13fb971732e47",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa danh mục thành công"
+                    },
+                    "400": {
+                        "description": "Không thể xóa do có ràng buộc"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Bật/tắt trạng thái danh mục nguyên liệu",
+                "description": "Thay đổi trạng thái hoạt động của danh mục nguyên liệu",
+                "operationId": "4d2b15398e399a084c038c5c9fd5db7c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật trạng thái thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/active/list": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy danh sách danh mục nguyên liệu đang hoạt động",
+                "description": "Trả về tất cả các danh mục nguyên liệu có trạng thái is_active = true",
+                "operationId": "81266746fb19998b1da1f3ccc357a731",
+                "responses": {
+                    "200": {
+                        "description": "Lấy danh sách thành công"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "List ingredients",
+                "description": "Retrieve a paginated list of ingredients with optional filters",
+                "operationId": "ca30a55ef34259f063c742b684cc4bff",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by ingredient name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "unit",
+                        "in": "query",
+                        "description": "Filter by unit",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "low_stock",
+                        "in": "query",
+                        "description": "Filter ingredients below minimum stock",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "category_ids[]",
+                        "in": "query",
+                        "description": "Filter by one or multiple category IDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredients retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Create ingredient",
+                "description": "Create a new ingredient",
+                "operationId": "c2d68c40741ce26dfd17624c54639c04",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "unit",
+                                    "min_stock"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tomato"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "kg"
+                                    },
+                                    "current_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 0
+                                    },
+                                    "min_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "max_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ingredient created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/{id}": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Get ingredient details",
+                "description": "Retrieve detailed information about a specific ingredient by ID",
+                "operationId": "31ceea6e0627b6ebd10d683e8ae3af69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredient retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Update ingredient",
+                "description": "Update ingredient information",
+                "operationId": "644a667784d857e8a6a8074285b1eb5b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Tomato"
+                                    },
+                                    "unit": {
+                                        "type": "string",
+                                        "example": "kg"
+                                    },
+                                    "current_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 25
+                                    },
+                                    "min_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "max_stock": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredient updated successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Delete ingredient",
+                "description": "Delete an ingredient by ID",
+                "operationId": "f058c3992f4ae8a7e0fbfa77a5450545",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ingredient deleted successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    },
+                    "409": {
+                        "description": "Cannot delete ingredient with existing stock movements"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Activate or deactivate ingredient",
+                "description": "Toggle the active status of an ingredient",
+                "operationId": "49f849a8df82c4dcf5920f5cb9b2e7a8",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Ingredient ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "description": "Set to true to activate, false to deactivate",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ingredient status updated successfully"
+                    },
+                    "404": {
+                        "description": "Ingredient not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredients/low-stock/list": {
+            "get": {
+                "tags": [
+                    "Ingredients"
+                ],
+                "summary": "Get low stock ingredients",
+                "description": "Retrieve list of ingredients below minimum stock level",
+                "operationId": "d699cf278272f717e4faa4789524c66c",
+                "responses": {
+                    "200": {
+                        "description": "Low stock ingredients retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "List invoices",
+                "description": "Retrieve a paginated list of invoices with optional filters such as table session, status, and total amount range.",
+                "operationId": "getInvoices",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page (default 15)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "table_session_id",
+                        "in": "query",
+                        "description": "Filter by table session ID",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "TS001"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "Filter by invoice status (e.g. pending, active, completed, cancel)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "completed"
+                        }
+                    },
+                    {
+                        "name": "total_amount_min",
+                        "in": "query",
+                        "description": "Filter invoices with total amount greater than or equal to this value",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 100000
+                        }
+                    },
+                    {
+                        "name": "total_amount_max",
+                        "in": "query",
+                        "description": "Filter invoices with total amount less than or equal to this value",
+                        "required": false,
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 1000000
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoices retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoices retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "INV001"
+                                                            },
+                                                            "table_session_id": {
+                                                                "type": "string",
+                                                                "example": "TS001"
+                                                            },
+                                                            "status": {
+                                                                "type": "string",
+                                                                "example": "completed"
+                                                            },
+                                                            "total_amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 250000
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-13T12:00:00Z"
+                                                            },
+                                                            "updated_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-13T13:00:00Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Create invoice with payment",
+                "description": "Tạo invoice kèm payment và áp dụng các khuyến mãi nếu có",
+                "operationId": "afab2f2bee05fd353c5d3591b7b34f37",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "table_session_id": {
+                                        "type": "string",
+                                        "example": "TS123"
+                                    },
+                                    "total_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 100000
+                                    },
+                                    "discount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "tax": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 10
+                                    },
+                                    "final_amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 99000
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ],
+                                        "example": 2
+                                    },
+                                    "listPromotionApply": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "promotion_id": {
+                                                    "type": "string",
+                                                    "example": "PROMO1"
+                                                },
+                                                "discount_value": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "employee_id": {
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    },
+                                    "method": {
+                                        "description": "0=Cash, 1=Bank transfer",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ],
+                                        "example": 0
+                                    },
+                                    "status_payment": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ],
+                                        "example": 1
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Invoice and payment created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "invoice": {
+                                            "type": "object"
+                                        },
+                                        "payment": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Table session not found or invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session không tồn tại!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice detail with payments",
+                "description": "Retrieve an invoice by its ID along with all related payments.",
+                "operationId": "getInvoiceDetail",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Invoice ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "INV001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice detail retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice detail retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "INV001"
+                                                },
+                                                "table_session_id": {
+                                                    "type": "string",
+                                                    "example": "TS001"
+                                                },
+                                                "status": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "total_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 250000
+                                                },
+                                                "discount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                },
+                                                "tax": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                },
+                                                "final_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 275000
+                                                },
+                                                "payments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "PM001"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 100000
+                                                            },
+                                                            "method": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "method_label": {
+                                                                "type": "string",
+                                                                "example": "Bank Transfer"
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string",
+                                                                "example": "Completed"
+                                                            },
+                                                            "paid_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-13T12:00:00Z"
+                                                            },
+                                                            "employee": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "example": "EMP001"
+                                                                    },
+                                                                    "name": {
+                                                                        "type": "string",
+                                                                        "example": "Nguyen Van A"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/table-session/{id}": {
+            "get": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Get invoice detail by table session ID",
+                "description": "Retrieve the invoice and its payments (with employee info) for a given table session.",
+                "operationId": "getInvoiceByTableSession",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Table session ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "TS001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Invoice retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice detail retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string",
+                                                    "example": "INV001"
+                                                },
+                                                "table_session_id": {
+                                                    "type": "string",
+                                                    "example": "TS001"
+                                                },
+                                                "total_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 250000
+                                                },
+                                                "discount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                },
+                                                "tax": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                },
+                                                "final_amount": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 275000
+                                                },
+                                                "status": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "created_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-13T12:00:00Z"
+                                                },
+                                                "updated_at": {
+                                                    "type": "string",
+                                                    "format": "date-time",
+                                                    "example": "2025-10-13T13:00:00Z"
+                                                },
+                                                "payments": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "PM001"
+                                                            },
+                                                            "amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 150000
+                                                            },
+                                                            "method": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "paid_at": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-10-13T14:30:00Z"
+                                                            },
+                                                            "desc_issue": {
+                                                                "type": "string",
+                                                                "example": null
+                                                            },
+                                                            "employee": {
+                                                                "properties": {
+                                                                    "id": {
+                                                                        "type": "string",
+                                                                        "example": "EMP001"
+                                                                    },
+                                                                    "full_name": {
+                                                                        "type": "string",
+                                                                        "example": "Nguyễn Văn A"
+                                                                    },
+                                                                    "phone": {
+                                                                        "type": "string",
+                                                                        "example": "0123456789"
+                                                                    },
+                                                                    "contract_type": {
+                                                                        "type": "integer",
+                                                                        "example": 1
+                                                                    },
+                                                                    "base_salary": {
+                                                                        "type": "number",
+                                                                        "format": "float",
+                                                                        "example": 8000000
+                                                                    },
+                                                                    "is_active": {
+                                                                        "type": "boolean",
+                                                                        "example": true
+                                                                    },
+                                                                    "created_at": {
+                                                                        "type": "string",
+                                                                        "format": "date-time",
+                                                                        "example": "2025-01-01T08:00:00Z"
+                                                                    }
+                                                                },
+                                                                "type": "object"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice not found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice for this table session not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/{invoice_id}": {
+            "put": {
+                "tags": [
+                    "Invoices"
+                ],
+                "summary": "Pay remaining amount of an invoice",
+                "description": "Cập nhật hóa đơn đã từng thanh toán một phần, tạo payment cho phần còn lại",
+                "operationId": "a50e39dadfd006cafbd2c468cdac53c4",
+                "parameters": [
+                    {
+                        "name": "invoice_id",
+                        "in": "path",
+                        "description": "ID của hóa đơn cần thanh toán",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "INV001"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "amount": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 50000
+                                    },
+                                    "method": {
+                                        "description": "0=Cash, 1=Bank transfer",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1
+                                        ],
+                                        "example": 0
+                                    },
+                                    "status_payment": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2,
+                                            3
+                                        ],
+                                        "example": 1
+                                    },
+                                    "employee_id": {
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Payment created successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "payment": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invoice not found or invalid payload",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice không tồn tại!"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/menus": {
             "get": {
                 "tags": [
                     "Menus"
@@ -3523,7 +4951,126 @@
                 }
             }
         },
-        "/api/auth/order-items/status": {
+        "/api/active/categories": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Get active menu categories with dishes",
+                "description": "Retrieve dish categories with up to 4 active dishes from the current menu",
+                "operationId": "8daaad933e8961f9aa944f8282fc55ef",
+                "parameters": [
+                    {
+                        "name": "menu_id",
+                        "in": "query",
+                        "description": "Filter by specific menu ID (optional)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "limit_dishes",
+                        "in": "query",
+                        "description": "Limit number of dishes per category (default: 4)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "example": 4
+                        }
+                    },
+                    {
+                        "name": "category_name",
+                        "in": "query",
+                        "description": "Filter categories by name (optional, supports partial match)",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "example": "Món chính"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status of category (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Categories with dishes retrieved successfully"
+                    },
+                    "404": {
+                        "description": "No menu found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/order-items/{id}": {
+            "delete": {
+                "tags": [
+                    "Order Items"
+                ],
+                "summary": "Xóa một món trong order",
+                "description": "Xóa order item theo ID. Nếu món chưa thuộc hóa đơn thì chỉ cần xóa, không cập nhật gì thêm.",
+                "operationId": "1278a6534795039ad2102b83915b6ead",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của order item cần xóa",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "123"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa món thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Order item deleted successfully"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy order item",
+                        "content": {
+                            "application/json": {
+                                "schema": {},
+                                "example": {
+                                    "message": "Order item not found"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Không có quyền hoặc chưa đăng nhập"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/order-items/status": {
             "put": {
                 "tags": [
                     "OrderItems"
@@ -6338,7 +7885,1336 @@
                 ]
             }
         },
-        "/api/auth/table-sessions": {
+        "/api/home/statistics": {
+            "get": {
+                "tags": [
+                    "Statistics"
+                ],
+                "summary": "Get general statistics",
+                "description": "Retrieve general statistics for the restaurant system including counts of employees, customers, orders, reservations, active table sessions, and total revenue.",
+                "operationId": "1d46bb15f17b3d671bc95d65eedaa346",
+                "responses": {
+                    "200": {
+                        "description": "Statistics retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "success"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Statistics retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "total_employees": {
+                                                    "type": "integer",
+                                                    "example": 50
+                                                },
+                                                "total_customers": {
+                                                    "type": "integer",
+                                                    "example": 200
+                                                },
+                                                "total_orders": {
+                                                    "type": "integer",
+                                                    "example": 1000
+                                                },
+                                                "total_reservations": {
+                                                    "type": "integer",
+                                                    "example": 150
+                                                },
+                                                "active_table_sessions": {
+                                                    "type": "integer",
+                                                    "example": 10
+                                                },
+                                                "total_revenue": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 50000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to retrieve statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "status": {
+                                            "type": "string",
+                                            "example": "error"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Failed to retrieve statistics"
+                                        },
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            },
+                                            "example": []
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/imports": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock imports",
+                "description": "Retrieve a paginated list of stock imports with optional filters",
+                "operationId": "73515253ea3e4f6ac9f561688713348a",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "description": "Filter from date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "description": "Filter to date",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "supplier_id",
+                        "in": "query",
+                        "description": "Filter by supplier",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock imports retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Create stock import",
+                "description": "Create a new stock import with details",
+                "operationId": "19d22d8ef3a5242990f63f0bff183a96",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "import_date",
+                                    "details"
+                                ],
+                                "properties": {
+                                    "import_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "supplier_id": {
+                                        "type": "string",
+                                        "example": "SUP-000001"
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "ingredient_id",
+                                                "ordered_quantity",
+                                                "received_quantity",
+                                                "unit_price"
+                                            ],
+                                            "properties": {
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING-000001"
+                                                },
+                                                "ordered_quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "received_quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 100
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 15000
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock import created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/imports/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock import details",
+                "description": "Retrieve detailed information about a specific stock import",
+                "operationId": "31badbf139e4e77a23475ac667f99fc5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock import retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock import",
+                "description": "Update stock import information",
+                "operationId": "0c3143f0ecad9a9e0c6a553d03680067",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "import_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "supplier_id": {
+                                        "type": "string"
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "description": "Detail ID (for update)",
+                                                    "type": "string"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string"
+                                                },
+                                                "ordered_quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "received_quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "unit_price": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "delete": {
+                                                    "description": "Mark for deletion",
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock import updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock import",
+                "description": "Delete a stock import and rollback stock changes",
+                "operationId": "7606653f6b3126a4db22f1a2a41b9bb3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock import deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock import not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock exports",
+                "description": "Retrieve a paginated list of stock exports with optional filters",
+                "operationId": "fa887314f2a0bd90b7802a2d025e8be3",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "0=Draft, 1=Approved, 2=Completed",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock exports retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Create stock export",
+                "description": "Create a new stock export with details",
+                "operationId": "c1dd305dc0943515e6f3a982ec3de0eb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "export_date",
+                                    "details"
+                                ],
+                                "properties": {
+                                    "export_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "purpose": {
+                                        "type": "string",
+                                        "example": "Kitchen operations"
+                                    },
+                                    "status": {
+                                        "description": "0=Draft, 1=Approved, 2=Completed",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ],
+                                        "example": 0
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "ingredient_id",
+                                                "quantity"
+                                            ],
+                                            "properties": {
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING-000001"
+                                                },
+                                                "quantity": {
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "example": 10
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock export created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock export details",
+                "description": "Retrieve detailed information about a specific stock export",
+                "operationId": "f7a5695eb680d24b9aa42ac8d17c935b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock export retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock export",
+                "description": "Update stock export information",
+                "operationId": "5a55ba8ca6aa114ab1b3e89567439c2b",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "export_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "purpose": {
+                                        "type": "string"
+                                    },
+                                    "status": {
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ]
+                                    },
+                                    "details": {
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "id": {
+                                                    "type": "string"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string"
+                                                },
+                                                "quantity": {
+                                                    "type": "number",
+                                                    "format": "float"
+                                                },
+                                                "delete": {
+                                                    "type": "boolean"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock export updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock export",
+                "description": "Delete a stock export and rollback stock if completed",
+                "operationId": "c3b675e6817b9e8a744db04052898073",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock export deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/exports/{id}/status": {
+            "patch": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Change stock export status",
+                "description": "Change the status of a stock export (Draft/Approved/Completed)",
+                "operationId": "bfbf1c6b3ce5c8ce2a94db1a971120d7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "description": "0=Draft, 1=Approved, 2=Completed",
+                                        "type": "integer",
+                                        "enum": [
+                                            0,
+                                            1,
+                                            2
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock export not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/losses": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "List stock losses",
+                "description": "Retrieve a paginated list of stock losses",
+                "operationId": "48b8388f4c2f016cf9cf29029b5f54fe",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "ingredient_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock losses retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Record stock loss",
+                "description": "Record a new stock loss",
+                "operationId": "57015fcfb29b0832445071bbdaf2956e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ingredient_id",
+                                    "quantity",
+                                    "loss_date"
+                                ],
+                                "properties": {
+                                    "ingredient_id": {
+                                        "type": "string",
+                                        "example": "ING-000001"
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 5
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "example": "Expired"
+                                    },
+                                    "loss_date": {
+                                        "type": "string",
+                                        "format": "date",
+                                        "example": "2025-10-14"
+                                    },
+                                    "employee_id": {
+                                        "type": "string",
+                                        "example": "EMP-000001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Stock loss recorded successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/stocks/losses/{id}": {
+            "get": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Get stock loss details",
+                "description": "Retrieve detailed information about a specific stock loss",
+                "operationId": "7d52b273c513af19070fb90e56615d53",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock loss retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Update stock loss",
+                "description": "Update stock loss information",
+                "operationId": "3729d38e7fcc9228262df6a07b7d7dc5",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "ingredient_id": {
+                                        "type": "string"
+                                    },
+                                    "quantity": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    },
+                                    "loss_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "employee_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock loss updated successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stock Management"
+                ],
+                "summary": "Delete stock loss",
+                "description": "Delete a stock loss record and restore stock",
+                "operationId": "7f6fb4d5d1b6f695f37adb7a81b1e7f7",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock loss deleted successfully"
+                    },
+                    "404": {
+                        "description": "Stock loss not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "List suppliers",
+                "description": "Retrieve a paginated list of suppliers with optional filters",
+                "operationId": "6207e57dd1dcd1d6e7125fe144607196",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by supplier name",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter by email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "phone",
+                        "in": "query",
+                        "description": "Filter by phone",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "ingredient_ids[]",
+                        "in": "query",
+                        "description": "Filter suppliers who have supplied one or more specific ingredients",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppliers retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Create supplier",
+                "description": "Create a new supplier",
+                "operationId": "dc5dc7ccb140cd5b81cab6f42b396691",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Fresh Food Suppliers Co."
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "contact_person_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "contact_person_phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@freshfood.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main Street, City"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Get supplier details",
+                "description": "Retrieve detailed information about a specific supplier by ID",
+                "operationId": "7fc447855461518ce36bdeb5a44310a3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier retrieved successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Update supplier",
+                "description": "Update supplier information",
+                "operationId": "22145931fdda85497cf90c73c5406747",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Fresh Food Suppliers Co."
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "contact_person_name": {
+                                        "type": "string",
+                                        "example": "John Doe"
+                                    },
+                                    "contact_person_phone": {
+                                        "type": "string",
+                                        "example": "0901234567"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "contact@freshfood.com"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main Street, City"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier updated successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Delete supplier",
+                "description": "Delete a supplier by ID",
+                "operationId": "2fe04361f0f1581a9f5dbb4094b634b2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier deleted successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    },
+                    "409": {
+                        "description": "Cannot delete supplier with existing stock imports"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Activate or deactivate supplier",
+                "description": "Toggle the active status of a supplier",
+                "operationId": "5745cf86dddb7713034bc3a37e795ae9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Supplier ID",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "description": "Set to true to activate, false to deactivate",
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier status updated successfully"
+                    },
+                    "404": {
+                        "description": "Supplier not found"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/suppliers/active/list": {
+            "get": {
+                "tags": [
+                    "Suppliers"
+                ],
+                "summary": "Get active suppliers",
+                "description": "Retrieve list of active suppliers",
+                "operationId": "b79e147a1b73431ca15837cd39f7b6ab",
+                "responses": {
+                    "200": {
+                        "description": "Active suppliers retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions": {
             "get": {
                 "tags": [
                     "TableSessions"
@@ -7127,125 +10003,7 @@
                 ]
             }
         },
-        "/api/dining-tables/{idDiningTable}/session-history": {
-            "get": {
-                "tags": [
-                    "DiningTables"
-                ],
-                "summary": "Lấy lịch sử phiên bàn theo Dining Table",
-                "description": "Trả về danh sách các phiên bàn đã hoàn thành hoặc bị hủy, kèm thông tin reservation nếu có",
-                "operationId": "getTableSessionHistory",
-                "parameters": [
-                    {
-                        "name": "idDiningTable",
-                        "in": "path",
-                        "description": "ID của dining table",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Lịch sử phiên bàn retrieved successfully",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "array",
-                                    "items": {
-                                        "properties": {
-                                            "session_id": {
-                                                "type": "string"
-                                            },
-                                            "table_id": {
-                                                "type": "string"
-                                            },
-                                            "table_number": {
-                                                "type": "string"
-                                            },
-                                            "session_type": {
-                                                "description": "0-Offline,1-Merge,2-Reservation,3-Split",
-                                                "type": "integer"
-                                            },
-                                            "session_status": {
-                                                "description": "3-Completed,4-Cancelled",
-                                                "type": "integer"
-                                            },
-                                            "started_at": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "ended_at": {
-                                                "type": "string",
-                                                "format": "date-time"
-                                            },
-                                            "customer_id": {
-                                                "type": "string"
-                                            },
-                                            "employee_id": {
-                                                "type": "string"
-                                            },
-                                            "reservations": {
-                                                "type": "array",
-                                                "items": {
-                                                    "properties": {
-                                                        "reservation_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "reservation_customer_id": {
-                                                            "type": "string"
-                                                        },
-                                                        "reservation_time": {
-                                                            "type": "string",
-                                                            "format": "date-time"
-                                                        },
-                                                        "number_of_people": {
-                                                            "type": "integer"
-                                                        },
-                                                        "reservation_status": {
-                                                            "description": "0-Pending,1-Confirmed,2-Cancelled,3-Completed",
-                                                            "type": "integer"
-                                                        },
-                                                        "notes": {
-                                                            "type": "string",
-                                                            "nullable": true
-                                                        }
-                                                    },
-                                                    "type": "object"
-                                                }
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "description": "Không tìm thấy lịch sử phiên bàn",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "properties": {
-                                        "error": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    }
-                },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
-            }
-        },
-        "/api/auth/table-sessions/{idDiningTable}/session-history/{sessionId}": {
+        "/api/table-sessions/{idDiningTable}/session-history/{sessionId}": {
             "get": {
                 "tags": [
                     "TableSessions"
@@ -7293,6 +10051,403 @@
                                         "message": {
                                             "type": "string",
                                             "example": "Không tìm thấy phiên bàn"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions/merge": {
+            "post": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Gộp nhiều bàn vào một bàn chính",
+                "description": "Gộp nhiều table sessions vào một target session, tạo invoice tổng và chuyển tất cả orders",
+                "operationId": "mergeTables",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "source_session_ids",
+                                    "target_session_id",
+                                    "employee_id"
+                                ],
+                                "properties": {
+                                    "source_session_ids": {
+                                        "description": "Danh sách ID các session cần gộp",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "TS001"
+                                        }
+                                    },
+                                    "target_session_id": {
+                                        "description": "ID session đích (bàn chính)",
+                                        "type": "string",
+                                        "example": "TS002"
+                                    },
+                                    "employee_id": {
+                                        "description": "ID nhân viên thực hiện",
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    },
+                                    "note": {
+                                        "description": "Ghi chú (tùy chọn)",
+                                        "type": "string",
+                                        "example": "Gộp bàn theo yêu cầu khách"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Gộp bàn thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tables merged successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "merged_invoice": {
+                                                    "type": "object"
+                                                },
+                                                "merged_from_sessions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "target_session": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation failed hoặc không thể gộp",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Lỗi server",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions/split-invoice": {
+            "post": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Tách hóa đơn thành nhiều hóa đơn con",
+                "description": "Chia một invoice thành nhiều invoice con theo order items được chọn",
+                "operationId": "splitInvoice",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "invoice_id",
+                                    "splits",
+                                    "employee_id"
+                                ],
+                                "properties": {
+                                    "invoice_id": {
+                                        "description": "ID hóa đơn cần tách",
+                                        "type": "string",
+                                        "example": "IN001"
+                                    },
+                                    "splits": {
+                                        "description": "Danh sách các phần tách",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "order_item_ids": {
+                                                    "description": "Danh sách ID các order items",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "OI001"
+                                                    }
+                                                },
+                                                "note": {
+                                                    "description": "Ghi chú cho phần tách",
+                                                    "type": "string",
+                                                    "example": "Khách A"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "employee_id": {
+                                        "description": "ID nhân viên thực hiện",
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tách hóa đơn thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice split successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "parent_invoice": {
+                                                    "type": "object"
+                                                },
+                                                "child_invoices": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation failed hoặc không thể tách",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Invoice không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/table-sessions/unmerge/{mergedSessionId}": {
+            "delete": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Hủy gộp bàn (rollback merge)",
+                "description": "Khôi phục các session đã được gộp về trạng thái trước khi gộp",
+                "operationId": "unmergeTables",
+                "parameters": [
+                    {
+                        "name": "mergedSessionId",
+                        "in": "path",
+                        "description": "ID của session đã gộp",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "TS002"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "employee_id"
+                                ],
+                                "properties": {
+                                    "employee_id": {
+                                        "description": "ID nhân viên thực hiện",
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Hủy gộp thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Tables unmerged successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "restored_sessions": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Không thể hủy gộp",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
                                         }
                                     },
                                     "type": "object"
@@ -7756,6 +10911,10 @@
         {
             "name": "Menu Items",
             "description": "Menu Items"
+        },
+        {
+            "name": "Order Items",
+            "description": "Order Items"
         },
         {
             "name": "OrderItems",

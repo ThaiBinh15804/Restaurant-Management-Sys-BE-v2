@@ -4,6 +4,16 @@ namespace App\Models;
 
 class Payment extends BaseModel
 {
+    // Status constants
+    const STATUS_PENDING = 0;
+    const STATUS_COMPLETED = 1;
+    const STATUS_FAILED = 2;
+    const STATUS_REFUNDED = 3;
+
+    // Method constants
+    const METHOD_CASH = 0;
+    const METHOD_BANK_TRANSFER = 1;
+
     protected $table = 'payments';
     protected $idPrefix = 'PM'; // Ví dụ: PM0001, PM0002,...
 
@@ -35,7 +45,7 @@ class Payment extends BaseModel
      */
     public function scopeCompleted($query)
     {
-        return $query->where('status', 1);
+        return $query->where('status', self::STATUS_COMPLETED);
     }
 
     /**
@@ -43,7 +53,7 @@ class Payment extends BaseModel
      */
     public function scopePending($query)
     {
-        return $query->where('status', 0);
+        return $query->where('status', self::STATUS_PENDING);
     }
 
     /**
@@ -68,10 +78,10 @@ class Payment extends BaseModel
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            0 => 'Pending',
-            1 => 'Completed',
-            2 => 'Failed',
-            3 => 'Refunded',
+            self::STATUS_PENDING => 'Pending',
+            self::STATUS_COMPLETED => 'Completed',
+            self::STATUS_FAILED => 'Failed',
+            self::STATUS_REFUNDED => 'Refunded',
             default => 'Unknown',
         };
     }
@@ -82,8 +92,8 @@ class Payment extends BaseModel
     public function getMethodLabelAttribute(): string
     {
         return match ($this->method) {
-            0 => 'Cash',
-            1 => 'Bank Transfer',
+            self::METHOD_CASH => 'Cash',
+            self::METHOD_BANK_TRANSFER => 'Bank Transfer',
             default => 'Unknown',
         };
     }
