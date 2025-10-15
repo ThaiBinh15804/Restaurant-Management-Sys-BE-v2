@@ -40,6 +40,14 @@ class SupplierController extends Controller
      *     @OA\Parameter(name="email", in="query", description="Filter by email", @OA\Schema(type="string")),
      *     @OA\Parameter(name="phone", in="query", description="Filter by phone", @OA\Schema(type="string")),
      *     @OA\Parameter(name="is_active", in="query", description="Filter by active status", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(
+     *         name="ingredient_ids[]",
+     *         in="query",
+     *         description="Filter suppliers who have supplied one or more specific ingredients",
+     *         @OA\Schema(type="array", @OA\Items(type="string")),
+     *         style="form",
+     *         explode=true
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Suppliers retrieved successfully"
@@ -51,7 +59,7 @@ class SupplierController extends Controller
     {
         $filters = $request->filters();
 
-        $query = Supplier::query()
+        $query = Supplier::query()->with('stockImports.details.ingredient')
             ->orderBy('name')
             ->when(
                 $filters['name'] ?? null,
@@ -70,7 +78,13 @@ class SupplierController extends Controller
                 if ($isActive !== null) {
                     $q->where('is_active', $isActive);
                 }
-            });
+            })
+            ->when(
+                !empty($filters['ingredient_ids']),
+                fn($q) => $q->whereHas('stockImports.details', function ($query) use ($filters) {
+                    $query->whereIn('ingredient_id', $filters['ingredient_ids']);
+                })
+            );
 
         $perPage = $request->perPage();
         $paginator = $query->paginate($perPage);

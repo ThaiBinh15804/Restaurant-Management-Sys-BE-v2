@@ -3219,6 +3219,19 @@
                         "schema": {
                             "type": "boolean"
                         }
+                    },
+                    {
+                        "name": "category_ids[]",
+                        "in": "query",
+                        "description": "Filter by one or multiple category IDs",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
                     }
                 ],
                 "responses": {
@@ -7478,6 +7491,19 @@
                         "description": "Filter by active status",
                         "schema": {
                             "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "ingredient_ids[]",
+                        "in": "query",
+                        "description": "Filter suppliers who have supplied one or more specific ingredients",
+                        "style": "form",
+                        "explode": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
                         }
                     }
                 ],

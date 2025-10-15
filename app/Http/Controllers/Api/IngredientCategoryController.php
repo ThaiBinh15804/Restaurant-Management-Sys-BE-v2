@@ -45,7 +45,7 @@ class IngredientCategoryController extends Controller
     public function index(IngredientCategoryQueryRequest $request): JsonResponse
     {
         try {
-            $query = IngredientCategory::query()->withCount('ingredients');
+            $query = IngredientCategory::query()->withCount('ingredients')->with('ingredients');
 
             // Apply filters from request
             $query = $request->applyFilters($query);

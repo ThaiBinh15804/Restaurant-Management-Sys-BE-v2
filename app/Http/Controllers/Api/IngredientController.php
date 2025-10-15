@@ -40,6 +40,14 @@ class IngredientController extends Controller
      *     @OA\Parameter(name="unit", in="query", description="Filter by unit", @OA\Schema(type="string")),
      *     @OA\Parameter(name="is_active", in="query", description="Filter by active status", @OA\Schema(type="boolean")),
      *     @OA\Parameter(name="low_stock", in="query", description="Filter ingredients below minimum stock", @OA\Schema(type="boolean")),
+     *     @OA\Parameter(
+     *         name="category_ids[]",
+     *         in="query",
+     *         description="Filter by one or multiple category IDs",
+     *         @OA\Schema(type="array", @OA\Items(type="string")),
+     *         style="form",
+     *         explode=true
+     *     ),
      *     @OA\Response(
      *         response=200,
      *         description="Ingredients retrieved successfully"
@@ -51,7 +59,7 @@ class IngredientController extends Controller
     {
         $filters = $request->filters();
 
-        $query = Ingredient::query()
+        $query = Ingredient::query()->with('category')
             ->orderBy('name')
             ->when(
                 $filters['name'] ?? null,
@@ -72,7 +80,11 @@ class IngredientController extends Controller
                 if ($lowStock === true) {
                     $q->whereColumn('current_stock', '<', 'min_stock');
                 }
-            });
+            })
+            ->when(
+                !empty($filters['category_ids']),
+                fn($q, $v) => $q->whereIn('ingredient_category_id', $filters['category_ids'])
+            );
 
         $perPage = $request->perPage();
         $paginator = $query->paginate($perPage);

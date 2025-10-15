@@ -16,6 +16,8 @@ class IngredientQueryRequest extends BaseQueryRequest
             'unit' => ['sometimes', 'string', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],
             'low_stock' => ['sometimes', 'boolean'], // Filter ingredients below min_stock
+            'category_ids' => ['sometimes', 'array'], // Filter by multiple categories
+            'category_ids.*' => ['string', 'max:10'], // Each category ID must be a string
         ];
     }
 
@@ -29,6 +31,7 @@ class IngredientQueryRequest extends BaseQueryRequest
             'unit',
             'is_active',
             'low_stock',
+            'category_ids',
         ]);
     }
 }

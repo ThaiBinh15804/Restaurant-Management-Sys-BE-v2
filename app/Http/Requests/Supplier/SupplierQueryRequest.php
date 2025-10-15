@@ -16,6 +16,8 @@ class SupplierQueryRequest extends BaseQueryRequest
             'email' => ['sometimes', 'string', 'email', 'max:100'],
             'phone' => ['sometimes', 'string', 'max:20'],
             'is_active' => ['sometimes', 'boolean'],
+            'ingredient_ids' => ['sometimes', 'array'], // Filter suppliers by ingredients
+            'ingredient_ids.*' => ['string', 'max:10'], // Each ingredient ID must be a string
         ];
     }
 
@@ -29,6 +31,7 @@ class SupplierQueryRequest extends BaseQueryRequest
             'email',
             'phone',
             'is_active',
+            'ingredient_ids',
         ]);
     }
 }
