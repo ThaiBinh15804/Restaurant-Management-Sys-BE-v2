@@ -434,6 +434,29 @@ return [
             ],
         ],
 
+        'ingredient_categories' => [
+            'name' => 'Ingredient Category Management',
+            'description' => 'Permissions related to ingredient category management',
+            'permissions' => [
+                'ingredient_categories.view' => [
+                    'name' => 'View Ingredient Categories',
+                    'description' => 'Permission to view ingredient category listings and details',
+                ],
+                'ingredient_categories.create' => [
+                    'name' => 'Create Ingredient Categories',
+                    'description' => 'Permission to create new ingredient categories',
+                ],
+                'ingredient_categories.edit' => [
+                    'name' => 'Edit Ingredient Categories',
+                    'description' => 'Permission to edit existing ingredient categories',
+                ],
+                'ingredient_categories.delete' => [
+                    'name' => 'Delete Ingredient Categories',
+                    'description' => 'Permission to delete ingredient categories',
+                ],
+            ],
+        ],
+
         'ingredients' => [
             'name' => 'Ingredient Management',
             'description' => 'Permissions related to ingredient master data management',
@@ -622,6 +645,10 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
+                'ingredient_categories.view',
+                'ingredient_categories.create',
+                'ingredient_categories.edit',
+                'ingredient_categories.delete',
                 'ingredients.view',
                 'ingredients.create',
                 'ingredients.edit',
@@ -674,6 +701,9 @@ return [
                 'reservations.edit',
                 'reservations.delete',
                 'reservations.confirm',
+                'ingredient_categories.view',
+                'ingredient_categories.create',
+                'ingredient_categories.edit',
                 'ingredients.view',
                 'ingredients.create',
                 'ingredients.edit',
@@ -704,6 +734,7 @@ return [
                 'reservations.view',
                 'reservations.create',
                 'reservations.edit',
+                'ingredient_categories.view',
                 'ingredients.view',
             ],
         ],
@@ -734,6 +765,7 @@ return [
                 'orders.view',
                 'orders.process',
                 'orders.complete',
+                'ingredient_categories.view',
                 'ingredients.view',
                 'stocks.view',
                 'stocks.create',

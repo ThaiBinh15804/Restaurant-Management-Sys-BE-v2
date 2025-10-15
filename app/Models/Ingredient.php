@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Ingredient extends BaseModel
@@ -26,6 +27,7 @@ class Ingredient extends BaseModel
      * @var array<int, string>
      */
     protected $fillable = [
+        'ingredient_category_id',
         'name',
         'unit',
         'current_stock',
@@ -47,6 +49,14 @@ class Ingredient extends BaseModel
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    /**
+     * Get the category that owns the ingredient.
+     */
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(IngredientCategory::class, 'ingredient_category_id');
+    }
 
     /**
      * Get the stock import details for the ingredient.

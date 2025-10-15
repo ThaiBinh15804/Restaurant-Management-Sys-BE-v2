@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Employee;
 use App\Models\Ingredient;
+use App\Models\IngredientCategory;
 use App\Models\StockExport;
 use App\Models\StockExportDetail;
 use App\Models\StockImport;
@@ -33,16 +34,19 @@ class InventoryManagementSeeder extends Seeder
         // 1. Create Suppliers
         $suppliers = $this->createSuppliers($adminEmployee);
 
-        // 2. Create Ingredients
-        $ingredients = $this->createIngredients($adminEmployee);
+        // 2. Create Ingredient Categories
+        $categories = $this->createIngredientCategories($adminEmployee);
 
-        // 3. Create Stock Imports with Details (nhập kho)
+        // 3. Create Ingredients
+        $ingredients = $this->createIngredients($categories, $adminEmployee);
+
+        // 4. Create Stock Imports with Details (nhập kho)
         $this->createStockImports($suppliers, $ingredients, $adminEmployee, $now);
 
-        // 4. Create Stock Exports with Details (xuất kho)
+        // 5. Create Stock Exports with Details (xuất kho)
         $this->createStockExports($ingredients, $adminEmployee, $now);
 
-        // 5. Create Stock Losses (hao hụt)
+        // 6. Create Stock Losses (hao hụt)
         $this->createStockLosses($ingredients, $adminEmployee, $now);
     }
 
@@ -107,57 +111,86 @@ class InventoryManagementSeeder extends Seeder
     }
 
     /**
+     * Create ingredient categories
+     */
+    private function createIngredientCategories($employee): array
+    {
+        $categories = [
+            ['name' => 'Rau củ & Thảo mộc'],
+            ['name' => 'Thịt & Hải sản'],
+            ['name' => 'Sữa & Trứng'],
+            ['name' => 'Gạo & Mì'],
+            ['name' => 'Gia vị & Nước chấm'],
+            ['name' => 'Đồ uống'],
+        ];
+
+        $createdCategories = [];
+        foreach ($categories as $categoryData) {
+            $createdCategories[] = IngredientCategory::create([
+                'name' => $categoryData['name'],
+                'is_active' => true,
+                'created_by' => $employee->id,
+                'updated_by' => $employee->id,
+            ]);
+        }
+
+        $this->command->info("✓ Đã tạo " . count($createdCategories) . " danh mục nguyên liệu");
+        return $createdCategories;
+    }
+
+    /**
      * Create ingredients with initial stock = 0
      */
-    private function createIngredients($employee): array
+    private function createIngredients($categories, $employee): array
     {
         $ingredients = [
             // Rau củ & Thảo mộc
-            ['name' => 'Cà chua', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 50],
-            ['name' => 'Hành tây', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60],
-            ['name' => 'Tỏi', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20],
-            ['name' => 'Cà rốt', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Ớt chuông', 'unit' => 'kg', 'min_stock' => 8, 'max_stock' => 30],
-            ['name' => 'Xà lách', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20],
-            ['name' => 'Rau mùi', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 10],
-            ['name' => 'Húng quế', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 8],
+            ['name' => 'Cà chua', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 50, 'category' => 0],
+            ['name' => 'Hành tây', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60, 'category' => 0],
+            ['name' => 'Tỏi', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20, 'category' => 0],
+            ['name' => 'Cà rốt', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40, 'category' => 0],
+            ['name' => 'Ớt chuông', 'unit' => 'kg', 'min_stock' => 8, 'max_stock' => 30, 'category' => 0],
+            ['name' => 'Xà lách', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20, 'category' => 0],
+            ['name' => 'Rau mùi', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 10, 'category' => 0],
+            ['name' => 'Húng quế', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 8, 'category' => 0],
             
             // Thịt & Hải sản
-            ['name' => 'Ức gà', 'unit' => 'kg', 'min_stock' => 20, 'max_stock' => 80],
-            ['name' => 'Thịt bò thăn', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60],
-            ['name' => 'Thịt vai heo', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60],
-            ['name' => 'Phi lê cá hồi', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Tôm sú', 'unit' => 'kg', 'min_stock' => 12, 'max_stock' => 50],
+            ['name' => 'Ức gà', 'unit' => 'kg', 'min_stock' => 20, 'max_stock' => 80, 'category' => 1],
+            ['name' => 'Thịt bò thăn', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60, 'category' => 1],
+            ['name' => 'Thịt vai heo', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60, 'category' => 1],
+            ['name' => 'Phi lê cá hồi', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40, 'category' => 1],
+            ['name' => 'Tôm sú', 'unit' => 'kg', 'min_stock' => 12, 'max_stock' => 50, 'category' => 1],
             
             // Sữa & Trứng
-            ['name' => 'Sữa tươi', 'unit' => 'lít', 'min_stock' => 20, 'max_stock' => 80],
-            ['name' => 'Bơ', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20],
-            ['name' => 'Phô mai', 'unit' => 'kg', 'min_stock' => 8, 'max_stock' => 30],
-            ['name' => 'Trứng gà', 'unit' => 'chục', 'min_stock' => 30, 'max_stock' => 100],
+            ['name' => 'Sữa tươi', 'unit' => 'lít', 'min_stock' => 20, 'max_stock' => 80, 'category' => 2],
+            ['name' => 'Bơ', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20, 'category' => 2],
+            ['name' => 'Phô mai', 'unit' => 'kg', 'min_stock' => 8, 'max_stock' => 30, 'category' => 2],
+            ['name' => 'Trứng gà', 'unit' => 'chục', 'min_stock' => 30, 'max_stock' => 100, 'category' => 2],
             
             // Gạo & Mì
-            ['name' => 'Gạo', 'unit' => 'kg', 'min_stock' => 50, 'max_stock' => 200],
-            ['name' => 'Mì Ý', 'unit' => 'kg', 'min_stock' => 20, 'max_stock' => 80],
-            ['name' => 'Bột mì', 'unit' => 'kg', 'min_stock' => 30, 'max_stock' => 100],
+            ['name' => 'Gạo', 'unit' => 'kg', 'min_stock' => 50, 'max_stock' => 200, 'category' => 3],
+            ['name' => 'Mì Ý', 'unit' => 'kg', 'min_stock' => 20, 'max_stock' => 80, 'category' => 3],
+            ['name' => 'Bột mì', 'unit' => 'kg', 'min_stock' => 30, 'max_stock' => 100, 'category' => 3],
             
             // Gia vị & Nước chấm
-            ['name' => 'Muối', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Tiêu đen', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 10],
-            ['name' => 'Đường', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60],
-            ['name' => 'Nước tương', 'unit' => 'lít', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Nước mắm', 'unit' => 'lít', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Dầu ô liu', 'unit' => 'lít', 'min_stock' => 8, 'max_stock' => 30],
-            ['name' => 'Dầu ăn', 'unit' => 'lít', 'min_stock' => 15, 'max_stock' => 60],
+            ['name' => 'Muối', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40, 'category' => 4],
+            ['name' => 'Tiêu đen', 'unit' => 'kg', 'min_stock' => 2, 'max_stock' => 10, 'category' => 4],
+            ['name' => 'Đường', 'unit' => 'kg', 'min_stock' => 15, 'max_stock' => 60, 'category' => 4],
+            ['name' => 'Nước tương', 'unit' => 'lít', 'min_stock' => 10, 'max_stock' => 40, 'category' => 4],
+            ['name' => 'Nước mắm', 'unit' => 'lít', 'min_stock' => 10, 'max_stock' => 40, 'category' => 4],
+            ['name' => 'Dầu ô liu', 'unit' => 'lít', 'min_stock' => 8, 'max_stock' => 30, 'category' => 4],
+            ['name' => 'Dầu ăn', 'unit' => 'lít', 'min_stock' => 15, 'max_stock' => 60, 'category' => 4],
             
             // Đồ uống
-            ['name' => 'Nước cam ép', 'unit' => 'lít', 'min_stock' => 20, 'max_stock' => 80],
-            ['name' => 'Hạt cà phê', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40],
-            ['name' => 'Lá trà', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20],
+            ['name' => 'Nước cam ép', 'unit' => 'lít', 'min_stock' => 20, 'max_stock' => 80, 'category' => 5],
+            ['name' => 'Hạt cà phê', 'unit' => 'kg', 'min_stock' => 10, 'max_stock' => 40, 'category' => 5],
+            ['name' => 'Lá trà', 'unit' => 'kg', 'min_stock' => 5, 'max_stock' => 20, 'category' => 5],
         ];
 
         $createdIngredients = [];
         foreach ($ingredients as $ingredientData) {
             $createdIngredients[] = Ingredient::create([
+                'ingredient_category_id' => $categories[$ingredientData['category']]->id,
                 'name' => $ingredientData['name'],
                 'unit' => $ingredientData['unit'],
                 'current_stock' => 0, // Start with 0, will be updated by imports
@@ -169,6 +202,7 @@ class InventoryManagementSeeder extends Seeder
             ]);
         }
 
+        $this->command->info("✓ Đã tạo " . count($createdIngredients) . " nguyên liệu");
         return $createdIngredients;
     }
 

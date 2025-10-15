@@ -2865,6 +2865,304 @@
                 }
             }
         },
+        "/api/ingredient-categories": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy danh sách danh mục nguyên liệu",
+                "description": "Trả về danh sách danh mục nguyên liệu có phân trang và tìm kiếm",
+                "operationId": "c93731bb84957fc0f810ed45415bca26",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Số trang",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Số bản ghi mỗi trang",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Tìm kiếm theo tên",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Lọc theo trạng thái",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách danh mục lấy thành công"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Tạo danh mục nguyên liệu mới",
+                "description": "Tạo một danh mục nguyên liệu mới trong hệ thống",
+                "operationId": "ba4ebb5f0ab5afbf2b9f4d1708893171",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Rau củ"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Tạo danh mục thành công"
+                    },
+                    "422": {
+                        "description": "Lỗi validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/{id}": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy chi tiết danh mục nguyên liệu",
+                "description": "Trả về thông tin chi tiết của một danh mục nguyên liệu",
+                "operationId": "a5526945af48475161dd2ab4e9ebdbc6",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy thông tin danh mục thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Cập nhật danh mục nguyên liệu",
+                "description": "Cập nhật thông tin danh mục nguyên liệu theo ID",
+                "operationId": "5cb498d0160cd6f8a6e92aff1a201f93",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Rau củ quả"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật danh mục thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    },
+                    "422": {
+                        "description": "Lỗi validation"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Xóa danh mục nguyên liệu",
+                "description": "Xóa danh mục nguyên liệu theo ID (chỉ xóa nếu không có nguyên liệu nào thuộc danh mục này)",
+                "operationId": "64fe82a6256ec85f47c13fb971732e47",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa danh mục thành công"
+                    },
+                    "400": {
+                        "description": "Không thể xóa do có ràng buộc"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/{id}/activate": {
+            "patch": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Bật/tắt trạng thái danh mục nguyên liệu",
+                "description": "Thay đổi trạng thái hoạt động của danh mục nguyên liệu",
+                "operationId": "4d2b15398e399a084c038c5c9fd5db7c",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID danh mục",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "is_active"
+                                ],
+                                "properties": {
+                                    "is_active": {
+                                        "type": "boolean",
+                                        "example": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật trạng thái thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy danh mục"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/ingredient-categories/active/list": {
+            "get": {
+                "tags": [
+                    "Ingredient Categories"
+                ],
+                "summary": "Lấy danh sách danh mục nguyên liệu đang hoạt động",
+                "description": "Trả về tất cả các danh mục nguyên liệu có trạng thái is_active = true",
+                "operationId": "81266746fb19998b1da1f3ccc357a731",
+                "responses": {
+                    "200": {
+                        "description": "Lấy danh sách thành công"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/ingredients": {
             "get": {
                 "tags": [
@@ -8556,6 +8854,10 @@
         {
             "name": "Employee Shifts",
             "description": "API Endpoints for Employee Shift Assignments"
+        },
+        {
+            "name": "Ingredient Categories",
+            "description": "API Endpoints for Ingredient Category Management"
         },
         {
             "name": "Ingredients",
