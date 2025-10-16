@@ -220,14 +220,20 @@ class OrderItemController extends Controller
             }
         }
 
-        if ($orderId) {
-            $order = Order::with('items')->find($orderId);
+        $orderIds = collect($updatedItems)->pluck('order_id')->unique();
 
+        foreach ($orderIds as $oid) {
+            $order = Order::with('items')->find($oid);
             if ($order) {
-                $statuses = $order->items->pluck('status')->all();
+                // Cập nhật total_amount chỉ tính món chưa hủy
+                $order->total_amount = $order->items
+                    ->where('status', '!=', 4)
+                    ->sum('total_price');
+
+                // Xác định trạng thái Order dựa trên các items
+                $statuses = $order->items->pluck('status');
                 $collection = collect($statuses);
 
-                // ⚙️ Logic xác định trạng thái Order
                 if ($collection->every(fn($s) => $s === 4)) {
                     $orderStatus = 4; // tất cả bị hủy
                 } elseif ($collection->every(fn($s) => $s === 3)) {
@@ -243,42 +249,35 @@ class OrderItemController extends Controller
                 }
 
                 $order->status = $orderStatus;
-
-                // 🧮 Tổng tiền chỉ tính món chưa hủy
-                $order->total_amount = $order->items
-                    ->where('status', '!=', 4)
-                    ->sum('total_price');
-
                 $order->save();
             }
         }
 
-        // ⚙️ Nếu có hóa đơn thì cập nhật lại tổng tiền & hoàn tiền (nếu cần)
-        if ($invoiceId) {
+        $hasCancelledItem = collect($updatedItems)->contains(fn($item) => $item->status === 4);
+
+        if ($invoiceId && $hasCancelledItem) {
             $invoice = Invoice::with('payments')->find($invoiceId);
             if ($invoice) {
-                $oldFinal = $invoice->final_amount;
                 $newTotal = Order::where('table_session_id', $invoice->table_session_id)
                     ->with(['items' => function ($q) {
-                        $q->where('status', '!=', 4); // chỉ lấy món chưa bị hủy
+                        $q->where('status', '!=', 4);
                     }])
                     ->get()
                     ->flatMap->items
                     ->sum('total_price');
 
                 $invoice->total_amount = $newTotal;
-                $invoice->final_amount = $newTotal * (1 + $invoice->tax / 100) - $invoice->discount;
+                $invoice->final_amount = ($newTotal * (1 - $invoice->discount / 100)) * (1 + $invoice->tax / 100);
                 $invoice->save();
 
-                // ⚙️ Nếu đã thanh toán trước => kiểm tra cần hoàn lại không
+                // Xử lý hoàn tiền nếu cần
                 $paid = $invoice->payments->sum('amount');
                 $refund = $paid - $invoice->final_amount;
                 if ($refund > 0) {
-                    // tạo bản ghi hoàn tiền hoặc thông báo
                     Payment::create([
-                        'amount' => -$refund, // âm nghĩa là hoàn lại
+                        'amount' => -$refund,
                         'method' => $invoice->payments->first()->method ?? 0,
-                        'status' => 3, // 3 = hoàn tiền
+                        'status' => 3,
                         'paid_at' => now(),
                         'invoice_id' => $invoice->id,
                         'employee_id' => $invoice->payments->first()->employee_id ?? null,
@@ -449,15 +448,28 @@ class OrderItemController extends Controller
         };
 
         if (!empty($data['invoice_id'])) {
-            $invoice = Invoice::find($data['invoice_id']);
+            $invoice = Invoice::with('payments')->find($data['invoice_id']);
             if ($invoice) {
-                $totalAmount = $order->total_amount;
-                $totalAfterDiscount = $totalAmount * (1 - ($invoice->discount / 100));
-                $finalAmount = $totalAfterDiscount * (1 + ($invoice->tax / 100));
+                // Lấy tất cả order cùng session
+                $newTotal = Order::where('table_session_id', $invoice->table_session_id)
+                    ->with(['items' => function ($q) {
+                        $q->where('status', '!=', 4); // chỉ lấy món chưa bị hủy
+                    }])
+                    ->get()
+                    ->flatMap->items
+                    ->sum('total_price');
 
-                $invoice->total_amount = $totalAmount;
-                $invoice->final_amount = $finalAmount;
+                $invoice->total_amount = $newTotal;
+
+                // Nếu discount là phần trăm
+                $invoice->final_amount = ($newTotal * (1 - ($invoice->discount / 100))) * (1 + ($invoice->tax / 100));
+
                 $invoice->save();
+
+                // Tính số còn lại phải thanh toán
+                $paid = $invoice->payments->sum('amount');
+                $remaining = $invoice->final_amount - $paid;
+                // $remaining chính là số tiền khách cần thanh toán tiếp
             }
         }
 

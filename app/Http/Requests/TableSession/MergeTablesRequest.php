@@ -50,11 +50,6 @@ class MergeTablesRequest extends FormRequest
                 'string',
                 'exists:employees,id',
             ],
-            'note' => [
-                'nullable',
-                'string',
-                'max:500',
-            ],
         ];
     }
 

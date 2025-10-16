@@ -16,7 +16,7 @@ class TableSessionService
 {
     /**
      * Gộp nhiều bàn vào một bàn chính
-     * 
+     *
      * @param array $sourceTableSessionIds Danh sách ID các session cần gộp
      * @param string $targetTableSessionId ID session đích (bàn chính)
      * @param string $employeeId ID nhân viên thực hiện
@@ -25,7 +25,7 @@ class TableSessionService
     public function mergeTables(array $sourceTableSessionIds, string $targetTableSessionId, string $employeeId): array
     {
         DB::beginTransaction();
-        
+
         try {
             // 1. Validate các session
             $validation = $this->validateMerge($sourceTableSessionIds, $targetTableSessionId);
@@ -115,10 +115,9 @@ class TableSessionService
                     'target_session' => $targetSession->fresh()
                 ]
             ];
-
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Merge tables failed', [
                 'source_sessions' => $sourceTableSessionIds,
                 'target_session' => $targetTableSessionId,
@@ -136,7 +135,7 @@ class TableSessionService
 
     /**
      * Tách hóa đơn thành nhiều hóa đơn con
-     * 
+     *
      * @param string $invoiceId ID hóa đơn cần tách
      * @param array $splits Mảng các phần tách [['order_item_ids' => [...], 'note' => '...']]
      * @param string $employeeId ID nhân viên thực hiện
@@ -145,11 +144,11 @@ class TableSessionService
     public function splitInvoice(string $invoiceId, array $splits, string $employeeId): array
     {
         DB::beginTransaction();
-        
+
         try {
             // 1. Validate invoice
             $invoice = Invoice::with(['tableSession', 'invoicePromotions', 'payments'])->find($invoiceId);
-            
+
             if (!$invoice) {
                 return [
                     'success' => false,
@@ -178,7 +177,7 @@ class TableSessionService
 
             // 3. Cập nhật invoice gốc
             $remainingAmount = $invoice->final_amount - $totalSplitAmount;
-            
+
             if ($remainingAmount < 0) {
                 throw new Exception('Split amounts exceed original invoice total');
             }
@@ -214,10 +213,9 @@ class TableSessionService
                     'child_invoices' => $childInvoices
                 ]
             ];
-
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Split invoice failed', [
                 'invoice_id' => $invoiceId,
                 'error' => $e->getMessage(),
@@ -257,7 +255,7 @@ class TableSessionService
 
         // Kiểm tra source sessions
         $sourceSessions = TableSession::whereIn('id', $sourceSessionIds)->get();
-        
+
         if ($sourceSessions->count() !== count($sourceSessionIds)) {
             return [
                 'valid' => false,
@@ -361,9 +359,9 @@ class TableSessionService
             ->where('status', Payment::STATUS_COMPLETED)
             ->sum('amount');
 
-        // Xác định trạng thái
-        $status = Invoice::STATUS_UNPAID;
-        if ($totalPaid >= $finalAmount) {
+        if ($finalAmount <= 0) {
+            $status = Invoice::STATUS_UNPAID;
+        } elseif ($totalPaid >= $finalAmount) {
             $status = Invoice::STATUS_PAID;
         } elseif ($totalPaid > 0) {
             $status = Invoice::STATUS_PARTIALLY_PAID;
@@ -387,7 +385,7 @@ class TableSessionService
     {
         foreach ($sourceInvoices as $invoice) {
             $promotions = InvoicePromotion::where('invoice_id', $invoice->id)->get();
-            
+
             foreach ($promotions as $promotion) {
                 // Kiểm tra xem promotion đã tồn tại chưa (tránh trùng)
                 $exists = InvoicePromotion::where('invoice_id', $mergedInvoice->id)
@@ -446,7 +444,7 @@ class TableSessionService
 
     /**
      * Hủy gộp bàn (rollback)
-     * 
+     *
      * @param string $mergedSessionId ID session đã gộp
      * @param string $employeeId ID nhân viên thực hiện
      * @return array
@@ -454,10 +452,10 @@ class TableSessionService
     public function unmerge(string $mergedSessionId, string $employeeId): array
     {
         DB::beginTransaction();
-        
+
         try {
             $mergedSession = TableSession::find($mergedSessionId);
-            
+
             if (!$mergedSession || $mergedSession->type !== TableSession::TYPE_MERGE) {
                 return [
                     'success' => false,
@@ -550,10 +548,9 @@ class TableSessionService
                     'restored_sessions' => $sourceSessions->pluck('id')->toArray()
                 ]
             ];
-
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Unmerge failed', [
                 'merged_session_id' => $mergedSessionId,
                 'error' => $e->getMessage()

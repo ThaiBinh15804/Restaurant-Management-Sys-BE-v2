@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TableSession\MergeTablesRequest;
 use App\Http\Requests\TableSession\SplitInvoiceRequest;
 use App\Http\Requests\TableSession\TableSessionQueryRequest;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\TableSession;
 use App\Models\TableSessionDiningTable;
 use App\Models\TableSessionReservation;
+use App\Models\User;
 use App\Services\TableSessionService;
 use Illuminate\Http\JsonResponse;
 use OpenApi\Attributes as OA;
@@ -69,14 +71,16 @@ class TableSessionController extends Controller
             ->leftJoinSub(function ($sub) {
                 $sub->from('table_session_dining_table as tsdt')
                     ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
-                    ->where('ts.status', 1)
+                    ->whereIn('ts.status', [1, 4])
                     ->select(
                         'tsdt.dining_table_id',
                         'ts.id',
                         'ts.type',
                         'ts.status',
                         'ts.started_at',
-                        'ts.ended_at'
+                        'ts.ended_at',
+                        'ts.parent_session_id',
+                        'ts.merged_into_session_id',
                     );
             }, 'ts', function ($join) {
                 $join->on('dt.id', '=', 'ts.dining_table_id');
@@ -90,7 +94,9 @@ class TableSessionController extends Controller
                 'ts.type as session_type',
                 'ts.status as session_status',
                 'ts.started_at',
-                'ts.ended_at'
+                'ts.ended_at',
+                'ts.parent_session_id',
+                'ts.merged_into_session_id',
             )
             ->orderBy('dt.table_number');
 
@@ -320,6 +326,17 @@ class TableSessionController extends Controller
             'employee_id' => 'required|exists:employees,id',
         ]);
 
+        $user = User::where('email', 'customerOffline@restaurant.com')->first();
+        if (!$user) {
+            return response()->json(['message' => 'Offline customer user not found'], 404);
+        }
+
+        $customer = Customer::where('user_id', $user->id)->first();
+
+        if (!$customer) {
+            return response()->json(['message' => 'Customer record not found for offline user'], 404);
+        }
+
         $diningTableId = $data['dining_table_id'];
 
         // 🧩 1. Tạo session mới
@@ -330,7 +347,7 @@ class TableSessionController extends Controller
             'merged_into_session_id' => null,
             'started_at' => null,
             'ended_at' => null,
-            'customer_id' => 'CUOJO15Z5I', // khách mặc định
+            'customer_id' => $customer->id, // từ bảng customers
             'employee_id' => $request->employee_id,
             'created_by' => $request->employee_id,
             'updated_by' => $request->employee_id,
@@ -720,33 +737,24 @@ class TableSessionController extends Controller
      *                 @OA\Items(
      *                     @OA\Property(property="order_id", type="string", example="O123"),
      *                     @OA\Property(property="table_session_id", type="string", example="TSPC3JAEON"),
-     *                     @OA\Property(property="order_status", type="integer", example=1, description="0=Open, 1=In-Progress, 2=Served, 3=Paid, 4=Cancelled"),
-     *                     @OA\Property(property="total_amount", type="number", format="float", example=350000),
+     *                     @OA\Property(property="order_status", type="integer", example=1),
+     *                     @OA\Property(property="total_amount", type="number", example=350000),
      *                     @OA\Property(
      *                         property="items",
      *                         type="array",
      *                         @OA\Items(
      *                             @OA\Property(property="order_item_id", type="string", example="OI001"),
      *                             @OA\Property(property="quantity", type="integer", example=2),
-     *                             @OA\Property(property="item_price", type="number", format="float", example=120000),
-     *                             @OA\Property(property="total_price", type="number", format="float", example=240000),
-     *                             @OA\Property(property="item_status", type="integer", example=1, description="0=Ordered, 1=Cooking, 2=Served, 3=Cancelled"),
+     *                             @OA\Property(property="item_price", type="number", example=120000),
+     *                             @OA\Property(property="total_price", type="number", example=240000),
+     *                             @OA\Property(property="item_status", type="integer", example=1),
      *                             @OA\Property(property="notes", type="string", example="Less spicy"),
-     *                             @OA\Property(property="prepared_by", type="string", example="EMP001"),
-     *                             @OA\Property(property="served_at", type="string", format="date-time", example="2025-10-02T08:45:00Z"),
-     *                             @OA\Property(property="cancelled_reason", type="string", example=null),
      *                             @OA\Property(
      *                                 property="dish",
      *                                 type="object",
      *                                 @OA\Property(property="dish_id", type="string", example="D123"),
      *                                 @OA\Property(property="dish_name", type="string", example="Fried Rice"),
-     *                                 @OA\Property(property="dish_price", type="number", example=120000),
-     *                                 @OA\Property(property="dish_desc", type="string", example="Delicious fried rice"),
-     *                                 @OA\Property(property="cooking_time", type="integer", example=15),
-     *                                 @OA\Property(property="image", type="string", example="/images/fried_rice.png"),
-     *                                 @OA\Property(property="dish_active", type="boolean", example=true),
-     *                                 @OA\Property(property="category_name", type="string", example="Main Course"),
-     *                                 @OA\Property(property="category_desc", type="string", example="Main course dishes")
+     *                                 @OA\Property(property="category_name", type="string", example="Main Course")
      *                             )
      *                         )
      *                     )
@@ -764,14 +772,14 @@ class TableSessionController extends Controller
      *     )
      * )
      */
-    #[Get('/{idDiningTable}/orders', middleware: ['permission:table-sessions.view'])]
-    public function getOrdersBySession(string $idDiningTable): JsonResponse
+    #[Get('/{tableSessionId}/orders', middleware: ['permission:table-sessions.view'])]
+    public function getOrdersBySession(string $tableSessionId): JsonResponse
     {
         $orders = DB::table('orders as o')
-            ->join('order_items as oi', 'o.id', '=', 'oi.order_id')
-            ->join('dishes as d', 'oi.dish_id', '=', 'd.id')
-            ->join('dish_categories as dc', 'd.category_id', '=', 'dc.id')
-            ->where('o.table_session_id', $idDiningTable)
+            ->leftJoin('order_items as oi', 'o.id', '=', 'oi.order_id')
+            ->leftJoin('dishes as d', 'oi.dish_id', '=', 'd.id')
+            ->leftJoin('dish_categories as dc', 'd.category_id', '=', 'dc.id')
+            ->where('o.table_session_id', $tableSessionId)
             ->select(
                 'o.id as order_id',
                 'o.table_session_id',
@@ -785,6 +793,7 @@ class TableSessionController extends Controller
                 'oi.notes',
                 'oi.prepared_by',
                 'oi.served_at',
+                'oi.created_at',
                 'oi.cancelled_reason',
                 'd.id as dish_id',
                 'd.name as dish_name',
@@ -796,47 +805,48 @@ class TableSessionController extends Controller
                 'dc.name as category_name',
                 'dc.desc as category_desc'
             )
+            ->orderBy('o.created_at', 'asc')
             ->get();
 
         if ($orders->isEmpty()) {
             return $this->errorResponse(
-                'Không tìm thấy orders cho Table Session: ' . $idDiningTable,
+                'Không tìm thấy orders cho Table Session: ' . $tableSessionId,
                 404
             );
         }
 
-        // Nhóm order_items theo order_id để format data
         $grouped = $orders->groupBy('order_id')->map(function ($rows) {
             $order = $rows->first();
             return [
                 'order_id' => $order->order_id,
                 'table_session_id' => $order->table_session_id,
-                'order_status' => $order->order_status,
-                'total_amount' => $order->total_amount,
-                'items' => $rows->map(function ($r) {
+                'order_status' => (int) $order->order_status,
+                'total_amount' => (float) $order->total_amount,
+                'items' => $rows->filter(fn($r) => $r->order_item_id !== null)->map(function ($r) {
                     return [
                         'order_item_id' => $r->order_item_id,
-                        'quantity' => $r->quantity,
-                        'item_price' => $r->item_price,
-                        'total_price' => $r->total_price,
-                        'item_status' => $r->item_status,
+                        'quantity' => (int) $r->quantity,
+                        'item_price' => (float) $r->item_price,
+                        'total_price' => (float) $r->total_price,
+                        'item_status' => (int) $r->item_status,
                         'notes' => $r->notes,
                         'prepared_by' => $r->prepared_by,
                         'served_at' => $r->served_at,
+                        'created_at' => $r->created_at,
                         'cancelled_reason' => $r->cancelled_reason,
                         'dish' => [
                             'dish_id' => $r->dish_id,
                             'dish_name' => $r->dish_name,
-                            'dish_price' => $r->dish_price,
+                            'dish_price' => (float) $r->dish_price,
                             'dish_desc' => $r->dish_desc,
-                            'cooking_time' => $r->cooking_time,
+                            'cooking_time' => (int) $r->cooking_time,
                             'image' => $r->image,
                             'dish_active' => (bool) $r->dish_active,
                             'category_name' => $r->category_name,
                             'category_desc' => $r->category_desc,
                         ]
                     ];
-                })
+                })->values()
             ];
         })->values();
 
@@ -1089,7 +1099,7 @@ class TableSessionController extends Controller
      *     )
      * )
      */
-    #[Post('/merge', middleware: ['permission:table-sessions.merge'])]
+    #[Post('/merge', middleware: ['permission:table-sessions.view'])]
     public function mergeTables(MergeTablesRequest $request): JsonResponse
     {
         $result = $this->tableSessionService->mergeTables(
@@ -1200,7 +1210,7 @@ class TableSessionController extends Controller
     public function splitInvoice(SplitInvoiceRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        
+
         $result = $this->tableSessionService->splitInvoice(
             $validated['invoice_id'],
             $validated['splits'],
