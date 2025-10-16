@@ -368,160 +368,134 @@ class InvoicePaymentController extends Controller
             'listPromotionApply' => 'nullable|array',
             'listPromotionApply.*.promotion_id' => 'required|string|exists:promotions,id',
             'listPromotionApply.*.discount_value' => 'required|numeric',
-            'employee_id' => 'nullable|string|exists:employees,id',
+            'employee_id' => 'required|string|exists:employees,id',
             'method' => 'required_if:isDraft,false|integer|in:0,1',
             'status_payment' => 'required_if:isDraft,false|integer|in:0,1,2,3',
             'paymentBefore' => 'nullable|numeric|min:0',
             'isDraft' => 'required|boolean',
+            'merged_invoice_id' => 'nullable|string|exists:invoices,id'
         ]);
 
-        $tableSession = TableSession::findOrFail($request->table_session_id);
-
-        Log::info("Creating invoice for TableSession {$tableSession->id} with payload: " . json_encode($request->all()));
-        
-        // Sử dụng employee_id từ request hoặc throw error nếu null
-        $employeeId = $request->employee_id;
-        if (!$employeeId) {
-            throw new \Exception('employee_id is required');
+        $tableSession = TableSession::find($request->table_session_id);
+        if (!$tableSession) {
+            return response()->json(['success' => false, 'message' => 'Table session không tồn tại!'], 400);
         }
 
         DB::beginTransaction();
         try {
-            // Lấy hoặc tạo invoice
+            // Xác định invoice cần xử lý (cũ hoặc mới)
             $invoice = Invoice::where('table_session_id', $request->table_session_id)
                 ->whereNull('merged_invoice_id')
                 ->first();
 
+            if ($request->merged_invoice_id) {
+                // Nếu là bàn gộp → liên kết hóa đơn gộp
+                $invoice = Invoice::find($request->merged_invoice_id);
+            }
+
             if ($invoice) {
-                // Cập nhật invoice nếu đã tồn tại
                 $invoice->update([
                     'total_amount' => round($request->total_amount, 2),
                     'discount' => round($request->discount, 2),
                     'tax' => round($request->tax, 2),
                     'final_amount' => round($request->final_amount, 2),
-                    'updated_by' => $employeeId
+                    'updated_by' => $request->employee_id
                 ]);
             } else {
-                // Tạo invoice mới
                 $invoice = Invoice::create([
                     'table_session_id' => $request->table_session_id,
+                    'merged_invoice_id' => $request->merged_invoice_id,
                     'total_amount' => round($request->total_amount, 2),
                     'discount' => round($request->discount, 2),
                     'tax' => round($request->tax, 2),
                     'final_amount' => round($request->final_amount, 2),
                     'status' => Invoice::STATUS_UNPAID,
-                    'operation_type' => Invoice::OPERATION_NORMAL,
-                    'created_by' => $employeeId,
-                    'updated_by' => $employeeId
+                    'created_by' => $request->employee_id,
+                    'updated_by' => $request->employee_id
                 ]);
+            }
 
-                // Áp dụng promotions nếu có
-                if (!empty($request->listPromotionApply)) {
-                    foreach ($request->listPromotionApply as $p) {
-                        InvoicePromotion::create([
-                            'applied_at' => now(),
-                            'discount_value' => $p['discount_value'],
-                            'promotion_id' => $p['promotion_id'],
-                            'invoice_id' => $invoice->id,
-                            'created_by' => $employeeId,
-                            'updated_by' => $employeeId
-                        ]);
-                    }
+            // Áp dụng promotions
+            if (!empty($request->listPromotionApply)) {
+                foreach ($request->listPromotionApply as $p) {
+                    InvoicePromotion::create([
+                        'applied_at' => now(),
+                        'discount_value' => $p['discount_value'],
+                        'promotion_id' => $p['promotion_id'],
+                        'invoice_id' => $invoice->id,
+                        'created_by' => $request->employee_id,
+                        'updated_by' => $request->employee_id
+                    ]);
                 }
             }
 
-            // Nếu là draft, chỉ lưu invoice và return
-            if ($request->isDraft === true) {
+            // Nếu là draft, lưu và kết thúc
+            if ($request->isDraft) {
                 DB::commit();
                 return response()->json([
                     'success' => true,
-                    'message' => 'Hóa đơn đã được lưu nháp!',
-                    'data' => ['invoice' => $invoice->fresh()->load(['invoicePromotions'])]
+                    'message' => 'Đã lưu hóa đơn nháp!',
+                    'data' => ['invoice' => $invoice->fresh(['invoicePromotions'])]
                 ]);
             }
 
-            // Tạo payment và xử lý thanh toán
-            // Ưu tiên paymentBefore, sau đó amount, cuối cùng là final_amount
-            $paymentAmount = $request->input('paymentBefore') 
-                ?? $request->input('amount') 
-                ?? $invoice->final_amount;
-            
-            $totalPaidBefore = (float) $invoice->payments()
-                ->where('status', Payment::STATUS_COMPLETED)
-                ->sum('amount');
-            $remainingAmount = $invoice->final_amount - $totalPaidBefore;
+            // Tạo Payment và kiểm tra overpay
+            $paymentAmount = $request->paymentBefore ?? $request->final_amount;
+            $paidBefore = $invoice->payments()->where('status', Payment::STATUS_COMPLETED)->sum('amount');
+            $remaining = $invoice->final_amount - $paidBefore;
 
-            if ($paymentAmount > $remainingAmount + 0.01) {
-                throw new \Exception("Số tiền thanh toán ($paymentAmount) vượt quá số tiền còn lại ($remainingAmount)");
+            if ($paymentAmount > $remaining + 0.01) {
+                throw new \Exception("Số tiền thanh toán vượt quá số dư còn lại.");
             }
 
             $payment = Payment::create([
-                'amount' => round($paymentAmount, 2),
+                'amount' => $paymentAmount,
                 'method' => $request->input('method'),
-                'status' => $request->input('status_payment'),
+                'status' => $request->status_payment,
                 'paid_at' => now(),
                 'invoice_id' => $invoice->id,
-                'employee_id' => $employeeId,
-                'created_by' => $employeeId,
-                'updated_by' => $employeeId
+                'employee_id' => $request->employee_id,
+                'created_by' => $request->employee_id,
+                'updated_by' => $request->employee_id
             ]);
 
-            // Tính lại trạng thái invoice
-            $totalPaid = $totalPaidBefore + ($request->input('status_payment') === Payment::STATUS_COMPLETED ? $paymentAmount : 0);
-            
-            if ($totalPaid >= $invoice->final_amount - 0.01) {
-                $newStatus = Invoice::STATUS_PAID;
-            } elseif ($totalPaid > 0) {
-                $newStatus = Invoice::STATUS_PARTIALLY_PAID;
-            } else {
-                $newStatus = Invoice::STATUS_UNPAID;
-            }
+            // Tính trạng thái mới cho invoice
+            $totalPaid = $paidBefore + ($request->status_payment === Payment::STATUS_COMPLETED ? $paymentAmount : 0);
+            $newStatus = $totalPaid >= $invoice->final_amount - 0.01
+                ? Invoice::STATUS_PAID
+                : ($totalPaid > 0 ? Invoice::STATUS_PARTIALLY_PAID : Invoice::STATUS_UNPAID);
 
-            $invoice->update(['status' => $newStatus, 'updated_by' => $employeeId]);
+            $invoice->update(['status' => $newStatus]);
 
-            // Cập nhật TableSession và Orders
-            if (!$tableSession->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists()) {
-                Log::info("All invoices for TableSession {$tableSession->id} are paid. Updating TableSession and Orders.");
-
+            // Nếu invoice gộp hoặc tất cả hóa đơn đã paid → đóng TableSession
+            $allPaid = !$tableSession->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists();
+            if ($allPaid || $request->merged_invoice_id) {
                 $tableSession->update([
                     'status' => TableSession::STATUS_COMPLETED,
                     'ended_at' => now(),
-                    'updated_by' => $employeeId
+                    'updated_by' => $request->employee_id
                 ]);
 
                 Order::where('table_session_id', $request->table_session_id)
-                    // ->where('status', '==', Order::STATUS_SERVED)
-                    ->update(['status' => Order::STATUS_PAID, 'updated_by' => $employeeId]);
-            } 
+                    ->update(['status' => Order::STATUS_PAID, 'updated_by' => $request->employee_id]);
+            }
 
             DB::commit();
-
             return response()->json([
                 'success' => true,
-                'message' => $newStatus === Invoice::STATUS_PAID ? 'Thanh toán hoàn tất!' : 'Đã lưu thanh toán!',
+                'message' => 'Hóa đơn xử lý thành công!',
                 'data' => [
-                    'invoice' => $invoice->fresh()->load(['payments', 'invoicePromotions']),
+                    'invoice' => $invoice->fresh(['payments', 'invoicePromotions']),
                     'payment' => $payment,
-                    'summary' => [
-                        'total_paid' => $totalPaid,
-                        'remaining_amount' => max(0, $invoice->final_amount - $totalPaid),
-                        'invoice_status' => $invoice->status_label
-                    ]
+                    'remaining' => max(0, $invoice->final_amount - $totalPaid)
                 ]
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('createInvoiceWithPayment failed', [
-                'error' => $e->getMessage(),
-                'table_session_id' => $request->table_session_id
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
 
     /**
      * @OA\Put(
@@ -580,11 +554,20 @@ class InvoicePaymentController extends Controller
     public function payRemainingInvoice(Request $request, string $invoice_id)
     {
         $request->validate([
-            'table_session_id' => 'required|string|exists:table_sessions,id', // 🆕 thêm dòng này
-            'amount' => 'required|numeric|min:0',
+            'table_session_id' => 'required|string|exists:table_sessions,id',
+            'amount' => 'nullable|numeric|min:0',
+            'total_amount' => 'nullable|numeric|min:0',
+            'discount' => 'nullable|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'final_amount' => 'nullable|numeric|min:0',
+            'status' => 'nullable|integer|in:0,1,2,3',
+            'listPromotionApply' => 'nullable|array',
+            'listPromotionApply.*.promotion_id' => 'required|string|exists:promotions,id',
+            'listPromotionApply.*.discount_value' => 'required|numeric',
+            'employee_id' => 'required|string|exists:employees,id',
             'method' => 'required|integer|in:0,1',
             'status_payment' => 'required|integer|in:0,1,2,3',
-            'employee_id' => 'required|string|exists:employees,id',
+            'paymentBefore' => 'nullable|numeric|min:0',
         ]);
 
         $invoice = Invoice::with('payments', 'tableSession')->find($invoice_id);
@@ -597,9 +580,22 @@ class InvoicePaymentController extends Controller
 
         DB::beginTransaction();
         try {
-            // Tạo payment mới cho phần còn lại
+            // 1. Cập nhật thông tin hóa đơn (nếu gửi)
+            if ($request->filled('total_amount')) $invoice->total_amount = $request->total_amount;
+            if ($request->filled('discount')) $invoice->discount = $request->discount;
+            if ($request->filled('tax')) $invoice->tax = $request->tax;
+            if ($request->filled('final_amount')) $invoice->final_amount = $request->final_amount;
+            if ($request->filled('status')) $invoice->status = $request->status;
+            $invoice->save();
+
+            // 2. Tạo payment mới
+            $paymentAmount = $request->amount
+                ?? $request->paymentBefore
+                ?? $request->final_amount
+                ?? $invoice->final_amount;
+
             $payment = Payment::create([
-                'amount' => $request->amount,
+                'amount' => $paymentAmount,
                 'method' => $request->input('method'),
                 'status' => $request->status_payment,
                 'paid_at' => now(),
@@ -607,31 +603,56 @@ class InvoicePaymentController extends Controller
                 'employee_id' => $request->employee_id,
             ]);
 
-            // Chỉ cập nhật status của hóa đơn
-            $invoice->status = 2; // hoàn thành
-            $invoice->save();
-
-            // Cập nhật table session
-            if ($invoice->tableSession && !$invoice->tableSession->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists()) {
-                $invoice->tableSession->status = 2; // Hoàn thành
-                $invoice->tableSession->ended_at = now();
-                $invoice->tableSession->save();
-
-                // Cập nhật toàn bộ Order của table_session về status = PAID (đã trả)
-                Order::where('table_session_id', $request->table_session_id)
-                    ->update(['status' => 3]);
+            // 3. Xóa và tạo lại promotions nếu có
+            if ($request->has('listPromotionApply')) {
+                InvoicePromotion::where('invoice_id', $invoice->id)->delete();
+                foreach ($request->listPromotionApply as $p) {
+                    InvoicePromotion::create([
+                        'applied_at' => now(),
+                        'discount_value' => $p['discount_value'],
+                        'promotion_id' => $p['promotion_id'],
+                        'invoice_id' => $invoice->id
+                    ]);
+                }
             }
 
-            // Cập nhật toàn bộ Order của table_session về status = 3 (đã trả)
-            Order::where('table_session_id', $request->table_session_id)
-                // ->where('status', '!=', 4) 
-                ->update(['status' => 3]);
+            // 4. Cập nhật TableSession & merged sessions
+            $tableSession = $invoice->tableSession;
+
+            if ($tableSession) {
+                // Kiểm tra nếu còn invoice nào chưa thanh toán
+                $hasUnpaid = $tableSession->invoices()
+                    ->where('status', '!=', Invoice::STATUS_PAID)
+                    ->exists();
+
+                if ($hasUnpaid) {
+                    $tableSession->status = TableSession::STATUS_ACTIVE; // vẫn còn hoạt động
+                } else {
+                    $tableSession->status = TableSession::STATUS_COMPLETED;
+                    $tableSession->ended_at = now();
+                }
+                $tableSession->save();
+
+                // Nếu có các bàn gộp thì cũng đóng chúng
+                if ($tableSession->status === TableSession::STATUS_COMPLETED) {
+                    TableSession::where('merged_into_session_id', $tableSession->id)
+                        ->update([
+                            'status' => TableSession::STATUS_COMPLETED,
+                            'ended_at' => now()
+                        ]);
+
+                    // Cập nhật toàn bộ order sang ĐÃ TRẢ (trừ order hủy)
+                    Order::where('table_session_id', $request->table_session_id)
+                        ->where('status', '!=', Order::STATUS_CANCELLED)
+                        ->update(['status' => Order::STATUS_PAID]);
+                }
+            }
 
             DB::commit();
             return response()->json([
                 'success' => true,
                 'payment' => $payment,
-                'invoice' => $invoice
+                'invoice' => $invoice,
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
