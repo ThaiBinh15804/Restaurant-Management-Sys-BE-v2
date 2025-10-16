@@ -201,7 +201,11 @@ class TableSessionService
                 ];
             }
 
-            // 4. Tạo các invoice con
+            // 4. Lưu giá trị gốc TRƯỚC KHI update
+            $originalTotalAmount = $invoice->total_amount;
+            $originalFinalAmount = $invoice->final_amount;
+
+            // 5. Tạo các invoice con
             $childInvoices = [];
             $totalSplitFinal = 0;
             $totalSplitBase = 0;
@@ -211,12 +215,12 @@ class TableSessionService
                 $note = $split['note'] ?? null;
 
                 // Tính số tiền tách (final_amount sau discount & tax)
-                $splitFinal = $remainingAmount * ($percentage / 100);
+                $splitFinal = round($remainingAmount * ($percentage / 100), 2);
                 
                 // Tính ngược total_amount (trước discount & tax)
-                $splitTotal = $splitFinal / (
+                $splitTotal = round($splitFinal / (
                     (1 - $invoice->discount / 100) * (1 + $invoice->tax / 100)
-                );
+                ), 2);
 
                 // Tạo invoice con
                 $childInvoice = Invoice::create([
@@ -247,9 +251,9 @@ class TableSessionService
                 ]);
             }
 
-            // 5. Cập nhật invoice gốc
-            $newTotalAmount = $invoice->total_amount - $totalSplitBase;
-            $newFinalAmount = $invoice->final_amount - $totalSplitFinal;
+            // 6. Cập nhật invoice gốc
+            $newTotalAmount = round($originalTotalAmount - $totalSplitBase, 2);
+            $newFinalAmount = round($originalFinalAmount - $totalSplitFinal, 2);
 
             // Xác định trạng thái mới
             $newStatus = Invoice::STATUS_UNPAID;
@@ -266,12 +270,26 @@ class TableSessionService
                 'updated_by' => $employeeId
             ]);
 
-            // 6. Verify tổng
-            $verifyTotal = $invoice->fresh()->total_amount + collect($childInvoices)->sum('total_amount');
-            $originalTotal = $invoice->getOriginal('total_amount');
+            // 7. Verify tổng với tolerance lớn hơn (do rounding)
+            $verifyTotal = round($invoice->fresh()->total_amount + collect($childInvoices)->sum('total_amount'), 2);
+            $difference = abs($verifyTotal - $originalTotalAmount);
             
-            if (abs($verifyTotal - $originalTotal) > 0.01) {
-                throw new Exception("Split verification failed: sum mismatch");
+            if ($difference > 0.10) { // Tăng tolerance lên 0.10 VND
+                Log::error('Split verification failed - detailed info', [
+                    'invoice_id' => $invoiceId,
+                    'original_total' => $originalTotalAmount,
+                    'parent_after_split' => $invoice->fresh()->total_amount,
+                    'children_sum' => collect($childInvoices)->sum('total_amount'),
+                    'verify_total' => $verifyTotal,
+                    'difference' => $difference,
+                    'splits' => $splits
+                ]);
+                throw new Exception(sprintf(
+                    "Split verification failed: sum mismatch (difference: %.2f, original: %.2f, verify: %.2f)",
+                    $difference,
+                    $originalTotalAmount,
+                    $verifyTotal
+                ));
             }
 
             DB::commit();

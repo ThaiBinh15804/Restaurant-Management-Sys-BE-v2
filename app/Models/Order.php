@@ -8,10 +8,11 @@ class Order extends BaseModel
     protected $idPrefix = 'OR';
 
     // Status constants
-    const STATUS_PENDING = 0;
-    const STATUS_ACTIVE = 1;
-    const STATUS_CANCELLED = 2;
-    const STATUS_REFUNDED = 3;
+    const STATUS_OPEN = 0;
+    const STATUS_IN_PROGRESS = 1;
+    const STATUS_SERVED = 2;
+    const STATUS_PAID = 3;
+    const STATUS_CANCELLED = 4;
 
     protected $fillable = [
         'table_session_id',

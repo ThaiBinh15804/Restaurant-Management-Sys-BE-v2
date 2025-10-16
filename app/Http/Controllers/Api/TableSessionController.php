@@ -1117,8 +1117,8 @@ class TableSessionController extends Controller
      * @OA\Post(
      *     path="/api/table-sessions/split-invoice",
      *     tags={"TableSessions"},
-     *     summary="Tách hóa đơn thành nhiều hóa đơn con",
-     *     description="Chia một invoice thành nhiều invoice con theo order items được chọn",
+     *     summary="Tách hóa đơn theo tỷ lệ phần trăm",
+     *     description="Chia một invoice thành nhiều invoice con theo tỷ lệ % của số tiền còn lại chưa thanh toán. Tổng % các phần tách phải < 100%, phần còn lại sẽ ở invoice gốc.",
      *     operationId="splitInvoice",
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
@@ -1135,20 +1135,25 @@ class TableSessionController extends Controller
      *             @OA\Property(
      *                 property="splits",
      *                 type="array",
-     *                 description="Danh sách các phần tách",
+     *                 description="Danh sách các phần tách theo %. Tổng % phải < 100%",
      *                 @OA\Items(
      *                     type="object",
+     *                     required={"percentage"},
      *                     @OA\Property(
-     *                         property="order_item_ids",
-     *                         type="array",
-     *                         description="Danh sách ID các order items",
-     *                         @OA\Items(type="string", example="OI001")
+     *                         property="percentage",
+     *                         type="number",
+     *                         format="float",
+     *                         description="Tỷ lệ % cần tách (0.01 - 99.99). VD: 40 = 40%",
+     *                         example=40.0,
+     *                         minimum=0.01,
+     *                         maximum=99.99
      *                     ),
      *                     @OA\Property(
      *                         property="note",
      *                         type="string",
+     *                         nullable=true,
      *                         description="Ghi chú cho phần tách",
-     *                         example="Khách A"
+     *                         example="Hóa đơn khách A"
      *                     )
      *                 )
      *             ),
@@ -1169,11 +1174,21 @@ class TableSessionController extends Controller
      *             @OA\Property(
      *                 property="data",
      *                 type="object",
-     *                 @OA\Property(property="parent_invoice", type="object"),
+     *                 @OA\Property(property="parent_invoice", type="object", description="Hóa đơn gốc sau khi tách (chứa phần còn lại)"),
      *                 @OA\Property(
      *                     property="child_invoices",
      *                     type="array",
+     *                     description="Danh sách hóa đơn con được tách ra",
      *                     @OA\Items(type="object")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="summary",
+     *                     type="object",
+     *                     @OA\Property(property="original_remaining", type="number", format="float", description="Số tiền còn lại ban đầu"),
+     *                     @OA\Property(property="split_count", type="integer", description="Số hóa đơn con được tạo"),
+     *                     @OA\Property(property="total_split_percentage", type="number", format="float", description="Tổng % đã tách"),
+     *                     @OA\Property(property="parent_remaining_percentage", type="number", format="float", description="% còn lại ở hóa đơn gốc"),
+     *                     @OA\Property(property="verification", type="string", example="passed")
      *                 )
      *             )
      *         )
@@ -1183,7 +1198,7 @@ class TableSessionController extends Controller
      *         description="Validation failed hoặc không thể tách",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="message", type="string", example="Total percentage must be less than 100%"),
      *             @OA\Property(property="errors", type="object")
      *         )
      *     ),
@@ -1192,7 +1207,7 @@ class TableSessionController extends Controller
      *         description="Invoice không tồn tại",
      *         @OA\JsonContent(
      *             @OA\Property(property="success", type="boolean", example=false),
-     *             @OA\Property(property="message", type="string")
+     *             @OA\Property(property="message", type="string", example="Invoice not found")
      *         )
      *     )
      * )

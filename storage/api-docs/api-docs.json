@@ -10206,8 +10206,8 @@
                 "tags": [
                     "TableSessions"
                 ],
-                "summary": "Tách hóa đơn thành nhiều hóa đơn con",
-                "description": "Chia một invoice thành nhiều invoice con theo order items được chọn",
+                "summary": "Tách hóa đơn theo tỷ lệ phần trăm",
+                "description": "Chia một invoice thành nhiều invoice con theo tỷ lệ % của số tiền còn lại chưa thanh toán. Tổng % các phần tách phải < 100%, phần còn lại sẽ ở invoice gốc.",
                 "operationId": "splitInvoice",
                 "requestBody": {
                     "required": true,
@@ -10226,22 +10226,26 @@
                                         "example": "IN001"
                                     },
                                     "splits": {
-                                        "description": "Danh sách các phần tách",
+                                        "description": "Danh sách các phần tách theo %. Tổng % phải < 100%",
                                         "type": "array",
                                         "items": {
+                                            "required": [
+                                                "percentage"
+                                            ],
                                             "properties": {
-                                                "order_item_ids": {
-                                                    "description": "Danh sách ID các order items",
-                                                    "type": "array",
-                                                    "items": {
-                                                        "type": "string",
-                                                        "example": "OI001"
-                                                    }
+                                                "percentage": {
+                                                    "description": "Tỷ lệ % cần tách (0.01 - 99.99). VD: 40 = 40%",
+                                                    "type": "number",
+                                                    "format": "float",
+                                                    "maximum": 99.99,
+                                                    "minimum": 0.01,
+                                                    "example": 40
                                                 },
                                                 "note": {
                                                     "description": "Ghi chú cho phần tách",
                                                     "type": "string",
-                                                    "example": "Khách A"
+                                                    "example": "Hóa đơn khách A",
+                                                    "nullable": true
                                                 }
                                             },
                                             "type": "object"
@@ -10276,13 +10280,43 @@
                                         "data": {
                                             "properties": {
                                                 "parent_invoice": {
+                                                    "description": "Hóa đơn gốc sau khi tách (chứa phần còn lại)",
                                                     "type": "object"
                                                 },
                                                 "child_invoices": {
+                                                    "description": "Danh sách hóa đơn con được tách ra",
                                                     "type": "array",
                                                     "items": {
                                                         "type": "object"
                                                     }
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "original_remaining": {
+                                                            "description": "Số tiền còn lại ban đầu",
+                                                            "type": "number",
+                                                            "format": "float"
+                                                        },
+                                                        "split_count": {
+                                                            "description": "Số hóa đơn con được tạo",
+                                                            "type": "integer"
+                                                        },
+                                                        "total_split_percentage": {
+                                                            "description": "Tổng % đã tách",
+                                                            "type": "number",
+                                                            "format": "float"
+                                                        },
+                                                        "parent_remaining_percentage": {
+                                                            "description": "% còn lại ở hóa đơn gốc",
+                                                            "type": "number",
+                                                            "format": "float"
+                                                        },
+                                                        "verification": {
+                                                            "type": "string",
+                                                            "example": "passed"
+                                                        }
+                                                    },
+                                                    "type": "object"
                                                 }
                                             },
                                             "type": "object"
@@ -10304,7 +10338,8 @@
                                             "example": false
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Total percentage must be less than 100%"
                                         },
                                         "errors": {
                                             "type": "object"
@@ -10326,7 +10361,8 @@
                                             "example": false
                                         },
                                         "message": {
-                                            "type": "string"
+                                            "type": "string",
+                                            "example": "Invoice not found"
                                         }
                                     },
                                     "type": "object"
