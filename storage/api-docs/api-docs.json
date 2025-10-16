@@ -10342,6 +10342,189 @@
                 ]
             }
         },
+        "/api/table-sessions/split-table": {
+            "post": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Tách bàn - Di chuyển món ăn giữa các bàn",
+                "description": "Di chuyển một hoặc nhiều món ăn từ bàn nguồn sang bàn đích. Hoạt động ở cấp độ order items, không bắt buộc phải có invoice. Nếu có invoice thì sẽ cập nhật số tiền, nếu chưa có thì chỉ chuyển món.",
+                "operationId": "splitTable",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "source_session_id",
+                                    "order_items",
+                                    "employee_id"
+                                ],
+                                "properties": {
+                                    "source_session_id": {
+                                        "description": "ID của session nguồn (bàn cần tách)",
+                                        "type": "string",
+                                        "example": "TS001"
+                                    },
+                                    "order_items": {
+                                        "description": "Danh sách món cần tách",
+                                        "type": "array",
+                                        "items": {
+                                            "required": [
+                                                "order_item_id",
+                                                "quantity_to_transfer"
+                                            ],
+                                            "properties": {
+                                                "order_item_id": {
+                                                    "type": "string",
+                                                    "example": "OI001"
+                                                },
+                                                "quantity_to_transfer": {
+                                                    "description": "Số lượng cần tách",
+                                                    "type": "integer",
+                                                    "example": 2
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "target_session_id": {
+                                        "description": "ID session đích (nếu chuyển sang bàn có sẵn)",
+                                        "type": "string",
+                                        "example": "TS002",
+                                        "nullable": true
+                                    },
+                                    "target_dining_table_id": {
+                                        "description": "ID bàn đích (nếu tạo session mới). Required nếu không có target_session_id",
+                                        "type": "string",
+                                        "example": "DT003",
+                                        "nullable": true
+                                    },
+                                    "note": {
+                                        "description": "Ghi chú",
+                                        "type": "string",
+                                        "example": "Khách yêu cầu tách bàn",
+                                        "nullable": true
+                                    },
+                                    "employee_id": {
+                                        "description": "ID nhân viên thực hiện",
+                                        "type": "string",
+                                        "example": "EMP001"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Tách bàn thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table split successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "source_session": {
+                                                    "type": "object"
+                                                },
+                                                "target_session": {
+                                                    "type": "object"
+                                                },
+                                                "source_invoice": {
+                                                    "description": "Null nếu chưa có invoice",
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "target_invoice": {
+                                                    "description": "Null nếu chưa có invoice",
+                                                    "type": "object",
+                                                    "nullable": true
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "transferred_amount": {
+                                                            "type": "number",
+                                                            "format": "float"
+                                                        },
+                                                        "items_transferred": {
+                                                            "type": "integer"
+                                                        },
+                                                        "source_remaining": {
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "nullable": true
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error hoặc logic error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Session không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/table-sessions/unmerge/{mergedSessionId}": {
             "delete": {
                 "tags": [

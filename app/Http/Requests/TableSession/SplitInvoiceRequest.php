@@ -33,21 +33,16 @@ class SplitInvoiceRequest extends FormRequest
                 'min:1',
                 'max:10',
             ],
-            'splits.*.order_item_ids' => [
+            'splits.*.percentage' => [
                 'required',
-                'array',
-                'min:1',
-            ],
-            'splits.*.order_item_ids.*' => [
-                'required',
-                'string',
-                'exists:order_items,id',
-                'distinct',
+                'numeric',
+                'min:0.01',
+                'max:99.99',
             ],
             'splits.*.note' => [
                 'nullable',
                 'string',
-                'max:255',
+                'max:500',
             ],
             'employee_id' => [
                 'required',
@@ -71,9 +66,10 @@ class SplitInvoiceRequest extends FormRequest
             'splits.array' => 'Splits must be an array',
             'splits.min' => 'At least one split is required',
             'splits.max' => 'Maximum 10 splits allowed',
-            'splits.*.order_item_ids.required' => 'Order items are required for each split',
-            'splits.*.order_item_ids.*.exists' => 'One or more order items do not exist',
-            'splits.*.order_item_ids.*.distinct' => 'Order items must be unique within a split',
+            'splits.*.percentage.required' => 'Percentage is required for each split',
+            'splits.*.percentage.numeric' => 'Percentage must be a number',
+            'splits.*.percentage.min' => 'Percentage must be at least 0.01%',
+            'splits.*.percentage.max' => 'Percentage must not exceed 99.99%',
             'employee_id.required' => 'Employee ID is required',
             'employee_id.exists' => 'Employee does not exist',
         ];
@@ -104,24 +100,22 @@ class SplitInvoiceRequest extends FormRequest
         $validator->after(function ($validator) {
             $splits = $this->input('splits', []);
             
-            // Kiểm tra không có order_item_id trùng lặp giữa các splits
-            $allOrderItemIds = [];
-            foreach ($splits as $index => $split) {
-                $orderItemIds = $split['order_item_ids'] ?? [];
-                
-                foreach ($orderItemIds as $itemId) {
-                    if (in_array($itemId, $allOrderItemIds)) {
-                        $validator->errors()->add(
-                            "splits.{$index}.order_item_ids",
-                            "Order item {$itemId} is already included in another split"
-                        );
-                    }
-                    $allOrderItemIds[] = $itemId;
-                }
+            // Kiểm tra tổng % không vượt quá 100%
+            $totalPercentage = collect($splits)->sum('percentage');
+            
+            if ($totalPercentage >= 100) {
+                $validator->errors()->add(
+                    'splits',
+                    "Total split percentage ({$totalPercentage}%) must be less than 100%"
+                );
             }
 
-            // TODO: Validate rằng tất cả order_item_ids thuộc về invoice_id
-            // (Cần query database để check)
+            if ($totalPercentage <= 0) {
+                $validator->errors()->add(
+                    'splits',
+                    "Total split percentage must be greater than 0%"
+                );
+            }
         });
     }
 }

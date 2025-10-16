@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\TableSession\MergeTablesRequest;
 use App\Http\Requests\TableSession\SplitInvoiceRequest;
+use App\Http\Requests\TableSession\SplitTableRequest;
 use App\Http\Requests\TableSession\TableSessionQueryRequest;
 use App\Models\Order;
 use App\Models\Reservation;
@@ -1205,6 +1206,135 @@ class TableSessionController extends Controller
             $validated['invoice_id'],
             $validated['splits'],
             $validated['employee_id']
+        );
+
+        if (!$result['success']) {
+            return $this->errorResponse(
+                $result['message'],
+                $result['errors'] ?? [],
+                400
+            );
+        }
+
+        return $this->successResponse(
+            $result['data'],
+            $result['message']
+        );
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/table-sessions/split-table",
+     *     tags={"TableSessions"},
+     *     summary="Tách bàn - Di chuyển món ăn giữa các bàn",
+     *     description="Di chuyển một hoặc nhiều món ăn từ bàn nguồn sang bàn đích. Hoạt động ở cấp độ order items, không bắt buộc phải có invoice. Nếu có invoice thì sẽ cập nhật số tiền, nếu chưa có thì chỉ chuyển món.",
+     *     operationId="splitTable",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             type="object",
+     *             required={"source_session_id", "order_items", "employee_id"},
+     *             @OA\Property(
+     *                 property="source_session_id",
+     *                 type="string",
+     *                 description="ID của session nguồn (bàn cần tách)",
+     *                 example="TS001"
+     *             ),
+     *             @OA\Property(
+     *                 property="order_items",
+     *                 type="array",
+     *                 description="Danh sách món cần tách",
+     *                 @OA\Items(
+     *                     type="object",
+     *                     required={"order_item_id", "quantity_to_transfer"},
+     *                     @OA\Property(property="order_item_id", type="string", example="OI001"),
+     *                     @OA\Property(property="quantity_to_transfer", type="integer", example=2, description="Số lượng cần tách")
+     *                 )
+     *             ),
+     *             @OA\Property(
+     *                 property="target_session_id",
+     *                 type="string",
+     *                 nullable=true,
+     *                 description="ID session đích (nếu chuyển sang bàn có sẵn)",
+     *                 example="TS002"
+     *             ),
+     *             @OA\Property(
+     *                 property="target_dining_table_id",
+     *                 type="string",
+     *                 nullable=true,
+     *                 description="ID bàn đích (nếu tạo session mới). Required nếu không có target_session_id",
+     *                 example="DT003"
+     *             ),
+     *             @OA\Property(
+     *                 property="note",
+     *                 type="string",
+     *                 nullable=true,
+     *                 description="Ghi chú",
+     *                 example="Khách yêu cầu tách bàn"
+     *             ),
+     *             @OA\Property(
+     *                 property="employee_id",
+     *                 type="string",
+     *                 description="ID nhân viên thực hiện",
+     *                 example="EMP001"
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tách bàn thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Table split successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="source_session", type="object"),
+     *                 @OA\Property(property="target_session", type="object"),
+     *                 @OA\Property(property="source_invoice", type="object", nullable=true, description="Null nếu chưa có invoice"),
+     *                 @OA\Property(property="target_invoice", type="object", nullable=true, description="Null nếu chưa có invoice"),
+     *                 @OA\Property(
+     *                     property="summary",
+     *                     type="object",
+     *                     @OA\Property(property="transferred_amount", type="number", format="float"),
+     *                     @OA\Property(property="items_transferred", type="integer"),
+     *                     @OA\Property(property="source_remaining", type="number", format="float", nullable=true)
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=400,
+     *         description="Validation error hoặc logic error",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Session không tồn tại",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string")
+     *         )
+     *     )
+     * )
+     */
+    #[Post('/split-table', middleware: ['permission:table-sessions.split'])]
+    public function splitTable(SplitTableRequest $request): JsonResponse
+    {
+        $validated = $request->validated();
+        
+        $result = $this->tableSessionService->splitTable(
+            $validated['source_session_id'],
+            $validated['order_items'],
+            $validated['target_session_id'] ?? null,
+            $validated['target_dining_table_id'] ?? null,
+            $validated['employee_id'],
+            $validated['note'] ?? null
         );
 
         if (!$result['success']) {

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Invoice;
 use App\Models\InvoicePromotion;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\TableSession;
 use App\Models\TableSessionDiningTable;
@@ -45,13 +46,25 @@ class TableSessionService
                 ->mergeable()
                 ->get();
 
+            // Lưu lại IDs các invoice nguồn
+            $sourceInvoiceIds = $sourceInvoices->pluck('id')->toArray();
+
             // 3. Tạo hoặc lấy invoice tổng của target session
             $mergedInvoice = $this->getOrCreateMergedInvoice($targetSession, $employeeId);
 
             // 4. Tính toán lại invoice tổng
             $this->calculateMergedInvoice($mergedInvoice, $sourceInvoices, $employeeId);
 
-            // 5. Chuyển tất cả orders sang target session
+            // 5. Cập nhật audit trail cho merged invoice
+            $mergedInvoice->update([
+                'operation_type' => Invoice::OPERATION_MERGE,
+                'source_invoice_ids' => $sourceInvoiceIds,
+                'operation_notes' => "Merged from " . count($sourceInvoiceIds) . " invoices",
+                'operation_at' => now(),
+                'operation_by' => $employeeId
+            ]);
+
+            // 6. Chuyển tất cả orders sang target session
             Order::whereIn('table_session_id', $sourceTableSessionIds)
                 ->update([
                     'table_session_id' => $targetTableSessionId,
@@ -59,7 +72,7 @@ class TableSessionService
                     'updated_at' => now()
                 ]);
 
-            // 6. Cập nhật trạng thái các invoice nguồn
+            // 7. Cập nhật trạng thái các invoice nguồn
             foreach ($sourceInvoices as $invoice) {
                 $invoice->update([
                     'status' => Invoice::STATUS_MERGED,
@@ -68,7 +81,7 @@ class TableSessionService
                 ]);
             }
 
-            // 7. Chuyển các payment đã hoàn thành sang invoice tổng
+            // 8. Chuyển các payment đã hoàn thành sang invoice tổng
             Payment::whereIn('invoice_id', $sourceInvoices->pluck('id'))
                 ->where('status', Payment::STATUS_COMPLETED)
                 ->update([
@@ -77,10 +90,10 @@ class TableSessionService
                     'updated_at' => now()
                 ]);
 
-            // 8. Sao chép các promotion từ invoice nguồn
+            // 9. Sao chép các promotion từ invoice nguồn
             $this->copyPromotionsToMergedInvoice($sourceInvoices, $mergedInvoice, $employeeId);
 
-            // 9. Cập nhật trạng thái các session nguồn
+            // 10. Cập nhật trạng thái các session nguồn
             TableSession::whereIn('id', $sourceTableSessionIds)
                 ->update([
                     'status' => TableSession::STATUS_MERGED,
@@ -90,7 +103,7 @@ class TableSessionService
                     'updated_at' => now()
                 ]);
 
-            // 10. Cập nhật target session
+            // 11. Cập nhật target session
             $targetSession->update([
                 'type' => TableSession::TYPE_MERGE,
                 'status' => TableSession::STATUS_ACTIVE,
@@ -135,10 +148,10 @@ class TableSessionService
     }
 
     /**
-     * Tách hóa đơn thành nhiều hóa đơn con
+     * Tách hóa đơn theo tỷ lệ % của số tiền còn lại (Split Invoice)
      * 
      * @param string $invoiceId ID hóa đơn cần tách
-     * @param array $splits Mảng các phần tách [['order_item_ids' => [...], 'note' => '...']]
+     * @param array $splits Mảng các phần tách [['percentage' => 40, 'note' => '...']]
      * @param string $employeeId ID nhân viên thực hiện
      * @return array
      */
@@ -166,36 +179,99 @@ class TableSessionService
                 ];
             }
 
-            // 2. Tạo các invoice con
+            // 2. Tính số tiền còn lại
+            $totalPaid = $invoice->total_paid;
+            $remainingAmount = $invoice->final_amount - $totalPaid;
+
+            if ($remainingAmount <= 0) {
+                return [
+                    'success' => false,
+                    'message' => 'Invoice fully paid, cannot split',
+                    'errors' => ['invoice' => ['No remaining amount to split']]
+                ];
+            }
+
+            // 3. Validate tổng % không vượt quá 100%
+            $totalPercentage = collect($splits)->sum('percentage');
+            if ($totalPercentage >= 100) {
+                return [
+                    'success' => false,
+                    'message' => 'Total percentage must be less than 100%',
+                    'errors' => ['splits' => ['Total split percentage cannot be 100% or more']]
+                ];
+            }
+
+            // 4. Tạo các invoice con
             $childInvoices = [];
-            $totalSplitAmount = 0;
+            $totalSplitFinal = 0;
+            $totalSplitBase = 0;
 
             foreach ($splits as $split) {
-                $childInvoice = $this->createSplitInvoice($invoice, $split['order_item_ids'], $employeeId);
+                $percentage = $split['percentage'];
+                $note = $split['note'] ?? null;
+
+                // Tính số tiền tách (final_amount sau discount & tax)
+                $splitFinal = $remainingAmount * ($percentage / 100);
+                
+                // Tính ngược total_amount (trước discount & tax)
+                $splitTotal = $splitFinal / (
+                    (1 - $invoice->discount / 100) * (1 + $invoice->tax / 100)
+                );
+
+                // Tạo invoice con
+                $childInvoice = Invoice::create([
+                    'table_session_id' => $invoice->table_session_id,
+                    'parent_invoice_id' => $invoice->id,
+                    'total_amount' => $splitTotal,
+                    'discount' => $invoice->discount,  // Giữ nguyên %
+                    'tax' => $invoice->tax,            // Giữ nguyên %
+                    'final_amount' => $splitFinal,
+                    'status' => Invoice::STATUS_UNPAID,
+                    'operation_type' => Invoice::OPERATION_SPLIT_INVOICE,
+                    'split_percentage' => $percentage,
+                    'operation_notes' => $note,
+                    'operation_at' => now(),
+                    'operation_by' => $employeeId,
+                    'created_by' => $employeeId,
+                    'updated_by' => $employeeId
+                ]);
+
                 $childInvoices[] = $childInvoice;
-                $totalSplitAmount += $childInvoice->final_amount;
+                $totalSplitFinal += $splitFinal;
+                $totalSplitBase += $splitTotal;
+
+                Log::info("Split invoice created", [
+                    'child_invoice_id' => $childInvoice->id,
+                    'percentage' => $percentage,
+                    'split_amount' => $splitFinal
+                ]);
             }
 
-            // 3. Cập nhật invoice gốc
-            $remainingAmount = $invoice->final_amount - $totalSplitAmount;
+            // 5. Cập nhật invoice gốc
+            $newTotalAmount = $invoice->total_amount - $totalSplitBase;
+            $newFinalAmount = $invoice->final_amount - $totalSplitFinal;
+
+            // Xác định trạng thái mới
+            $newStatus = Invoice::STATUS_UNPAID;
+            if ($totalPaid >= $newFinalAmount) {
+                $newStatus = Invoice::STATUS_PAID;
+            } elseif ($totalPaid > 0) {
+                $newStatus = Invoice::STATUS_PARTIALLY_PAID;
+            }
+
+            $invoice->update([
+                'total_amount' => $newTotalAmount,
+                'final_amount' => $newFinalAmount,
+                'status' => $newStatus,
+                'updated_by' => $employeeId
+            ]);
+
+            // 6. Verify tổng
+            $verifyTotal = $invoice->fresh()->total_amount + collect($childInvoices)->sum('total_amount');
+            $originalTotal = $invoice->getOriginal('total_amount');
             
-            if ($remainingAmount < 0) {
-                throw new Exception('Split amounts exceed original invoice total');
-            }
-
-            // Nếu tách hết, đánh dấu invoice gốc là completed
-            if ($remainingAmount == 0) {
-                $invoice->update([
-                    'status' => Invoice::STATUS_PAID, // Đã tách hết
-                    'updated_by' => $employeeId
-                ]);
-            } else {
-                // Cập nhật lại số tiền invoice gốc
-                $invoice->update([
-                    'total_amount' => $remainingAmount,
-                    'final_amount' => $remainingAmount,
-                    'updated_by' => $employeeId
-                ]);
+            if (abs($verifyTotal - $originalTotal) > 0.01) {
+                throw new Exception("Split verification failed: sum mismatch");
             }
 
             DB::commit();
@@ -203,6 +279,7 @@ class TableSessionService
             Log::info('Invoice split successfully', [
                 'parent_invoice_id' => $invoiceId,
                 'child_invoices' => collect($childInvoices)->pluck('id')->toArray(),
+                'remaining_percentage' => 100 - $totalPercentage,
                 'employee_id' => $employeeId
             ]);
 
@@ -211,7 +288,14 @@ class TableSessionService
                 'message' => 'Invoice split successfully',
                 'data' => [
                     'parent_invoice' => $invoice->fresh(),
-                    'child_invoices' => $childInvoices
+                    'child_invoices' => $childInvoices,
+                    'summary' => [
+                        'original_remaining' => $remainingAmount,
+                        'split_count' => count($childInvoices),
+                        'total_split_percentage' => $totalPercentage,
+                        'parent_remaining_percentage' => 100 - $totalPercentage,
+                        'verification' => 'passed'
+                    ]
                 ]
             ];
 
@@ -227,6 +311,266 @@ class TableSessionService
             return [
                 'success' => false,
                 'message' => 'Failed to split invoice: ' . $e->getMessage(),
+                'errors' => []
+            ];
+        }
+    }
+
+    /**
+     * Tách bàn - Di chuyển món ăn từ bàn này sang bàn khác (Split Table)
+     * 
+     * @param string $sourceSessionId ID session nguồn
+     * @param array $orderItems Mảng các món cần tách [['order_item_id' => '...', 'quantity_to_transfer' => 2]]
+     * @param string|null $targetSessionId ID session đích (nếu có)
+     * @param string|null $targetDiningTableId ID bàn đích (nếu tạo mới)
+     * @param string $employeeId ID nhân viên thực hiện
+     * @param string|null $note Ghi chú
+     * @return array
+     */
+    public function splitTable(
+        string $sourceSessionId,
+        array $orderItems,
+        ?string $targetSessionId,
+        ?string $targetDiningTableId,
+        string $employeeId,
+        ?string $note = null
+    ): array {
+        DB::beginTransaction();
+        
+        try {
+            // 1. Validate source session
+            $sourceSession = TableSession::find($sourceSessionId);
+            if (!$sourceSession) {
+                return [
+                    'success' => false,
+                    'message' => 'Source session not found',
+                    'errors' => ['source_session' => ['Source session does not exist']]
+                ];
+            }
+
+            // 2. Tính toán giá trị món tách
+            $transferredItemIds = [];
+            $transferredTotal = 0;
+            $itemsToTransfer = [];
+
+            foreach ($orderItems as $item) {
+                $orderItem = OrderItem::with('order')->find($item['order_item_id']);
+                
+                if (!$orderItem) {
+                    continue;
+                }
+
+                $qtyToTransfer = $item['quantity_to_transfer'];
+                $unitPrice = $orderItem->total_price / $orderItem->quantity;
+                $transferAmount = $unitPrice * $qtyToTransfer;
+
+                $itemsToTransfer[] = [
+                    'order_item' => $orderItem,
+                    'quantity' => $qtyToTransfer,
+                    'unit_price' => $unitPrice,
+                    'transfer_amount' => $transferAmount
+                ];
+
+                $transferredTotal += $transferAmount;
+                $transferredItemIds[] = $orderItem->id;
+            }
+
+            // 3. Kiểm tra source invoice (nếu có) - Validate remaining_amount
+            $sourceInvoice = Invoice::where('table_session_id', $sourceSessionId)
+                ->whereNull('merged_invoice_id')
+                ->first();
+
+            if ($sourceInvoice) {
+                // Nếu có invoice, kiểm tra số tiền chuyển không vượt quá remaining
+                $remainingAmount = $sourceInvoice->remaining_amount;
+                if ($transferredTotal >= $remainingAmount) {
+                    return [
+                        'success' => false,
+                        'message' => 'Cannot split: transferred amount must be less than remaining amount',
+                        'errors' => ['amount' => [
+                            sprintf(
+                                'Transferred amount (%.2f) must be less than remaining (%.2f)',
+                                $transferredTotal,
+                                $remainingAmount
+                            )
+                        ]]
+                    ];
+                }
+            }
+
+            // 4. Lấy hoặc tạo target session
+            if ($targetSessionId) {
+                $targetSession = TableSession::find($targetSessionId);
+                if (!$targetSession) {
+                    return [
+                        'success' => false,
+                        'message' => 'Target session not found',
+                        'errors' => ['target_session' => ['Target session does not exist']]
+                    ];
+                }
+            } else {
+                // Tạo session mới
+                $targetSession = TableSession::create([
+                    'type' => TableSession::TYPE_OFFLINE,
+                    'status' => TableSession::STATUS_ACTIVE,
+                    'started_at' => now(),
+                    'created_by' => $employeeId,
+                    'updated_by' => $employeeId
+                ]);
+
+                // Gán bàn cho session mới
+                if ($targetDiningTableId) {
+                    TableSessionDiningTable::create([
+                        'table_session_id' => $targetSession->id,
+                        'dining_table_id' => $targetDiningTableId,
+                        'created_by' => $employeeId,
+                        'updated_by' => $employeeId
+                    ]);
+                }
+            }
+
+            // 5. Lấy hoặc tạo order cho target session
+            $targetOrder = Order::where('table_session_id', $targetSession->id)
+                ->where('status', '!=', Order::STATUS_CANCELLED)
+                ->first();
+
+            if (!$targetOrder) {
+                $targetOrder = Order::create([
+                    'table_session_id' => $targetSession->id,
+                    'status' => Order::STATUS_PENDING,
+                    'created_by' => $employeeId,
+                    'updated_by' => $employeeId
+                ]);
+            }
+
+
+            // 6. Di chuyển/Tách order items
+            foreach ($itemsToTransfer as $item) {
+                $orderItem = $item['order_item'];
+                $qtyToTransfer = $item['quantity'];
+                $unitPrice = $item['unit_price'];
+
+                if ($qtyToTransfer >= $orderItem->quantity) {
+                    // Chuyển toàn bộ
+                    $orderItem->update([
+                        'order_id' => $targetOrder->id,
+                        'updated_by' => $employeeId
+                    ]);
+                } else {
+                    // Tách một phần: Tạo item mới cho target (GIÁ GỐC)
+                    OrderItem::create([
+                        'order_id' => $targetOrder->id,
+                        'dish_id' => $orderItem->dish_id,
+                        'quantity' => $qtyToTransfer,
+                        'price' => $unitPrice,
+                        'total_price' => $unitPrice * $qtyToTransfer,
+                        'notes' => $orderItem->notes,
+                        'created_by' => $employeeId,
+                        'updated_by' => $employeeId
+                    ]);
+
+                    // Giảm số lượng ở source
+                    $newQty = $orderItem->quantity - $qtyToTransfer;
+                    $orderItem->update([
+                        'quantity' => $newQty,
+                        'total_price' => $unitPrice * $newQty,
+                        'updated_by' => $employeeId
+                    ]);
+                }
+            }
+
+            // 7. Cập nhật invoice (nếu có)
+            if ($sourceInvoice) {
+                // Cập nhật invoice bàn nguồn
+                $sourceInvoice->update([
+                    'total_amount' => $sourceInvoice->total_amount - $transferredTotal,
+                    'final_amount' => ($sourceInvoice->total_amount - $transferredTotal) 
+                        * (1 - $sourceInvoice->discount / 100) 
+                        * (1 + $sourceInvoice->tax / 100),
+                    'operation_type' => Invoice::OPERATION_SPLIT_TABLE,
+                    'transferred_item_ids' => $transferredItemIds,
+                    'operation_notes' => $note ?? "Split to session {$targetSession->id}",
+                    'operation_at' => now(),
+                    'operation_by' => $employeeId,
+                    'updated_by' => $employeeId
+                ]);
+
+                // Kiểm tra target invoice
+                $targetInvoice = Invoice::where('table_session_id', $targetSession->id)
+                    ->whereNull('merged_invoice_id')
+                    ->first();
+
+                if ($targetInvoice) {
+                    // Cập nhật invoice có sẵn (với weighted discount & tax)
+                    $oldTotal = $targetInvoice->total_amount;
+                    $newTotal = $oldTotal + $transferredTotal;
+
+                    $weightedDiscount = 0;
+                    $weightedTax = 0;
+
+                    if ($newTotal > 0) {
+                        $weightedDiscount = ($targetInvoice->discount * $oldTotal) / $newTotal;
+                        $weightedTax = (
+                            ($targetInvoice->tax * $oldTotal) + 
+                            (10 * $transferredTotal) // Default tax 10%
+                        ) / $newTotal;
+                    }
+
+                    $targetInvoice->update([
+                        'total_amount' => $newTotal,
+                        'discount' => $weightedDiscount,
+                        'tax' => $weightedTax,
+                        'final_amount' => $newTotal * (1 - $weightedDiscount / 100) * (1 + $weightedTax / 100),
+                        'updated_by' => $employeeId
+                    ]);
+                }
+                // Nếu target chưa có invoice thì KHÔNG TẠO - chỉ chuyển order items
+            }
+
+            DB::commit();
+
+            Log::info('Table split successfully', [
+                'source_session' => $sourceSessionId,
+                'target_session' => $targetSession->id,
+                'transferred_total' => $transferredTotal,
+                'items_count' => count($itemsToTransfer),
+                'has_source_invoice' => $sourceInvoice ? true : false,
+                'employee_id' => $employeeId
+            ]);
+
+            // Lấy target invoice nếu có (sau khi commit)
+            $targetInvoice = Invoice::where('table_session_id', $targetSession->id)
+                ->whereNull('merged_invoice_id')
+                ->first();
+
+            return [
+                'success' => true,
+                'message' => 'Table split successfully',
+                'data' => [
+                    'source_session' => $sourceSession->fresh(),
+                    'target_session' => $targetSession->fresh(),
+                    'source_invoice' => $sourceInvoice ? $sourceInvoice->fresh() : null,
+                    'target_invoice' => $targetInvoice,
+                    'summary' => [
+                        'transferred_amount' => $transferredTotal,
+                        'items_transferred' => count($itemsToTransfer),
+                        'source_remaining' => $sourceInvoice ? $sourceInvoice->fresh()->remaining_amount : null
+                    ]
+                ]
+            ];
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            
+            Log::error('Split table failed', [
+                'source_session' => $sourceSessionId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'Failed to split table: ' . $e->getMessage(),
                 'errors' => []
             ];
         }
@@ -406,42 +750,6 @@ class TableSessionService
                 }
             }
         }
-    }
-
-    /**
-     * Tạo invoice con khi tách
-     */
-    private function createSplitInvoice(Invoice $parentInvoice, array $orderItemIds, string $employeeId): Invoice
-    {
-        // Tính tổng giá trị các order items
-        $orderItems = DB::table('order_items')
-            ->whereIn('id', $orderItemIds)
-            ->get();
-
-        $subtotal = $orderItems->sum('total_price');
-
-        // Áp dụng cùng tỷ lệ discount và tax như invoice gốc
-        $discount = $parentInvoice->discount;
-        $tax = $parentInvoice->tax;
-        $finalAmount = $subtotal * (1 - $discount / 100) * (1 + $tax / 100);
-
-        // Tạo invoice con
-        $childInvoice = Invoice::create([
-            'table_session_id' => $parentInvoice->table_session_id,
-            'parent_invoice_id' => $parentInvoice->id,
-            'total_amount' => $subtotal,
-            'discount' => $discount,
-            'tax' => $tax,
-            'final_amount' => $finalAmount,
-            'status' => Invoice::STATUS_UNPAID,
-            'created_by' => $employeeId,
-            'updated_by' => $employeeId
-        ]);
-
-        // TODO: Cập nhật order_items để liên kết với invoice con
-        // (Cần thêm trường invoice_id vào bảng order_items nếu cần tracking chính xác)
-
-        return $childInvoice;
     }
 
     /**
