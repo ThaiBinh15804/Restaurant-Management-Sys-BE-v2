@@ -568,6 +568,7 @@ class InvoicePaymentController extends Controller
             'method' => 'required|integer|in:0,1',
             'status_payment' => 'required|integer|in:0,1,2,3',
             'paymentBefore' => 'nullable|numeric|min:0',
+            'paymentBefore' => 'nullable|numeric|min:0',
         ]);
 
         $invoice = Invoice::with('payments', 'tableSession')->find($invoice_id);

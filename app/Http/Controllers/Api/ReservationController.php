@@ -235,18 +235,20 @@ class ReservationController extends Controller
 
             $assigned = false;
             $diningTableId = null;
+            $tableNumber = null;
             $sessionId = null;
 
             if ($tableSessionReservation) {
                 $sessionId = $tableSessionReservation->table_session_id;
 
                 $tableSessionDining = TableSessionDiningTable::where('table_session_id', $sessionId)
-                    ->with('diningTable:id') // chỉ lấy id của bàn
+                    ->with('diningTable:id,table_number') // lấy cả id và số bàn
                     ->first();
 
                 if ($tableSessionDining && $tableSessionDining->diningTable) {
                     $assigned = true;
                     $diningTableId  = $tableSessionDining->diningTable->id;
+                    $tableNumber = $tableSessionDining->diningTable->table_number;
                 }
             }
 
@@ -259,6 +261,7 @@ class ReservationController extends Controller
                 'customer_name' => $reservation->customer->full_name ?? null,
                 'session_id' => $sessionId,
                 'dining_table_id' => $diningTableId,
+                'dining_table_number' => $tableNumber,
                 'assigned' => $assigned,
             ];
         }
