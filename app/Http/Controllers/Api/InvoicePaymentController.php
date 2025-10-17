@@ -568,7 +568,6 @@ class InvoicePaymentController extends Controller
             'method' => 'required|integer|in:0,1',
             'status_payment' => 'required|integer|in:0,1,2,3',
             'paymentBefore' => 'nullable|numeric|min:0',
-            'paymentBefore' => 'nullable|numeric|min:0',
         ]);
 
         $invoice = Invoice::with('payments', 'tableSession')->find($invoice_id);
@@ -605,7 +604,7 @@ class InvoicePaymentController extends Controller
             ]);
 
             // 3. Xóa và tạo lại promotions nếu có
-            if ($request->has('listPromotionApply')) {
+            if ($request->has('listPromotionApply') && $request->listPromotionApply != null) {
                 InvoicePromotion::where('invoice_id', $invoice->id)->delete();
                 foreach ($request->listPromotionApply as $p) {
                     InvoicePromotion::create([
@@ -617,20 +616,24 @@ class InvoicePaymentController extends Controller
                 }
             }
 
+            if ($invoice->payments()->where('status', Payment::STATUS_COMPLETED)->sum('amount') >= $invoice->final_amount - 0.01) {
+                $invoice->status = Invoice::STATUS_PAID;
+                $invoice->save();
+            }
+
             // 4. Cập nhật TableSession & merged sessions
             $tableSession = $invoice->tableSession;
 
             if ($tableSession) {
-                // Kiểm tra nếu còn invoice nào chưa thanh toán
                 $hasUnpaid = $tableSession->invoices()
                     ->where('status', '!=', Invoice::STATUS_PAID)
                     ->exists();
-
-                if ($hasUnpaid) {
-                    $tableSession->status = TableSession::STATUS_ACTIVE; // vẫn còn hoạt động
-                } else {
+                Log::info('23123123 Table Session ' . $tableSession->id . ' has unpaid invoices: ' . ($hasUnpaid ? 'true' : 'false'));
+                if (!$hasUnpaid) {
+                    Log::info('Closing Table Session ' . $tableSession->id);
                     $tableSession->status = TableSession::STATUS_COMPLETED;
                     $tableSession->ended_at = now();
+                    Log::info('Table Session ' . $tableSession->id . ' closed. Status:' .$tableSession->status);
                 }
                 $tableSession->save();
 

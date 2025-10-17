@@ -8,6 +8,7 @@ use App\Http\Requests\TableSession\SplitInvoiceRequest;
 use App\Http\Requests\TableSession\SplitTableRequest;
 use App\Http\Requests\TableSession\TableSessionQueryRequest;
 use App\Models\Customer;
+use App\Models\Invoice;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\TableSession;
@@ -187,11 +188,18 @@ class TableSessionController extends Controller
         if (!$session) {
             return response()->json(['message' => 'Table session not found'], 404);
         }
-
-        $session->status = 1; // Đang phục vụ
+        
+        if (!$session->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists() 
+            && $session->started_at != null) 
+        {
+            $session->status = 2;
+        }
+        else {
+            $session->status = 1; // Đang phục vụ 
+        }
         $session->started_at = now();
+            
         $session->save();
-
         return response()->json([
             'id' => $session->id,
             'status' => $session->status,

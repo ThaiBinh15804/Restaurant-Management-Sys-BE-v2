@@ -453,7 +453,7 @@ class TableSessionService
             if (!$targetOrder) {
                 $targetOrder = Order::create([
                     'table_session_id' => $targetSession->id,
-                    'status' => Order::STATUS_PENDING,
+                    'status' => Order::STATUS_IN_PROGRESS,
                     'created_by' => $employeeId,
                     'updated_by' => $employeeId
                 ]);
