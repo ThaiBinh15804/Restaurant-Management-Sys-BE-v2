@@ -475,6 +475,13 @@ class InvoicePaymentController extends Controller
                     'ended_at' => now(),
                     'updated_by' => $request->employee_id
                 ]);
+                
+                TableSession::where('merged_into_session_id', $tableSession->id)
+                    ->update([
+                        'status' => TableSession::STATUS_COMPLETED,
+                        'ended_at' => now(),
+                        'updated_by' => $request->employee_id
+                    ]);
 
                 Order::where('table_session_id', $request->table_session_id)
                     ->update(['status' => Order::STATUS_PAID, 'updated_by' => $request->employee_id]);
@@ -634,22 +641,21 @@ class InvoicePaymentController extends Controller
                     $tableSession->status = TableSession::STATUS_COMPLETED;
                     $tableSession->ended_at = now();
                     Log::info('Table Session ' . $tableSession->id . ' closed. Status:' .$tableSession->status);
-                }
-                $tableSession->save();
-
-                // Nếu có các bàn gộp thì cũng đóng chúng
-                if ($tableSession->status === TableSession::STATUS_COMPLETED) {
                     TableSession::where('merged_into_session_id', $tableSession->id)
                         ->update([
                             'status' => TableSession::STATUS_COMPLETED,
                             'ended_at' => now()
                         ]);
 
+                    Log::info('Updating orders for Table Session ' . $request->table_session_id);
+                    Log::info('Table session be merged into: ' . $tableSession->merged_into_session_id);
+
                     // Cập nhật toàn bộ order sang ĐÃ TRẢ (trừ order hủy)
                     Order::where('table_session_id', $request->table_session_id)
                         ->where('status', '!=', Order::STATUS_CANCELLED)
                         ->update(['status' => Order::STATUS_PAID]);
                 }
+                $tableSession->save();
             }
 
             DB::commit();

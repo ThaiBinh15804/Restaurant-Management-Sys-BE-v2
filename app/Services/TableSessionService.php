@@ -41,30 +41,35 @@ class TableSessionService
             $sourceSessions = $validation['source_sessions'];
             $targetSession = $validation['target_session'];
 
-            // 2. Thu thập tất cả invoices từ các session nguồn
+            // 2. Kiểm tra invoice của target session và source sessions
+            $targetInvoice = Invoice::where('table_session_id', $targetTableSessionId)
+                ->whereNull('merged_invoice_id')
+                ->whereIn('status', [Invoice::STATUS_UNPAID, Invoice::STATUS_PARTIALLY_PAID])
+                ->first();
+
             $sourceInvoices = Invoice::whereIn('table_session_id', $sourceTableSessionIds)
-                ->mergeable()
+                ->whereNull('merged_invoice_id')
+                ->whereIn('status', [Invoice::STATUS_UNPAID, Invoice::STATUS_PARTIALLY_PAID])
                 ->get();
 
-            // Lưu lại IDs các invoice nguồn
-            $sourceInvoiceIds = $sourceInvoices->pluck('id')->toArray();
+            $hasSourceInvoices = $sourceInvoices->isNotEmpty();
+            $hasTargetInvoice = !is_null($targetInvoice);
 
-            // 3. Tạo hoặc lấy invoice tổng của target session
-            $mergedInvoice = $this->getOrCreateMergedInvoice($targetSession, $employeeId);
+            // 3. Validate logic gộp invoice
+            if (!$hasTargetInvoice && $hasSourceInvoices) {
+                // Bàn đích không có invoice nhưng bàn nguồn có invoice
+                return [
+                    'success' => false,
+                    'message' => 'Target table does not have an invoice. Please create a draft invoice for the target table before merging.',
+                    'errors' => [
+                        'target_invoice' => [
+                            'Target session must have an invoice (draft or active) when source sessions have invoices. Create a draft invoice first.'
+                        ]
+                    ]
+                ];
+            }
 
-            // 4. Tính toán lại invoice tổng
-            $this->calculateMergedInvoice($mergedInvoice, $sourceInvoices, $employeeId);
-
-            // 5. Cập nhật audit trail cho merged invoice
-            $mergedInvoice->update([
-                'operation_type' => Invoice::OPERATION_MERGE,
-                'source_invoice_ids' => $sourceInvoiceIds,
-                'operation_notes' => "Merged from " . count($sourceInvoiceIds) . " invoices",
-                'operation_at' => now(),
-                'operation_by' => $employeeId
-            ]);
-
-            // 6. Chuyển tất cả orders sang target session
+            // 4. Chuyển tất cả orders sang target session (luôn thực hiện)
             Order::whereIn('table_session_id', $sourceTableSessionIds)
                 ->update([
                     'table_session_id' => $targetTableSessionId,
@@ -72,28 +77,116 @@ class TableSessionService
                     'updated_at' => now()
                 ]);
 
-            // 7. Cập nhật trạng thái các invoice nguồn
-            foreach ($sourceInvoices as $invoice) {
-                $invoice->update([
-                    'status' => Invoice::STATUS_MERGED,
-                    'merged_invoice_id' => $mergedInvoice->id,
-                    'updated_by' => $employeeId
+            $mergedInvoice = null;
+
+            // 5. Xử lý invoice dựa trên trường hợp
+            if ($hasTargetInvoice) {
+                // Trường hợp: Bàn đích có invoice (bàn nguồn có thể có hoặc không)
+                $mergedInvoice = $targetInvoice;
+
+                if ($hasSourceInvoices) {
+                    // Gộp invoice nguồn vào invoice đích
+                    
+                    // 5.1. Tính tổng total_amount từ các invoice nguồn
+                    $sourceTotal = $sourceInvoices->sum('total_amount');
+                    $newTotalAmount = $targetInvoice->total_amount + $sourceTotal;
+
+                    // 5.2. Giảm giá và thuế áp dụng theo invoice bàn đích (giữ nguyên)
+                    $discount = $targetInvoice->discount;
+                    $tax = $targetInvoice->tax;
+
+                    // 5.3. Tính final_amount với discount và tax của bàn đích
+                    $finalAmount = round($newTotalAmount * (1 - $discount / 100) * (1 + $tax / 100), 2);
+
+                    // 5.4. Tính tổng payment đã hoàn thành từ tất cả invoice (target + sources)
+                    $targetPaid = Payment::where('invoice_id', $targetInvoice->id)
+                        ->where('status', Payment::STATUS_COMPLETED)
+                        ->sum('amount');
+
+                    $sourcePaid = Payment::whereIn('invoice_id', $sourceInvoices->pluck('id'))
+                        ->where('status', Payment::STATUS_COMPLETED)
+                        ->sum('amount');
+
+                    $totalPaid = round($targetPaid + $sourcePaid, 2);
+
+                    // 5.5. Xác định status mới
+                    $newStatus = Invoice::STATUS_UNPAID;
+                    if ($totalPaid >= $finalAmount) {
+                        $newStatus = Invoice::STATUS_PAID;
+                    } elseif ($totalPaid > 0) {
+                        $newStatus = Invoice::STATUS_PARTIALLY_PAID;
+                    }
+
+                    // 5.6. Cập nhật invoice đích
+                    $mergedInvoice->update([
+                        'total_amount' => $newTotalAmount,
+                        'discount' => $discount,
+                        'tax' => $tax,
+                        'final_amount' => $finalAmount,
+                        'status' => $newStatus,
+                        'operation_type' => Invoice::OPERATION_MERGE,
+                        'source_invoice_ids' => $sourceInvoices->pluck('id')->toArray(),
+                        'operation_notes' => "Merged from " . count($sourceInvoices) . " source invoices. Total paid: {$totalPaid}",
+                        'operation_at' => now(),
+                        'operation_by' => $employeeId,
+                        'updated_by' => $employeeId
+                    ]);
+
+                    // 5.7. Chuyển payment từ invoice nguồn sang invoice đích
+                    Payment::whereIn('invoice_id', $sourceInvoices->pluck('id'))
+                        ->where('status', Payment::STATUS_COMPLETED)
+                        ->update([
+                            'invoice_id' => $mergedInvoice->id,
+                            'updated_by' => $employeeId,
+                            'updated_at' => now()
+                        ]);
+
+                    // 5.8. Sao chép promotions từ invoice nguồn (nếu có)
+                    $this->copyPromotionsToMergedInvoice($sourceInvoices, $mergedInvoice, $employeeId);
+
+                    // 5.9. Đánh dấu invoice nguồn là đã merged
+                    foreach ($sourceInvoices as $sourceInvoice) {
+                        $sourceInvoice->update([
+                            'status' => Invoice::STATUS_MERGED,
+                            'merged_invoice_id' => $mergedInvoice->id,
+                            'updated_by' => $employeeId
+                        ]);
+                    }
+
+                    Log::info('Merged invoices into target invoice', [
+                        'target_invoice_id' => $mergedInvoice->id,
+                        'source_invoice_ids' => $sourceInvoices->pluck('id')->toArray(),
+                        'new_total' => $newTotalAmount,
+                        'new_final' => $finalAmount,
+                        'total_paid' => $totalPaid,
+                        'new_status' => $newStatus
+                    ]);
+                } else {
+                    // Bàn đích có invoice, bàn nguồn không có invoice
+                    // Chỉ cần cập nhật operation info
+                    $mergedInvoice->update([
+                        'operation_type' => Invoice::OPERATION_MERGE,
+                        'operation_notes' => "Merged orders from sessions without invoices",
+                        'operation_at' => now(),
+                        'operation_by' => $employeeId,
+                        'updated_by' => $employeeId
+                    ]);
+
+                    Log::info('Merged tables without source invoices', [
+                        'target_invoice_id' => $mergedInvoice->id,
+                        'source_sessions' => $sourceTableSessionIds
+                    ]);
+                }
+            } else {
+                // Trường hợp: Tất cả bàn đều chưa có invoice
+                // Chỉ gộp orders, không tạo invoice mới
+                Log::info('Merged tables without any invoices - orders only', [
+                    'source_sessions' => $sourceTableSessionIds,
+                    'target_session' => $targetTableSessionId
                 ]);
             }
 
-            // 8. Chuyển các payment đã hoàn thành sang invoice tổng
-            Payment::whereIn('invoice_id', $sourceInvoices->pluck('id'))
-                ->where('status', Payment::STATUS_COMPLETED)
-                ->update([
-                    'invoice_id' => $mergedInvoice->id,
-                    'updated_by' => $employeeId,
-                    'updated_at' => now()
-                ]);
-
-            // 9. Sao chép các promotion từ invoice nguồn
-            $this->copyPromotionsToMergedInvoice($sourceInvoices, $mergedInvoice, $employeeId);
-
-            // 10. Cập nhật trạng thái các session nguồn
+            // 6. Cập nhật trạng thái các session nguồn
             TableSession::whereIn('id', $sourceTableSessionIds)
                 ->update([
                     'status' => TableSession::STATUS_MERGED,
@@ -103,7 +196,7 @@ class TableSessionService
                     'updated_at' => now()
                 ]);
 
-            // 11. Cập nhật target session
+            // 7. Cập nhật target session
             $targetSession->update([
                 'type' => TableSession::TYPE_MERGE,
                 'status' => TableSession::STATUS_ACTIVE,
@@ -115,7 +208,8 @@ class TableSessionService
             Log::info('Tables merged successfully', [
                 'source_sessions' => $sourceTableSessionIds,
                 'target_session' => $targetTableSessionId,
-                'merged_invoice_id' => $mergedInvoice->id,
+                'merged_invoice_id' => $mergedInvoice ? $mergedInvoice->id : null,
+                'has_invoice' => !is_null($mergedInvoice),
                 'employee_id' => $employeeId
             ]);
 
@@ -123,9 +217,10 @@ class TableSessionService
                 'success' => true,
                 'message' => 'Tables merged successfully',
                 'data' => [
-                    'merged_invoice' => $mergedInvoice->load(['payments', 'invoicePromotions', 'tableSession']),
+                    'merged_invoice' => $mergedInvoice ? $mergedInvoice->fresh()->load(['payments', 'invoicePromotions', 'tableSession']) : null,
                     'merged_from_sessions' => $sourceTableSessionIds,
-                    'target_session' => $targetSession->fresh()
+                    'target_session' => $targetSession->fresh(),
+                    'merge_type' => $mergedInvoice ? 'with_invoice' : 'orders_only'
                 ]
             ];
         } catch (Exception $e) {

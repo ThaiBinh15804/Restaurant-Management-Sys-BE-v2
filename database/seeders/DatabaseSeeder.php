@@ -542,7 +542,7 @@ class DatabaseSeeder extends Seeder
         
         for ($i = 0; $i < 5; $i++) {
             $offlineSessions[$i] = TableSession::create([
-                'type' => 1, // Offline/Walk-in
+                'type' => 0, // Offline/Walk-in
                 'status' => 1, // Active
                 'customer_id' => $customerProfileOffline->id,
                 'employee_id' => $employeeProfile->id,
@@ -608,7 +608,7 @@ class DatabaseSeeder extends Seeder
 
         // 8. Tạo 2 Table Sessions từ Reservation (có đặt trước)
         $session1 = TableSession::create([
-            'type' => 0, // Reservation
+            'type' => 0, // Offline
             'status' => 1, // Active
             'customer_id' => $customerProfile1->id,
             'employee_id' => $employeeProfile->id,
@@ -621,7 +621,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $session2 = TableSession::create([
-            'type' => 0, // Reservation
+            'type' => 0, // Offline
             'status' => 0, // Pending
             'customer_id' => $customerProfile2->id,
             'employee_id' => $employeeProfile->id,

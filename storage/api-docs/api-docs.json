@@ -10640,6 +10640,178 @@
                 ]
             }
         },
+        "/api/table-sessions/{tableSessionId}/invoice-summary": {
+            "get": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Tóm tắt thông tin hóa đơn của table session",
+                "description": "Trả về tổng quan các hóa đơn liên quan đến table session: tổng số hóa đơn, tổng tiền, số tiền còn lại, số hóa đơn chưa thanh toán, thanh toán một phần, và đã hoàn tất thanh toán",
+                "operationId": "aea5629770af9afb2b2578cb86b14106",
+                "parameters": [
+                    {
+                        "name": "tableSessionId",
+                        "in": "path",
+                        "description": "ID của Table Session",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "TSPC3JAEON"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tóm tắt hóa đơn lấy thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Invoice summary retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "table_session_id": {
+                                                    "type": "string",
+                                                    "example": "TSPC3JAEON"
+                                                },
+                                                "summary": {
+                                                    "properties": {
+                                                        "total_invoices": {
+                                                            "description": "Tổng số hóa đơn",
+                                                            "type": "integer",
+                                                            "example": 5
+                                                        },
+                                                        "total_amount": {
+                                                            "description": "Tổng tiền tất cả hóa đơn",
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 1250000
+                                                        },
+                                                        "total_paid": {
+                                                            "description": "Tổng tiền đã thanh toán",
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 850000
+                                                        },
+                                                        "total_remaining": {
+                                                            "description": "Tổng tiền còn lại phải thanh toán",
+                                                            "type": "number",
+                                                            "format": "float",
+                                                            "example": 400000
+                                                        },
+                                                        "unpaid_count": {
+                                                            "description": "Số hóa đơn chưa thanh toán (status=0)",
+                                                            "type": "integer",
+                                                            "example": 1
+                                                        },
+                                                        "partially_paid_count": {
+                                                            "description": "Số hóa đơn thanh toán một phần (status=1)",
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "paid_count": {
+                                                            "description": "Số hóa đơn đã thanh toán đủ (status=2)",
+                                                            "type": "integer",
+                                                            "example": 2
+                                                        },
+                                                        "cancelled_count": {
+                                                            "description": "Số hóa đơn đã hủy (status=3)",
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        },
+                                                        "merged_count": {
+                                                            "description": "Số hóa đơn đã gộp (status=4)",
+                                                            "type": "integer",
+                                                            "example": 0
+                                                        }
+                                                    },
+                                                    "type": "object"
+                                                },
+                                                "invoices": {
+                                                    "description": "Chi tiết từng hóa đơn",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "invoice_id": {
+                                                                "type": "string",
+                                                                "example": "IN001"
+                                                            },
+                                                            "final_amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 250000
+                                                            },
+                                                            "total_paid": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 250000
+                                                            },
+                                                            "remaining_amount": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 0
+                                                            },
+                                                            "status": {
+                                                                "description": "0=Chưa thanh toán, 1=Thanh toán một phần, 2=Đã thanh toán, 3=Đã hủy, 4=Đã gộp",
+                                                                "type": "integer",
+                                                                "example": 2
+                                                            },
+                                                            "status_label": {
+                                                                "type": "string",
+                                                                "example": "Đã thanh toán"
+                                                            },
+                                                            "created_at": {
+                                                                "type": "string",
+                                                                "format": "date-time"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Table Session không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/users": {
             "get": {
                 "tags": [

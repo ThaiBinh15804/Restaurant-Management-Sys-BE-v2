@@ -1473,4 +1473,164 @@ class TableSessionController extends Controller
             $result['message']
         );
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/table-sessions/{tableSessionId}/invoice-summary",
+     *     tags={"TableSessions"},
+     *     summary="Tóm tắt thông tin hóa đơn của table session",
+     *     description="Trả về tổng quan các hóa đơn liên quan đến table session: tổng số hóa đơn, tổng tiền, số tiền còn lại, số hóa đơn chưa thanh toán, thanh toán một phần, và đã hoàn tất thanh toán",
+     *     security={{"bearerAuth": {}}},
+     *     @OA\Parameter(
+     *         name="tableSessionId",
+     *         in="path",
+     *         required=true,
+     *         description="ID của Table Session",
+     *         @OA\Schema(type="string", example="TSPC3JAEON")
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Tóm tắt hóa đơn lấy thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Invoice summary retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="table_session_id", type="string", example="TSPC3JAEON"),
+     *                 @OA\Property(
+     *                     property="summary",
+     *                     type="object",
+     *                     @OA\Property(property="total_invoices", type="integer", example=5, description="Tổng số hóa đơn"),
+     *                     @OA\Property(property="total_amount", type="number", format="float", example=1250000, description="Tổng tiền tất cả hóa đơn"),
+     *                     @OA\Property(property="total_paid", type="number", format="float", example=850000, description="Tổng tiền đã thanh toán"),
+     *                     @OA\Property(property="total_remaining", type="number", format="float", example=400000, description="Tổng tiền còn lại phải thanh toán"),
+     *                     @OA\Property(property="unpaid_count", type="integer", example=1, description="Số hóa đơn chưa thanh toán (status=0)"),
+     *                     @OA\Property(property="partially_paid_count", type="integer", example=2, description="Số hóa đơn thanh toán một phần (status=1)"),
+     *                     @OA\Property(property="paid_count", type="integer", example=2, description="Số hóa đơn đã thanh toán đủ (status=2)"),
+     *                     @OA\Property(property="cancelled_count", type="integer", example=0, description="Số hóa đơn đã hủy (status=3)"),
+     *                     @OA\Property(property="merged_count", type="integer", example=0, description="Số hóa đơn đã gộp (status=4)")
+     *                 ),
+     *                 @OA\Property(
+     *                     property="invoices",
+     *                     type="array",
+     *                     description="Chi tiết từng hóa đơn",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="invoice_id", type="string", example="IN001"),
+     *                         @OA\Property(property="final_amount", type="number", format="float", example=250000),
+     *                         @OA\Property(property="total_paid", type="number", format="float", example=250000),
+     *                         @OA\Property(property="remaining_amount", type="number", format="float", example=0),
+     *                         @OA\Property(property="status", type="integer", example=2, description="0=Chưa thanh toán, 1=Thanh toán một phần, 2=Đã thanh toán, 3=Đã hủy, 4=Đã gộp"),
+     *                         @OA\Property(property="status_label", type="string", example="Đã thanh toán"),
+     *                         @OA\Property(property="created_at", type="string", format="date-time")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Table Session không tồn tại",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Table session not found")
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/{tableSessionId}/invoice-summary', middleware: ['permission:table-sessions.view'])]
+    public function getInvoiceSummary(string $tableSessionId): JsonResponse
+    {
+        // Kiểm tra table session có tồn tại không
+        $tableSession = TableSession::find($tableSessionId);
+        if (!$tableSession) {
+            return $this->errorResponse('Table session not found', 404);
+        }
+
+        // Lấy tất cả invoices của table session kèm payments
+        $invoices = Invoice::where('table_session_id', $tableSessionId)
+            ->with(['payments' => function($query) {
+                $query->where('status', \App\Models\Payment::STATUS_COMPLETED);
+            }])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Khởi tạo các biến tổng hợp
+        $totalInvoices = $invoices->count();
+        $totalAmount = 0;
+        $totalPaid = 0;
+        $totalRemaining = 0;
+        
+        $unpaidCount = 0;
+        $partiallyPaidCount = 0;
+        $paidCount = 0;
+        $cancelledCount = 0;
+        $mergedCount = 0;
+
+        // Chi tiết từng invoice
+        $invoiceDetails = [];
+
+        foreach ($invoices as $invoice) {
+            // Tính tổng đã thanh toán cho invoice này
+            $invoicePaid = $invoice->payments->sum('amount');
+            $invoiceRemaining = max(0, $invoice->final_amount - $invoicePaid);
+
+            $totalAmount += $invoice->final_amount;
+            $totalPaid += $invoicePaid;
+            $totalRemaining += $invoiceRemaining;
+
+            // Đếm theo status
+            switch ($invoice->status) {
+                case Invoice::STATUS_UNPAID:
+                    $unpaidCount++;
+                    break;
+                case Invoice::STATUS_PARTIALLY_PAID:
+                    $partiallyPaidCount++;
+                    break;
+                case Invoice::STATUS_PAID:
+                    $paidCount++;
+                    break;
+                case Invoice::STATUS_CANCELLED:
+                    $cancelledCount++;
+                    break;
+                case Invoice::STATUS_MERGED:
+                    $mergedCount++;
+                    break;
+            }
+
+            // Thêm vào chi tiết
+            $invoiceDetails[] = [
+                'invoice_id' => $invoice->id,
+                'final_amount' => (float) $invoice->final_amount,
+                'total_paid' => (float) $invoicePaid,
+                'remaining_amount' => (float) $invoiceRemaining,
+                'status' => $invoice->status,
+                'status_label' => $invoice->status_label,
+                'operation_type' => $invoice->operation_type,
+                'created_at' => $invoice->created_at->toISOString(),
+            ];
+        }
+
+        $result = [
+            'table_session_id' => $tableSessionId,
+            'summary' => [
+                'total_invoices' => $totalInvoices,
+                'total_amount' => round($totalAmount, 2),
+                'total_paid' => round($totalPaid, 2),
+                'total_remaining' => round($totalRemaining, 2),
+                'unpaid_count' => $unpaidCount,
+                'partially_paid_count' => $partiallyPaidCount,
+                'paid_count' => $paidCount,
+                'cancelled_count' => $cancelledCount,
+                'merged_count' => $mergedCount,
+            ],
+            'invoices' => $invoiceDetails,
+        ];
+
+        return $this->successResponse(
+            $result,
+            'Invoice summary retrieved successfully'
+        );
+    }
 }
