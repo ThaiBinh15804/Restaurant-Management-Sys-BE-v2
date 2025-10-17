@@ -215,7 +215,7 @@ class DishController extends Controller
      *     @OA\Response(response=200, description="Danh sách món ăn phổ biến")
      * )
      */
-    #[Get('/popular', middleware: ['permission:table-sessions.view'])]
+    #[Get('/popular')]
     public function popular(Request $request): JsonResponse
     {
         $limit = $request->query('limit', 5);
@@ -248,7 +248,7 @@ class DishController extends Controller
      *     @OA\Response(response=404, description="Không tìm thấy món ăn")
      * )
      */
-    #[Get('/{id}', middleware: ['permission:table-sessions.view'])]
+    #[Get('/{id}')]
     public function show(string $id): JsonResponse
     {
         $dish = Dish::with('category')->findOrFail($id);

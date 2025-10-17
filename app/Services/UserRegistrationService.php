@@ -57,7 +57,7 @@ class UserRegistrationService
 
             return [
                 'success' => true,
-                'message' => 'Registration initiated. Please check your email to verify your account.',
+                'message' => 'Đăng ký đã được khởi tạo. Vui lòng kiểm tra email của bạn để xác minh tài khoản.',
                 'data' => [
                     'email' => $email,
                     'expires_at' => $verificationToken->expires_at,

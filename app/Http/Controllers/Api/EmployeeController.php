@@ -409,7 +409,7 @@ class EmployeeController extends Controller
      *     @OA\Response(response=200, description="Danh sách chef")
      * )
      */
-    #[Get('/find/chefs', middleware: 'permission:employees.view')]
+    #[Get('/find/chefs')]
     public function chefs(): JsonResponse
     {
         $chefs = Employee::whereHas('user.role', function ($q) {

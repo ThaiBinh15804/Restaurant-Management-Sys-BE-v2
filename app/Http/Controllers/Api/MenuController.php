@@ -690,7 +690,7 @@ class MenuController extends Controller
      *     @OA\Response(response=404, description="No menu found")
      * )
      */
-    #[Get('/active/categories', middleware: ['permission:table-sessions.view'])]
+    #[Get('/active/categories')]
     public function getActiveMenuCategoriesWithDishes(Request $request): JsonResponse
     {
         $menu = Menu::where('is_active', 1)->first();
@@ -820,7 +820,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Danh sách menu kèm items")
      * )
      */
-    #[Get('/with-items', middleware: ['permission:table-sessions.view'])]
+    #[Get('/with-items')]
     public function listMenusWithItems(Request $request): JsonResponse
     {
         $isActive          = $request->has('is_active') ? filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;

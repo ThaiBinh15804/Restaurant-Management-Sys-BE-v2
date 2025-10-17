@@ -23,7 +23,7 @@ class PromotionController extends Controller
      *   @OA\Response(response=200, description="OK")
      * )
      */
-    #[Get('/', middleware: ['permission:table-sessions.view'])]
+    #[Get('/')]
     public function index(Request $request): JsonResponse
     {
         $q = Promotion::query();

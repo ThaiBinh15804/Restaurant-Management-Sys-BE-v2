@@ -41,7 +41,7 @@ class JWTAuthService
             ]);
             return [
                 'success' => false,
-                'message' => 'This account was registered with Google. Please login using Google.',
+                'message' => 'Tài khoản này đã được đăng ký với Google. Vui lòng đăng nhập bằng Google.',
                 'error_code' => 'GOOGLE_ACCOUNT_ONLY'
             ];
         }

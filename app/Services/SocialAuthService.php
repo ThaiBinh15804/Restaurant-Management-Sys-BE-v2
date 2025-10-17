@@ -129,7 +129,7 @@ class SocialAuthService
                 
                 return [
                     'success' => false,
-                    'message' => 'This email is already registered. Please login with your email and password.',
+                    'message' => 'Email này đã được đăng ký. Vui lòng đăng nhập bằng email và mật khẩu của bạn.',
                     'error_code' => 'EMAIL_ACCOUNT_EXISTS',
                     'errors' => []
                 ];

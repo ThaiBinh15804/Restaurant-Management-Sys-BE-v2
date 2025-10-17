@@ -142,7 +142,7 @@ class AuthController extends BaseController
                 
                 return response()->json([
                     'success' => false,
-                    'message' => 'This login portal is for customers only. Please use the admin portal.',
+                    'message' => 'Cổng đăng nhập này chỉ dành cho khách hàng. Vui lòng sử dụng cổng dành cho quản trị viên.',
                     'error_code' => 'UNAUTHORIZED_ROLE',
                     'errors' => []
                 ], 403);
@@ -154,7 +154,7 @@ class AuthController extends BaseController
 
         return $this->successResponse(
             $authData,
-            'Login successful'
+            'Đăng nhập thành công'
         );
     }
 
@@ -239,10 +239,10 @@ class AuthController extends BaseController
         $success = $this->authService->logout($request);
 
         if ($success) {
-            return $this->successResponse([], 'Logout successful');
+            return $this->successResponse([], 'Đăng xuất thành công');
         }
 
-        return $this->errorResponse('Logout failed', [], 500);
+        return $this->errorResponse('Đăng xuất thất bại', [], 500);
     }
 
     /**
