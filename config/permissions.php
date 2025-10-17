@@ -711,14 +711,21 @@ return [
             'name' => 'Customer',
             'description' => 'Limited access for customers',
             'permissions' => [
-                'products.view',
-                'reservations.view',
-                'reservations.create',
                 'auth.register',
                 'auth.verify_email',
                 'auth.resend_verification',
                 'auth.google_login',
-                'auth.google_register',
+                
+                'table-sessions.view',
+                'products.view',
+                
+                'orders.view',
+                
+                'reservations.view',
+                'reservations.create',
+                'users.view',
+                
+                'employees.view',
             ],
         ],
     ],

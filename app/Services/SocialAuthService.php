@@ -120,6 +120,21 @@ class SocialAuthService
     private function loginExistingUser(User $user, $googleUser): array
     {
         try {
+            // Kiểm tra xem user có phải đăng ký bằng email/password không
+            if ($user->isSystemUser()) {
+                Log::warning('Google login failed - Account registered via email', [
+                    'user_id' => $user->id,
+                    'email' => $user->email
+                ]);
+                
+                return [
+                    'success' => false,
+                    'message' => 'This email is already registered. Please login with your email and password.',
+                    'error_code' => 'EMAIL_ACCOUNT_EXISTS',
+                    'errors' => []
+                ];
+            }
+
             if (!$user->isActive()) {
                 return [
                     'success' => false,
@@ -184,6 +199,7 @@ class SocialAuthService
             $user = User::create([
                 'email' => $googleUser->getEmail(),
                 'password' => bcrypt(uniqid()),
+                'type' => User::TYPE_GOOGLE_USER, 
                 'status' => User::STATUS_ACTIVE,
                 'role_id' => $defaultRole?->id,
                 'avatar' => $googleUser->getAvatar(),
