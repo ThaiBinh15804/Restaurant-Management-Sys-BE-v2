@@ -9867,13 +9867,11 @@
                                                         "example": "TSPC3JAEON"
                                                     },
                                                     "order_status": {
-                                                        "description": "0=Open, 1=In-Progress, 2=Served, 3=Paid, 4=Cancelled",
                                                         "type": "integer",
                                                         "example": 1
                                                     },
                                                     "total_amount": {
                                                         "type": "number",
-                                                        "format": "float",
                                                         "example": 350000
                                                     },
                                                     "items": {
@@ -9890,35 +9888,19 @@
                                                                 },
                                                                 "item_price": {
                                                                     "type": "number",
-                                                                    "format": "float",
                                                                     "example": 120000
                                                                 },
                                                                 "total_price": {
                                                                     "type": "number",
-                                                                    "format": "float",
                                                                     "example": 240000
                                                                 },
                                                                 "item_status": {
-                                                                    "description": "0=Ordered, 1=Cooking, 2=Served, 3=Cancelled",
                                                                     "type": "integer",
                                                                     "example": 1
                                                                 },
                                                                 "notes": {
                                                                     "type": "string",
                                                                     "example": "Less spicy"
-                                                                },
-                                                                "prepared_by": {
-                                                                    "type": "string",
-                                                                    "example": "EMP001"
-                                                                },
-                                                                "served_at": {
-                                                                    "type": "string",
-                                                                    "format": "date-time",
-                                                                    "example": "2025-10-02T08:45:00Z"
-                                                                },
-                                                                "cancelled_reason": {
-                                                                    "type": "string",
-                                                                    "example": null
                                                                 },
                                                                 "dish": {
                                                                     "properties": {
@@ -9930,33 +9912,9 @@
                                                                             "type": "string",
                                                                             "example": "Fried Rice"
                                                                         },
-                                                                        "dish_price": {
-                                                                            "type": "number",
-                                                                            "example": 120000
-                                                                        },
-                                                                        "dish_desc": {
-                                                                            "type": "string",
-                                                                            "example": "Delicious fried rice"
-                                                                        },
-                                                                        "cooking_time": {
-                                                                            "type": "integer",
-                                                                            "example": 15
-                                                                        },
-                                                                        "image": {
-                                                                            "type": "string",
-                                                                            "example": "/images/fried_rice.png"
-                                                                        },
-                                                                        "dish_active": {
-                                                                            "type": "boolean",
-                                                                            "example": true
-                                                                        },
                                                                         "category_name": {
                                                                             "type": "string",
                                                                             "example": "Main Course"
-                                                                        },
-                                                                        "category_desc": {
-                                                                            "type": "string",
-                                                                            "example": "Main course dishes"
                                                                         }
                                                                     },
                                                                     "type": "object"

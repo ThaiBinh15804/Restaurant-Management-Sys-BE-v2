@@ -134,7 +134,6 @@ class InventoryManagementSeeder extends Seeder
             ]);
         }
 
-        $this->command->info("✓ Đã tạo " . count($createdCategories) . " danh mục nguyên liệu");
         return $createdCategories;
     }
 
@@ -202,7 +201,6 @@ class InventoryManagementSeeder extends Seeder
             ]);
         }
 
-        $this->command->info("✓ Đã tạo " . count($createdIngredients) . " nguyên liệu");
         return $createdIngredients;
     }
 
