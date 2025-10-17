@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\EmployeeShift\BulkAssignEmployeesRequest;
 use App\Http\Requests\EmployeeShift\EmployeeShiftCheckInRequest;
 use App\Http\Requests\EmployeeShift\EmployeeShiftCheckOutRequest;
 use App\Http\Requests\EmployeeShift\EmployeeShiftQueryRequest;
@@ -11,6 +12,7 @@ use App\Http\Requests\EmployeeShift\EmployeeShiftStoreRequest;
 use App\Models\EmployeeShift;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Delete;
@@ -131,6 +133,184 @@ class EmployeeShiftController extends Controller
             'Employee shift assigned successfully',
             201
         );
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/api/employee-shifts/bulk-assign",
+     *     tags={"Employee Shifts"},
+     *     summary="Gán nhiều nhân viên vào một ca làm việc",
+     *     description="Cho phép gán nhiều nhân viên vào cùng một ca làm việc cùng lúc để tăng tốc độ xử lý. API sẽ tự động bỏ qua các nhân viên đã được gán vào ca này trước đó.",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"shift_id","employee_ids"},
+     *             @OA\Property(
+     *                 property="shift_id",
+     *                 type="string",
+     *                 description="ID của ca làm việc",
+     *                 example="SH001"
+     *             ),
+     *             @OA\Property(
+     *                 property="employee_ids",
+     *                 type="array",
+     *                 description="Danh sách ID nhân viên cần gán vào ca",
+     *                 @OA\Items(type="string", example="EMP001"),
+     *                 minItems=1
+     *             ),
+     *             @OA\Property(
+     *                 property="status",
+     *                 type="integer",
+     *                 description="Trạng thái ban đầu (0=Đã lên lịch, 1=Có mặt, 2=Đi muộn, 3=Về sớm)",
+     *                 example=0,
+     *                 default=0
+     *             ),
+     *             @OA\Property(
+     *                 property="notes",
+     *                 type="string",
+     *                 description="Ghi chú chung cho tất cả nhân viên",
+     *                 example="Gán cho ca sáng",
+     *                 nullable=true
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=201,
+     *         description="Gán nhân viên thành công",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Gán 5 nhân viên vào ca làm việc thành công"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="shift_id", type="string", example="SH001"),
+     *                 @OA\Property(property="total_requested", type="integer", example=7, description="Tổng số nhân viên yêu cầu gán"),
+     *                 @OA\Property(property="total_assigned", type="integer", example=5, description="Số nhân viên được gán thành công"),
+     *                 @OA\Property(property="total_skipped", type="integer", example=2, description="Số nhân viên đã được gán trước đó (bỏ qua)"),
+     *                 @OA\Property(
+     *                     property="assigned_employees",
+     *                     type="array",
+     *                     description="Danh sách nhân viên được gán thành công",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", example="ES001"),
+     *                         @OA\Property(property="employee_id", type="string", example="EMP001"),
+     *                         @OA\Property(property="shift_id", type="string", example="SH001"),
+     *                         @OA\Property(property="status", type="integer", example=0)
+     *                     )
+     *                 ),
+     *                 @OA\Property(
+     *                     property="skipped_employees",
+     *                     type="array",
+     *                     description="Danh sách nhân viên đã được gán trước đó",
+     *                     @OA\Items(type="string", example="EMP003")
+     *                 )
+     *             )
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=422,
+     *         description="Lỗi validation",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Validation error"),
+     *             @OA\Property(property="errors", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=404,
+     *         description="Ca làm việc không tồn tại",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="success", type="boolean", example=false),
+     *             @OA\Property(property="message", type="string", example="Shift not found")
+     *         )
+     *     )
+     * )
+     */
+    #[Post('/bulk-assign', middleware: 'permission:employee_shifts.create')]
+    public function bulkAssign(BulkAssignEmployeesRequest $request): JsonResponse
+    {
+        $data = $request->validated();
+        $shiftId = $data['shift_id'];
+        $employeeIds = $data['employee_ids'];
+        $status = $data['status'] ?? EmployeeShift::STATUS_SCHEDULED;
+        $notes = $data['notes'] ?? null;
+
+        DB::beginTransaction();
+
+        try {
+            $existingAssignments = EmployeeShift::where('shift_id', $shiftId)
+                ->whereIn('employee_id', $employeeIds)
+                ->pluck('employee_id')
+                ->toArray();
+
+            $employeesToAssign = array_diff($employeeIds, $existingAssignments);
+
+            $createdAssignments = [];
+
+            foreach ($employeesToAssign as $employeeId) {
+                $assignment = EmployeeShift::create([
+                    'employee_id' => $employeeId,
+                    'shift_id' => $shiftId,
+                    'status' => $status,
+                    'notes' => $notes,
+                ]);
+
+                $createdAssignments[] = $assignment;
+            }
+
+            $createdAssignments = EmployeeShift::with(['employee', 'shift'])
+                ->whereIn('id', collect($createdAssignments)->pluck('id'))
+                ->get();
+
+            DB::commit();
+
+            $totalRequested = count($employeeIds);
+            $totalAssigned = count($employeesToAssign);
+            $totalSkipped = count($existingAssignments);
+
+            Log::info('Bulk employee shift assignment completed', [
+                'shift_id' => $shiftId,
+                'total_requested' => $totalRequested,
+                'total_assigned' => $totalAssigned,
+                'total_skipped' => $totalSkipped,
+                'assigned_employees' => $employeesToAssign,
+                'skipped_employees' => $existingAssignments,
+            ]);
+
+            $message = $totalAssigned > 0
+                ? "Gán {$totalAssigned} nhân viên vào ca làm việc thành công"
+                : "Tất cả nhân viên đã được gán vào ca này trước đó";
+
+            return $this->successResponse(
+                [
+                    'shift_id' => $shiftId,
+                    'total_requested' => $totalRequested,
+                    'total_assigned' => $totalAssigned,
+                    'total_skipped' => $totalSkipped,
+                    'assigned_employees' => $createdAssignments,
+                    'skipped_employees' => $existingAssignments,
+                ],
+                $message,
+                201
+            );
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            Log::error('Bulk employee shift assignment failed', [
+                'shift_id' => $shiftId,
+                'employee_ids' => $employeeIds,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return $this->errorResponse(
+                'Gán nhân viên thất bại: ' . $e->getMessage(),
+                [],
+                500
+            );
+        }
     }
 
     /**

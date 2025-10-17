@@ -2629,6 +2629,185 @@
                 ]
             }
         },
+        "/api/employee-shifts/bulk-assign": {
+            "post": {
+                "tags": [
+                    "Employee Shifts"
+                ],
+                "summary": "Gán nhiều nhân viên vào một ca làm việc",
+                "description": "Cho phép gán nhiều nhân viên vào cùng một ca làm việc cùng lúc để tăng tốc độ xử lý. API sẽ tự động bỏ qua các nhân viên đã được gán vào ca này trước đó.",
+                "operationId": "76dad2e5fd2a7ca7011df074ee4ec115",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "shift_id",
+                                    "employee_ids"
+                                ],
+                                "properties": {
+                                    "shift_id": {
+                                        "description": "ID của ca làm việc",
+                                        "type": "string",
+                                        "example": "SH001"
+                                    },
+                                    "employee_ids": {
+                                        "description": "Danh sách ID nhân viên cần gán vào ca",
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "example": "EMP001"
+                                        },
+                                        "minItems": 1
+                                    },
+                                    "status": {
+                                        "description": "Trạng thái ban đầu (0=Đã lên lịch, 1=Có mặt, 2=Đi muộn, 3=Về sớm)",
+                                        "type": "integer",
+                                        "default": 0,
+                                        "example": 0
+                                    },
+                                    "notes": {
+                                        "description": "Ghi chú chung cho tất cả nhân viên",
+                                        "type": "string",
+                                        "example": "Gán cho ca sáng",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Gán nhân viên thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Gán 5 nhân viên vào ca làm việc thành công"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "shift_id": {
+                                                    "type": "string",
+                                                    "example": "SH001"
+                                                },
+                                                "total_requested": {
+                                                    "description": "Tổng số nhân viên yêu cầu gán",
+                                                    "type": "integer",
+                                                    "example": 7
+                                                },
+                                                "total_assigned": {
+                                                    "description": "Số nhân viên được gán thành công",
+                                                    "type": "integer",
+                                                    "example": 5
+                                                },
+                                                "total_skipped": {
+                                                    "description": "Số nhân viên đã được gán trước đó (bỏ qua)",
+                                                    "type": "integer",
+                                                    "example": 2
+                                                },
+                                                "assigned_employees": {
+                                                    "description": "Danh sách nhân viên được gán thành công",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "ES001"
+                                                            },
+                                                            "employee_id": {
+                                                                "type": "string",
+                                                                "example": "EMP001"
+                                                            },
+                                                            "shift_id": {
+                                                                "type": "string",
+                                                                "example": "SH001"
+                                                            },
+                                                            "status": {
+                                                                "type": "integer",
+                                                                "example": 0
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                },
+                                                "skipped_employees": {
+                                                    "description": "Danh sách nhân viên đã được gán trước đó",
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "example": "EMP003"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Lỗi validation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Validation error"
+                                        },
+                                        "errors": {
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Ca làm việc không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Shift not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/employee-shifts/{id}": {
             "get": {
                 "tags": [
