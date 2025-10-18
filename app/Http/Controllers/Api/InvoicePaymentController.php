@@ -196,7 +196,7 @@ class InvoicePaymentController extends Controller
     public function show(string $id)
     {
         // Lấy hóa đơn và các payment kèm nhân viên
-        $invoice = Invoice::with(['payments.employee'])->find($id);
+        $invoice = Invoice::with(['payments.employee', 'invoicePromotions.promotion'])->find($id);
 
         if (!$invoice) {
             return $this->errorResponse('Invoice not found', [], 404);
