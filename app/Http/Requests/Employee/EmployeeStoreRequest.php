@@ -37,6 +37,7 @@ class EmployeeStoreRequest extends FormRequest
             
             // Optional: Link to existing user (if provided, email/password will be ignored)
             'user_id' => ['nullable', 'string', 'exists:users,id', 'unique:employees,user_id'],
+            'avatar' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'],
         ];
     }
 
@@ -53,6 +54,9 @@ class EmployeeStoreRequest extends FormRequest
             'password.confirmed' => 'Password confirmation does not match.',
             'role_id.required' => 'Role is required for user account.',
             'role_id.exists' => 'The selected role does not exist.',
+            'avatar.image' => 'The avatar must be an image file.',
+            'avatar.mimes' => 'The avatar must be a file of type: jpeg, jpg, png, gif, webp.',
+            'avatar.max' => 'The avatar may not be greater than 2MB.',
         ];
     }
 }

@@ -11,11 +11,13 @@ use App\Http\Requests\Payroll\PayrollUpdateRequest;
 use App\Models\Employee;
 use App\Models\EmployeeShift;
 use App\Models\Payroll;
+use App\Models\PayrollItem;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Collection;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Middleware;
@@ -152,8 +154,28 @@ class PayrollController extends Controller
 
         $created = [];
         $skipped = [];
+        $details = [];
 
-        DB::transaction(function () use ($employees, $month, $year, $overwrite, &$created, &$skipped) {
+        DB::transaction(function () use ($employees, $month, $year, $overwrite, &$created, &$skipped, &$details) {
+            $employeeIds = $employees->pluck('id');
+
+            $assignmentsByEmployee = EmployeeShift::with('shift')
+                ->whereIn('employee_id', $employeeIds)
+                ->where(function ($query) use ($month, $year) {
+                    $query->whereHas('shift', function ($shiftQuery) use ($month, $year) {
+                        $shiftQuery->whereYear('shift_date', $year)
+                            ->whereMonth('shift_date', $month);
+                    })->orWhere(function ($inner) use ($month, $year) {
+                        $inner->whereYear('check_in', '=', $year)
+                            ->whereMonth('check_in', '=', $month);
+                    })->orWhere(function ($inner) use ($month, $year) {
+                        $inner->whereYear('check_out', '=', $year)
+                            ->whereMonth('check_out', '=', $month);
+                    });
+                })
+                ->get()
+                ->groupBy('employee_id');
+
             foreach ($employees as $employee) {
                 $existing = Payroll::where('employee_id', $employee->id)
                     ->where('month', $month)
@@ -164,23 +186,32 @@ class PayrollController extends Controller
                     $skipped[] = $employee->id;
                     continue;
                 }
+                
+                $assignments = $assignmentsByEmployee->get($employee->id, collect());
+                $summary = $this->summarizeEmployeeAssignments($assignments);
+                $hourlyRate = $this->calculateHourlyRate((float) ($employee->base_salary ?? 0));
+                $workedHours = $summary['worked_minutes'] ? $summary['worked_minutes'] / 60 : 0;
+                $diligenceAmount = round($hourlyRate * $workedHours, 2);
+                $overtimeAmount = $this->calculateOvertimePay((float) ($employee->base_salary ?? 0), (int) $summary['overtime_hours']);
 
-                $overtimeHours = EmployeeShift::where('employee_id', $employee->id)
-                    ->join('shifts', 'employee_shifts.shift_id', '=', 'shifts.id')
-                    ->whereYear('shifts.shift_date', $year)
-                    ->whereMonth('shifts.shift_date', $month)
-                    ->sum('employee_shifts.overtime_hours');
-
-                $baseSalary = (float) ($employee->base_salary ?? 0);
-                $overtimePay = $this->calculateOvertimePay($baseSalary, (int) $overtimeHours);
-
+                Log::info('Employee payroll calculation', [
+                    'employee_id' => $employee->id,
+                    'month' => $month,
+                    'year' => $year,
+                    'worked_hours' => round($workedHours, 2),
+                    'overtime_hours' => $summary['overtime_hours'],
+                    'hourly_rate' => round($hourlyRate, 2),
+                    'diligence_amount' => $diligenceAmount,
+                    'overtime_amount' => $overtimeAmount,
+                ]);
+                
                 $payload = [
                     'month' => $month,
                     'year' => $year,
-                    'base_salary' => $baseSalary,
-                    'bonus' => $overtimePay,
-                    'deductions' => 0,
-                    'final_salary' => $baseSalary + $overtimePay,
+                    'base_salary' => 0.0,
+                    'bonus' => $overtimeAmount,
+                    'deductions' => 0.0,
+                    'final_salary' => 0.0,
                     'status' => Payroll::STATUS_DRAFT,
                     'payment_method' => Payroll::PAYMENT_CASH,
                     'payment_ref' => null,
@@ -190,18 +221,51 @@ class PayrollController extends Controller
 
                 if ($existing) {
                     $existing->update($payload);
-                    $created[] = $existing->id;
+                    $payroll = $existing->fresh();
                 } else {
                     $payload['employee_id'] = $employee->id;
                     $payroll = Payroll::create($payload);
-                    $created[] = $payroll->id;
                 }
+
+                PayrollItem::updateOrCreate(
+                    [
+                        'payroll_id' => $payroll->id,
+                        'code' => 'DILIGENCE',
+                    ],
+                    [
+                        'item_type' => PayrollItem::TYPE_EARNING,
+                        'description' => 'Lương thực tế theo giờ làm (' . round($workedHours, 2) . ' giờ)',
+                        'amount' => $diligenceAmount,
+                    ]
+                );
+
+                $finalSalary = $this->updatePayrollTotals($payroll);
+
+                $created[] = $payroll->id;
+                $details[] = [
+                    'payroll_id' => $payroll->id,
+                    'employee_id' => $employee->id,
+                    'hours_worked' => round($workedHours, 2),
+                    'overtime_hours' => $summary['overtime_hours'],
+                    'hourly_rate' => round($hourlyRate, 2),
+                    'diligence_amount' => $diligenceAmount,
+                    'overtime_amount' => $overtimeAmount,
+                    'final_salary' => $finalSalary,
+                ];
             }
+
+            Log::info('Payroll generation completed', [
+                'month' => $month,
+                'year' => $year,
+                'generated_count' => count($created),
+                'skipped_count' => count($skipped),
+            ]);
         });
 
         return $this->successResponse([
             'generated' => $created,
             'skipped' => $skipped,
+            'details' => $details,
         ], 'Payroll generation completed');
     }
 
@@ -367,15 +431,107 @@ class PayrollController extends Controller
         return $this->successResponse($payroll->fresh(['employee', 'paidByEmployee']), 'Payroll paid successfully');
     }
 
-    private function calculateOvertimePay(float $baseSalary, int $overtimeHours): float
+    private function calculateHourlyRate(float $baseSalary): float
     {
-        if ($overtimeHours <= 0) {
+        if ($baseSalary <= 0) {
             return 0.0;
         }
 
-        $hourlyRate = $baseSalary / 160; // Approximate monthly hours
+        $standardMonthlyHours = 160; // Default standard working hours per month
 
-        return round($hourlyRate * $overtimeHours, 2);
+        return $baseSalary / $standardMonthlyHours;
+    }
+
+    private function summarizeEmployeeAssignments(Collection $assignments): array
+    {
+        $workedMinutes = 0;
+        $overtimeHours = 0;
+
+        foreach ($assignments as $assignment) {
+            $shift = $assignment->shift;
+
+            $shiftDate = null;
+            if ($shift && $shift->shift_date) {
+                $shiftDate = Carbon::parse((string) $shift->shift_date)->toDateString();
+            } elseif ($assignment->check_in) {
+                $shiftDate = $assignment->check_in->toDateString();
+            } elseif ($assignment->check_out) {
+                $shiftDate = $assignment->check_out->toDateString();
+            }
+
+            $scheduledStart = null;
+            $scheduledEnd = null;
+
+            $startTime = $shift ? $shift->getRawOriginal('start_time') : null;
+            $endTime = $shift ? $shift->getRawOriginal('end_time') : null;
+
+            if ($shiftDate && $startTime) {
+                $scheduledStart = Carbon::createFromFormat('Y-m-d H:i:s', $shiftDate . ' ' . $startTime);
+            }
+
+            if ($shiftDate && $endTime) {
+                $scheduledEnd = Carbon::createFromFormat('Y-m-d H:i:s', $shiftDate . ' ' . $endTime);
+                if ($scheduledStart && $scheduledEnd->lessThanOrEqualTo($scheduledStart)) {
+                    $scheduledEnd = $scheduledEnd->copy()->addDay();
+                }
+            }
+
+            $actualStart = $assignment->check_in ? $assignment->check_in->copy() : ($scheduledStart ? $scheduledStart->copy() : null);
+            $actualEnd = $assignment->check_out ? $assignment->check_out->copy() : ($scheduledEnd ? $scheduledEnd->copy() : null);
+
+            if ($actualStart && $actualEnd) {
+                if ($actualEnd->lessThanOrEqualTo($actualStart)) {
+                    $actualEnd = $actualEnd->copy()->addDay();
+                }
+
+                $workedMinutes += $actualStart->diffInMinutes($actualEnd);
+            }
+
+            $overtimeHours += max(0, (int) $assignment->overtime_hours);
+        }
+
+        return [
+            'worked_minutes' => $workedMinutes,
+            'overtime_hours' => $overtimeHours,
+        ];
+    }
+
+    private function updatePayrollTotals(Payroll $payroll): float
+    {
+        $payroll->refresh();
+
+        $totals = $payroll->items()
+            ->selectRaw(
+                'sum(case when item_type = ? then amount else 0 end) as earnings, sum(case when item_type = ? then amount else 0 end) as deductions',
+                [PayrollItem::TYPE_EARNING, PayrollItem::TYPE_DEDUCTION]
+            )
+            ->first();
+
+        $earnings = (float) ($totals->earnings ?? 0);
+        $deductions = (float) ($totals->deductions ?? 0);
+
+        $finalSalary = $this->calculateFinalSalary(
+            (float) $payroll->base_salary,
+            (float) $payroll->bonus + $earnings,
+            (float) $payroll->deductions + $deductions
+        );
+
+        $payroll->forceFill([
+            'final_salary' => $finalSalary,
+        ])->save();
+
+        return $finalSalary;
+    }
+
+    private function calculateOvertimePay(float $baseSalary, int $overtimeHours): float
+    {
+        if ($baseSalary <= 0 || $overtimeHours <= 0) {
+            return 0.0;
+        }
+
+        $hourlyRate = $this->calculateHourlyRate($baseSalary);
+
+        return round($hourlyRate * $overtimeHours * 2, 2);
     }
 
     private function calculateFinalSalary(float $baseSalary, float $bonus, float $deductions): float

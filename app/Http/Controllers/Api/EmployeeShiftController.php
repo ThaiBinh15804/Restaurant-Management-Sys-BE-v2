@@ -428,10 +428,15 @@ class EmployeeShiftController extends Controller
 
         $assignment->check_out = $timestamp;
 
+        Log::info('Shift data', [
+            'shift_date' => $assignment->shift->shift_date,
+            'end_time' => $assignment->shift->end_time,
+        ]);
+
         if ($request->filled('overtime_hours')) {
             $assignment->overtime_hours = (int) $request->input('overtime_hours');
         } elseif ($assignment->shift && $assignment->shift->shift_date) {
-            $scheduledEnd = Carbon::parse($assignment->shift->shift_date . ' ' . $assignment->shift->end_time);
+            $scheduledEnd = $assignment->shift->end_time;
             $diffMinutes = $scheduledEnd->diffInMinutes($timestamp, false);
             $assignment->overtime_hours = $diffMinutes > 0 ? (int) ceil($diffMinutes / 60) : 0;
         }

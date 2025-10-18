@@ -2131,12 +2131,12 @@
                     "Employees"
                 ],
                 "summary": "Create employee with user account",
-                "description": "Create a new employee along with their user account for login",
+                "description": "Create a new employee along with their user account for login. Supports file upload for avatar.",
                 "operationId": "781d9d682a574c5e2c1dab17f782b5cd",
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "full_name",
@@ -2188,8 +2188,12 @@
                                         "example": "2025-01-01"
                                     },
                                     "is_active": {
-                                        "type": "boolean",
-                                        "example": true
+                                        "type": "string",
+                                        "enum": [
+                                            "0",
+                                            "1"
+                                        ],
+                                        "example": "1"
                                     },
                                     "email": {
                                         "description": "User account email",
@@ -2212,6 +2216,11 @@
                                         "description": "Role ID for the user account",
                                         "type": "string",
                                         "example": "R-123456"
+                                    },
+                                    "avatar": {
+                                        "description": "Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"

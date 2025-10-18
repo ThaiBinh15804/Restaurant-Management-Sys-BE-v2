@@ -112,25 +112,34 @@ class EmployeeController extends Controller
      *     path="/api/employees",
      *     tags={"Employees"},
      *     summary="Create employee with user account",
-     *     description="Create a new employee along with their user account for login",
+     *     description="Create a new employee along with their user account for login. Supports file upload for avatar.",
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
-     *         @OA\JsonContent(
-     *             required={"full_name","contract_type","base_salary","email","password","password_confirmation","role_id"},
-     *             @OA\Property(property="full_name", type="string", example="John Smith"),
-     *             @OA\Property(property="phone", type="string", example="0123456789"),
-     *             @OA\Property(property="gender", type="string", example="male"),
-     *             @OA\Property(property="address", type="string", example="123 Main St"),
-     *             @OA\Property(property="bank_account", type="string", example="1234567890"),
-     *             @OA\Property(property="contract_type", type="integer", enum={0, 1}, example=0, description="0: Full-time, 1: Part-time"),
-     *             @OA\Property(property="base_salary", type="number", format="float", example=2000.00),
-     *             @OA\Property(property="hire_date", type="string", format="date", example="2025-01-01"),
-     *             @OA\Property(property="is_active", type="boolean", example=true),
-     *             @OA\Property(property="email", type="string", format="email", example="john.smith@restaurant.com", description="User account email"),
-     *             @OA\Property(property="password", type="string", format="password", example="password123", description="User account password (min 8 chars)"),
-     *             @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
-     *             @OA\Property(property="role_id", type="string", example="R-123456", description="Role ID for the user account")
+     *         @OA\MediaType(
+     *             mediaType="multipart/form-data",
+     *             @OA\Schema(
+     *                 required={"full_name","contract_type","base_salary","email","password","password_confirmation","role_id"},
+     *                 @OA\Property(property="full_name", type="string", example="John Smith"),
+     *                 @OA\Property(property="phone", type="string", example="0123456789"),
+     *                 @OA\Property(property="gender", type="string", example="male"),
+     *                 @OA\Property(property="address", type="string", example="123 Main St"),
+     *                 @OA\Property(property="bank_account", type="string", example="1234567890"),
+     *                 @OA\Property(property="contract_type", type="integer", enum={0, 1}, example=0, description="0: Full-time, 1: Part-time"),
+     *                 @OA\Property(property="base_salary", type="number", format="float", example=2000.00),
+     *                 @OA\Property(property="hire_date", type="string", format="date", example="2025-01-01"),
+     *                 @OA\Property(property="is_active", type="string", enum={"0","1"}, example="1"),
+     *                 @OA\Property(property="email", type="string", format="email", example="john.smith@restaurant.com", description="User account email"),
+     *                 @OA\Property(property="password", type="string", format="password", example="password123", description="User account password (min 8 chars)"),
+     *                 @OA\Property(property="password_confirmation", type="string", format="password", example="password123"),
+     *                 @OA\Property(property="role_id", type="string", example="R-123456", description="Role ID for the user account"),
+     *                 @OA\Property(
+     *                     property="avatar",
+     *                     type="string",
+     *                     format="binary",
+     *                     description="Avatar image file (jpeg, jpg, png, gif, webp, max 2MB)"
+     *                 )
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -149,7 +158,7 @@ class EmployeeController extends Controller
         try {
             $data = $request->validated();
 
-            $employee = DB::transaction(function () use ($data) {
+            $employee = DB::transaction(function () use ($data, $request) {
                 if (!empty($data['user_id'])) {
                     $userId = $data['user_id'];
                 } else {
@@ -158,9 +167,22 @@ class EmployeeController extends Controller
                         'password' => Hash::make($data['password']),
                         'role_id' => $data['role_id'],
                         'status' => User::STATUS_ACTIVE,
+                        'avatar' => $data['avatar'] ?? null,
                         'created_by' => auth('api')->id(),
                     ]);
                     $userId = $user->id;
+
+                    if ($request->hasFile('avatar')) {
+                        $entityType = $this->getEntityTypeFromController();
+
+                        $avatarPath = $this->uploadFile(
+                            $request->file('avatar'),
+                            $entityType,
+                            $userId
+                        );
+
+                        $user->update(['avatar' => $avatarPath]);
+                    }
                 }
 
                 $employeeData = [

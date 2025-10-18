@@ -38,7 +38,7 @@ class Shift extends BaseModel
      * @var array<string, string>
      */
     protected $casts = [
-        'shift_date' => 'date',
+        'shift_date' => 'date:Y-m-d',
         'start_time' => 'datetime:H:i:s',
         'end_time' => 'datetime:H:i:s',
         'created_at' => 'datetime',
