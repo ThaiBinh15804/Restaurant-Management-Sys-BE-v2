@@ -14,6 +14,7 @@ use Spatie\RouteAttributes\Attributes\Middleware;
 use Spatie\RouteAttributes\Attributes\Prefix;
 
 #[Prefix('invoices')]
+#[Middleware('auth:api')]
 class InvoiceController extends Controller
 {
 
@@ -32,7 +33,6 @@ class InvoiceController extends Controller
      * )
      */
     #[Get('my-invoices')]
-    #[Middleware('auth:api')]
     public function getMyInvoices(): JsonResponse
     {
         $user = Auth::user();

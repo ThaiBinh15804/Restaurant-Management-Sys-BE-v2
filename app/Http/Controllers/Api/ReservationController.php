@@ -22,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
  * )
  */
 #[Prefix('auth/reservations')]
+#[Middleware('auth:api')]
 class ReservationController extends Controller
 {
     /**
@@ -175,7 +176,6 @@ class ReservationController extends Controller
      * )
      */
     #[Get('/my')]
-    #[Middleware('auth:api')]
     public function my(ReservationQueryRequest $request): JsonResponse
     {
         $userId = Auth::id();

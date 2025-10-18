@@ -26,6 +26,7 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('users')]
+#[Middleware('auth:api')]
 class UserController extends Controller
 {
     /**
@@ -360,11 +361,18 @@ class UserController extends Controller
      * @OA\Post(
      *   path="/api/auth/profile/avatar",
      *   tags={"Profile"},
-     *   summary="Cập nhật ảnh đại diện"
+     *   summary="Cập nhật ảnh đại diện",
+     *   @OA\Response(
+     *     response=200,
+     *     description="Cập nhật ảnh đại diện thành công"
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Validation error"
+     *   )
      * )
      */
     #[Post('/avatar')]
-    #[Middleware('auth:api')]
     public function uploadAvatar(Request $request): JsonResponse
     {
         $request->validate([
@@ -387,7 +395,19 @@ class UserController extends Controller
      * @OA\Post(
      *   path="/api/auth/profile/change-password",
      *   tags={"Profile"},
-     *   summary="Đổi mật khẩu"
+     *   summary="Đổi mật khẩu",
+     *   @OA\Response(
+     *     response=200,
+     *     description="Đổi mật khẩu thành công"
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Validation error"
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Unauthenticated"
+     *   )
      * )
      */
     #[Post('/changePassword')]
@@ -443,7 +463,6 @@ class UserController extends Controller
      * )
      */
     #[Put('/show/my-profile')]
-    #[Middleware('auth:api')]
     public function updateProfile(Request $request): JsonResponse
     {
         $user = $request->user();

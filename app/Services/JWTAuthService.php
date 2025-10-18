@@ -28,7 +28,7 @@ class JWTAuthService
             Log::warning('Login failed - Email not found', ['email' => $credentials['email']]);
             return [
                 'success' => false,
-                'message' => 'Email does not exist in the system',
+                'message' => 'Email chưa được đăng ký',
                 'error_code' => 'EMAIL_NOT_FOUND'
             ];
         }
