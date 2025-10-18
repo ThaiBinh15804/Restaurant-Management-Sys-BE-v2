@@ -106,7 +106,8 @@ class InvoicePaymentController extends Controller
     public function index(InvoiceQueryRequest $request)
     {
         $filters = $request->filters();
-        $query = Invoice::query()->orderBy("created_at", "desc");
+        $query = Invoice::query()->with(['invoicePromotions.promotion', 'payments'])
+            ->orderBy("created_at", "desc");
 
         if (!empty($filters['table_session_id'])) {
             $query->where('table_session_id', $filters['table_session_id']);
