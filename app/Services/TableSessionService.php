@@ -559,6 +559,7 @@ class TableSessionService
                     'type' => TableSession::TYPE_OFFLINE,
                     'status' => TableSession::STATUS_ACTIVE,
                     'started_at' => now(),
+                    'customer_id' => $sourceSession->customer_id,
                     'created_by' => $employeeId,
                     'updated_by' => $employeeId
                 ]);
@@ -680,7 +681,8 @@ class TableSessionService
                 'transferred_total' => $transferredTotal,
                 'items_count' => count($itemsToTransfer),
                 'has_source_invoice' => $sourceInvoice ? true : false,
-                'employee_id' => $employeeId
+                'employee_id' => $employeeId,
+                'customer_id' => $sourceSession->customer_id
             ]);
 
             // Lấy target invoice nếu có (sau khi commit)

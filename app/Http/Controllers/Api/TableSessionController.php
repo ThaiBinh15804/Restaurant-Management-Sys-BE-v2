@@ -699,6 +699,14 @@ class TableSessionController extends Controller
             );
         }
 
+        if (!$session->customer_id) {
+            $session->customer_id = 'guest';
+            $session->customer_name = 'Khách vãng lai';
+            $session->customer_gender = null;
+            $session->customer_phone = null;
+            $session->customer_address = null;
+        }
+
         return $this->successResponse(
             $session,
             'Table session retrieved successfully'
