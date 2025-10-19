@@ -8,6 +8,7 @@ use App\Http\Requests\Ingredient\IngredientStatusRequest;
 use App\Http\Requests\Ingredient\IngredientStoreRequest;
 use App\Http\Requests\Ingredient\IngredientUpdateRequest;
 use App\Models\Ingredient;
+use App\Traits\HasFileUpload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
@@ -27,6 +28,8 @@ use Spatie\RouteAttributes\Attributes\Put;
 #[Prefix('ingredients')]
 class IngredientController extends Controller
 {
+    use HasFileUpload;
+
     /**
      * @OA\Get(
      *     path="/api/ingredients",
@@ -99,18 +102,28 @@ class IngredientController extends Controller
      *     summary="Create ingredient",
      *     description="Create a new ingredient",
      *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","unit","min_stock"},
-     *             @OA\Property(property="name", type="string", example="Tomato"),
-     *             @OA\Property(property="unit", type="string", example="kg"),
-     *             @OA\Property(property="current_stock", type="number", format="float", example=0),
-     *             @OA\Property(property="min_stock", type="number", format="float", example=10),
-     *             @OA\Property(property="max_stock", type="number", format="float", example=50),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
-     *         )
-     *     ),
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="multipart/form-data",
+    *             @OA\Schema(
+    *                 required={"name","unit","min_stock"},
+    *                 @OA\Property(property="ingredient_category_id", type="string", example="INGCAT-001", description="Ingredient category ID"),
+    *                 @OA\Property(property="name", type="string", example="Tomato"),
+    *                 @OA\Property(property="unit", type="string", example="kg"),
+    *                 @OA\Property(property="current_stock", type="number", format="float", example=0),
+    *                 @OA\Property(property="min_stock", type="number", format="float", example=10),
+    *                 @OA\Property(property="max_stock", type="number", format="float", example=50),
+    *                 @OA\Property(property="is_active", type="boolean", example=true),
+    *                 @OA\Property(
+    *                     property="image",
+    *                     type="string",
+    *                     format="binary",
+    *                     description="Ingredient image file (jpeg, jpg, png, gif, webp, max 2MB)"
+    *                 )
+    *             )
+    *         )
+    *     ),
      *     @OA\Response(
      *         response=201,
      *         description="Ingredient created successfully"
@@ -126,14 +139,34 @@ class IngredientController extends Controller
     {
         try {
             $data = $request->validated();
-            $data['created_by'] = auth('api')->id();
-            $data['updated_by'] = auth('api')->id();
+            $imageFile = $request->file('image');
+            unset($data['image']);
+
+            $userId = auth('api')->id();
+            $data['created_by'] = $userId;
+            $data['updated_by'] = $userId;
 
             $ingredient = Ingredient::create($data);
 
+            if ($imageFile) {
+                
+                $imageUrl = $this->uploadFile(
+                    $imageFile,
+                    $this->getEntityTypeFromController(),
+                    $ingredient->id
+                );
+
+                $ingredient->image = $imageUrl;
+                $ingredient->updated_by = $userId;
+                $ingredient->save();
+            }
+
+            $ingredient->refresh();
+
             Log::info('Ingredient created successfully', [
                 'ingredient_id' => $ingredient->id,
-                'created_by' => auth('api')->id(),
+                'created_by' => $userId,
+                'has_image' => (bool) $ingredient->image,
             ]);
 
             return $this->successResponse(
@@ -185,7 +218,7 @@ class IngredientController extends Controller
     }
 
     /**
-     * @OA\Put(
+     * @OA\Post(
      *     path="/api/ingredients/{id}",
      *     tags={"Ingredients"},
      *     summary="Update ingredient",
@@ -198,23 +231,33 @@ class IngredientController extends Controller
      *         required=true,
      *         @OA\Schema(type="string")
      *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="Tomato"),
-     *             @OA\Property(property="unit", type="string", example="kg"),
-     *             @OA\Property(property="current_stock", type="number", format="float", example=25),
-     *             @OA\Property(property="min_stock", type="number", format="float", example=10),
-     *             @OA\Property(property="max_stock", type="number", format="float", example=50),
-     *             @OA\Property(property="is_active", type="boolean", example=true)
-     *         )
-     *     ),
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\MediaType(
+    *             mediaType="multipart/form-data",
+    *             @OA\Schema(
+    *                 @OA\Property(property="ingredient_category_id", type="string", example="INGCAT-001", description="Ingredient category ID"),
+    *                 @OA\Property(property="name", type="string", example="Tomato"),
+    *                 @OA\Property(property="unit", type="string", example="kg"),
+    *                 @OA\Property(property="current_stock", type="number", format="float", example=25),
+    *                 @OA\Property(property="min_stock", type="number", format="float", example=10),
+    *                 @OA\Property(property="max_stock", type="number", format="float", example=50),
+    *                 @OA\Property(property="is_active", type="boolean", example=true),
+    *                 @OA\Property(
+    *                     property="image",
+    *                     type="string",
+    *                     format="binary",
+    *                     description="Ingredient image file (jpeg, jpg, png, gif, webp, max 2MB)"
+    *                 )
+    *             )
+    *         )
+    *     ),
      *     @OA\Response(response=200, description="Ingredient updated successfully"),
      *     @OA\Response(response=404, description="Ingredient not found"),
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    #[Put('/{id}', middleware: 'permission:ingredients.edit')]
+    #[Post('/{id}', middleware: 'permission:ingredients.edit')]
     public function update(IngredientUpdateRequest $request, string $id): JsonResponse
     {
         try {
@@ -225,13 +268,40 @@ class IngredientController extends Controller
             }
 
             $data = $request->validated();
-            $data['updated_by'] = auth('api')->id();
 
-            $ingredient->update($data);
+            $data = collect($data)
+                ->reject(fn($value, $key) => is_null($value))
+                ->toArray();
+
+            $imageFile = $request->file('image');
+            unset($data['image']);
+
+            $userId = auth('api')->id();
+            $oldImage = $ingredient->image;
+
+            if (!empty($data)) {
+                $ingredient->fill($data);
+            }
+
+            $ingredient->updated_by = $userId;
+
+            if ($imageFile) {
+                $newImageUrl = $this->uploadFile(
+                    $imageFile,
+                    $this->getEntityTypeFromController(),
+                    $ingredient->id,
+                    $oldImage
+                );
+
+                $ingredient->image = $newImageUrl;
+            }
+
+            $ingredient->save();
 
             Log::info('Ingredient updated successfully', [
                 'ingredient_id' => $ingredient->id,
-                'updated_by' => auth('api')->id(),
+                'updated_by' => $userId,
+                'image_changed' => (bool) $imageFile,
             ]);
 
             return $this->successResponse(
@@ -332,7 +402,12 @@ class IngredientController extends Controller
                 );
             }
 
+            $imageUrl = $ingredient->image;
             $ingredient->delete();
+
+            if ($imageUrl) {
+                $this->deleteFileByUrl($imageUrl);
+            }
 
             Log::info('Ingredient deleted', ['ingredient_id' => $id]);
 

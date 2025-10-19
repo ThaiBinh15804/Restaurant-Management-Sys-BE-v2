@@ -3841,7 +3841,7 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "required": [
                                     "name",
@@ -3849,6 +3849,11 @@
                                     "min_stock"
                                 ],
                                 "properties": {
+                                    "ingredient_category_id": {
+                                        "description": "Ingredient category ID",
+                                        "type": "string",
+                                        "example": "INGCAT-001"
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Tomato"
@@ -3875,6 +3880,11 @@
                                     "is_active": {
                                         "type": "boolean",
                                         "example": true
+                                    },
+                                    "image": {
+                                        "description": "Ingredient image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"
@@ -3930,13 +3940,13 @@
                     }
                 ]
             },
-            "put": {
+            "post": {
                 "tags": [
                     "Ingredients"
                 ],
                 "summary": "Update ingredient",
                 "description": "Update ingredient information",
-                "operationId": "644a667784d857e8a6a8074285b1eb5b",
+                "operationId": "607a0413b55a27a228b5d2c196cb002f",
                 "parameters": [
                     {
                         "name": "id",
@@ -3951,9 +3961,14 @@
                 "requestBody": {
                     "required": true,
                     "content": {
-                        "application/json": {
+                        "multipart/form-data": {
                             "schema": {
                                 "properties": {
+                                    "ingredient_category_id": {
+                                        "description": "Ingredient category ID",
+                                        "type": "string",
+                                        "example": "INGCAT-001"
+                                    },
                                     "name": {
                                         "type": "string",
                                         "example": "Tomato"
@@ -3980,6 +3995,11 @@
                                     "is_active": {
                                         "type": "boolean",
                                         "example": true
+                                    },
+                                    "image": {
+                                        "description": "Ingredient image file (jpeg, jpg, png, gif, webp, max 2MB)",
+                                        "type": "string",
+                                        "format": "binary"
                                     }
                                 },
                                 "type": "object"

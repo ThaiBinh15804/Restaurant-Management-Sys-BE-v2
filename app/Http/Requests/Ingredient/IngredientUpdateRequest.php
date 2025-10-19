@@ -17,12 +17,13 @@ class IngredientUpdateRequest extends FormRequest
         $ingredientId = $this->route('id');
 
         return [
-            'name' => ['sometimes', 'string', 'max:100', Rule::unique('ingredients', 'name')->ignore($ingredientId)],
-            'unit' => ['sometimes', 'string', 'max:20'],
-            'current_stock' => ['sometimes', 'numeric', 'min:0'],
-            'min_stock' => ['sometimes', 'numeric', 'min:0'],
-            'max_stock' => ['nullable', 'numeric', 'min:0'],
-            'is_active' => ['sometimes', 'boolean'],
+            'name' => ['sometimes', 'nullable', 'string', 'max:100', Rule::unique('ingredients', 'name')->ignore($ingredientId)],
+            'unit' => ['sometimes', 'nullable', 'string', 'max:20'],
+            'current_stock' => ['sometimes', 'nullable','numeric', 'min:0'],
+            'min_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
+            'max_stock' => ['nullable', 'nullable', 'numeric', 'min:0'],
+            'is_active' => ['sometimes', 'nullable', 'boolean'],
+            'image' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'],
         ];
     }
 
@@ -34,6 +35,9 @@ class IngredientUpdateRequest extends FormRequest
         return [
             'name.unique' => 'This ingredient name already exists.',
             'max_stock.gte' => 'Maximum stock must be greater than or equal to minimum stock.',
+            'image.image' => 'The ingredient image must be an image file.',
+            'image.mimes' => 'The ingredient image must be a file of type: jpeg, jpg, png, gif, webp.',
+            'image.max' => 'The ingredient image may not be greater than 2MB.',
         ];
     }
 

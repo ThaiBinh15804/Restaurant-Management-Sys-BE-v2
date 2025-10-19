@@ -33,6 +33,7 @@ class Ingredient extends BaseModel
         'current_stock',
         'min_stock',
         'max_stock',
+        'image',
         'is_active',
     ];
 
@@ -45,6 +46,7 @@ class Ingredient extends BaseModel
         'current_stock' => 'decimal:2',
         'min_stock' => 'decimal:2',
         'max_stock' => 'decimal:2',
+        'image' => 'string',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

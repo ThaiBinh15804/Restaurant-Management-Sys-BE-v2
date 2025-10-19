@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Customer;
+use App\Traits\HasFileUpload;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Post;
@@ -29,6 +30,7 @@ use Spatie\RouteAttributes\Attributes\Prefix;
 #[Middleware('auth:api')]
 class UserController extends Controller
 {
+    use HasFileUpload;
     /**
      * @OA\Get(
      *     path="/api/users",
@@ -384,8 +386,18 @@ class UserController extends Controller
             return $this->errorResponse('Unauthenticated.', [], 401);
         }
 
-        $path = $request->file('avatar')->store('avatars', 'public');
-        $user->avatar = '/storage/' . $path;
+        $path = $request->file('avatar');
+        if ($request->hasFile('avatar')) {
+            $entityType = $this->getEntityTypeFromController();
+
+            $avatarPath = $this->uploadFile(
+                $request->file('avatar'),
+                $entityType,
+                $user->id
+            );
+
+            $user->update(['avatar' => $avatarPath]);
+        }
         $user->save();
 
         return $this->successResponse(['avatar' => $user->avatar], 'Cập nhật ảnh đại diện thành công');
@@ -415,7 +427,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'current_password'      => 'required|string|min:6',
-            'new_password'          => 'required|string|min:8|confirmed', 
+            'new_password'          => 'required|string|min:8|confirmed',
         ]);
 
         $user = $request->user();
