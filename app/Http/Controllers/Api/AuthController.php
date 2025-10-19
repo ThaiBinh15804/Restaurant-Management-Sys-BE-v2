@@ -124,6 +124,14 @@ class AuthController extends BaseController
             );
         }
 
+        if (!$authData['success']) {
+            return $this->errorResponse(
+                $authData['message'],
+                $authData['error_code'],
+                401
+            );
+        }
+
         return $this->successResponse(
             $authData,
             'Login successful'
