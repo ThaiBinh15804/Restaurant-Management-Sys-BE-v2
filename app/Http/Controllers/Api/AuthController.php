@@ -116,45 +116,17 @@ class AuthController extends BaseController
         $credentials = $request->only('email', 'password');
         $authData = $this->authService->authenticate($credentials, $request);
 
-        // Kiểm tra nếu authenticate trả về lỗi
-        if (!$authData || (isset($authData['success']) && !$authData['success'])) {
-            $message = $authData['message'] ?? 'Invalid credentials or account is not active';
-            $errorCode = $authData['error_code'] ?? 'AUTHENTICATION_FAILED';
-            
-            return response()->json([
-                'success' => false,
-                'message' => $message,
-                'error_code' => $errorCode,
-                'errors' => []
-            ], 401);
+        if (!$authData) {
+            return $this->errorResponse(
+                'Invalid credentials or account is not active',
+                [],
+                401
+            );
         }
-
-        $user = $authData['user'] ?? null;
-        
-        $customerRole = Role::where('name', 'Customer')->first();
-        if ($user) {
-            // Lấy Customer role từ database
-
-            // Kiểm tra role_id
-            if (!$customerRole || $user->role_id !== $customerRole->id) {
-                // Logout ngay lập tức
-                $this->authService->logout($request);
-                
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cổng đăng nhập này chỉ dành cho khách hàng. Vui lòng sử dụng cổng dành cho quản trị viên.',
-                    'error_code' => 'UNAUTHORIZED_ROLE',
-                    'errors' => []
-                ], 403);
-            }
-        }
-
-        // Xóa key 'success' trước khi trả về
-        unset($authData['success']);
 
         return $this->successResponse(
             $authData,
-            'Đăng nhập thành công'
+            'Login successful'
         );
     }
 
@@ -520,7 +492,7 @@ class AuthController extends BaseController
         $result = $this->registrationService->completeRegistration($request->token);
 
         if ($result['success']) {
-        return redirect('http://localhost:4200/login?verify=success');
+            return redirect('http://localhost:4200/login?verify=success');
         } else {
             return redirect('http://localhost:4200/login?verify=fail');
         }
@@ -710,18 +682,18 @@ class AuthController extends BaseController
 
         if ($result['success']) {
             $frontendUrl = config('app.frontend_url', 'http://localhost:4200');
-            
+
             if (!isset($result['data']['access_token'])) {
                 return redirect("{$frontendUrl}/login?error=missing_token&provider=google");
             }
-            
+
             // Encode token để truyền qua URL
             $accessToken = urlencode($result['data']['access_token']);
             $expiresIn = $result['data']['expires_in'] ?? 3600;
-            
+
             // Redirect về /auth/callback để xử lý token, sau đó Angular sẽ redirect về home
             $redirectUrl = "{$frontendUrl}/auth/callback?access_token={$accessToken}&expires_in={$expiresIn}&provider=google";
-            
+
             return redirect($redirectUrl);
         }
 
@@ -785,7 +757,7 @@ class AuthController extends BaseController
 
         // Kiểm tra email tồn tại
         $user = User::where('email', $request->email)->first();
-        
+
         if (!$user) {
             return $this->errorResponse(
                 'Email not found in our system',
@@ -796,7 +768,7 @@ class AuthController extends BaseController
 
         // Generate OTP 6 số
         $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-        
+
         // Lưu OTP vào cache (5 phút)
         $cacheKey = 'password_reset_otp:' . $request->email;
         Cache::put($cacheKey, [
@@ -807,7 +779,7 @@ class AuthController extends BaseController
 
         try {
             $email = $request->email;
-            
+
             // ✅ Dùng Mail::raw() thay vì Mail::send()
             Mail::raw("Your password reset OTP code is: {$otp}\n\nThis code will expire in 5 minutes.", function ($message) use ($email) {
                 $message->to($email);
@@ -902,7 +874,7 @@ class AuthController extends BaseController
 
         // OTP đúng → Tạo reset token
         $resetToken = \Illuminate\Support\Str::random(64);
-        
+
         // Lưu reset token vào cache (10 phút)
         $resetCacheKey = 'password_reset_token:' . $resetToken;
         \Illuminate\Support\Facades\Cache::put($resetCacheKey, [
@@ -979,7 +951,7 @@ class AuthController extends BaseController
 
         // Tìm user
         $user = \App\Models\User::where('email', $tokenData['email'])->first();
-        
+
         if (!$user) {
             return $this->errorResponse(
                 'User not found',
