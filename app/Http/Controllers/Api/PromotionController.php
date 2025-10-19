@@ -67,7 +67,7 @@ class PromotionController extends Controller
      *     )
      * )
      */
-    #[Get('/')]
+    #[Get('/', middleware: ['permission:promotions.view'])]
     public function index(PromotionQueryRequest $request)
     {
         $query = Promotion::withCount(['invoicePromotions as used_count'])
@@ -124,7 +124,7 @@ class PromotionController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    #[Post('/', middleware: ['permission:table-sessions.create'])]
+    #[Post('/', middleware: ['permission:promotions.create'])]
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -167,7 +167,7 @@ class PromotionController extends Controller
      *     @OA\Response(response=404, description="Promotion not found")
      * )
      */
-    #[Put('/{id}', middleware: ['permission:table-sessions.edit'])]
+    #[Put('/{id}', middleware: ['permission:promotions.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
         $promotion = Promotion::find($id);
@@ -206,7 +206,7 @@ class PromotionController extends Controller
      *     @OA\Response(response=404, description="Promotion not found")
      * )
      */
-    #[Delete('/{id}', middleware: ['permission:table-sessions.delete'])]
+    #[Delete('/{id}', middleware: ['permission:promotions.delete'])]
     public function destroy(string $id): JsonResponse
     {
         $promotion = Promotion::find($id);
@@ -261,7 +261,7 @@ class PromotionController extends Controller
      *     )
      * )
      */
-    #[Get('/all', middleware: ['permission:table-sessions.view'])]
+    #[Get('/all', middleware: ['permission:promotions.view'])]
     public function allPromotions(): JsonResponse
     {
         // Lấy promotion đang active và chưa vượt usage_limit
@@ -293,7 +293,7 @@ class PromotionController extends Controller
      *   @OA\Response(response=404, description="Not found")
      * )
      */
-    #[Get('/{code}', middleware: ['permission:table-sessions.view'])]
+    #[Get('/{code}', middleware: ['permission:promotions.view'])]
     public function show(string $code): JsonResponse
     {
         $promotion = Promotion::where('code', $code)->orWhere('id', $code)->first();

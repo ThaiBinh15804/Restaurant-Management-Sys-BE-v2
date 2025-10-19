@@ -76,7 +76,7 @@ class OrderItemController extends Controller
      *     ),
      * )
      */
-    #[Delete('/{id}', middleware: ['permission:orders.edit'])]
+    #[Delete('/{id}', middleware: ['permission:orderItems.delete'])]
     public function destroy(string $id, Request $request)
     {
         $orderId = $request->query('order_id');
@@ -146,7 +146,7 @@ class OrderItemController extends Controller
      *     @OA\Response(response=403, description="Không có quyền")
      * )
      */
-    #[Put('/update-order', middleware: ['permission:orders.edit'])]
+    #[Put('/update-order', middleware: ['permission:orderItems.edit'])]
     public function updateMultipleItemStatus(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -371,7 +371,7 @@ class OrderItemController extends Controller
      *     @OA\Response(response=403, description="Không có quyền")
      * )
      */
-    #[Post('/add-order', middleware: ['permission:orders.create'])]
+    #[Post('/add-order', middleware: ['permission:orderItems.create'])]
     public function addOrder(Request $request): JsonResponse
     {
         // Validate dữ liệu
