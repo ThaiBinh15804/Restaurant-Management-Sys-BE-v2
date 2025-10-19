@@ -265,7 +265,7 @@ class DishController extends Controller
      *     @OA\Response(response=200, description="Danh sách món ăn phổ biến")
      * )
      */
-    #[Get('/popular', middleware: ['permission:table-sessions.view'])]
+    #[Get('/popular')]
     public function popular(Request $request): JsonResponse
     {
         $limit = $request->query('limit', 5);
@@ -280,5 +280,28 @@ class DishController extends Controller
             ->get();
 
         return $this->successResponse($popularDishes, 'Popular dishes retrieved successfully');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/dishes/{id}",
+     *     tags={"Dishes"},
+     *     summary="Lấy thông tin chi tiết món ăn theo ID",
+     *     @OA\Parameter(
+     *         name="id",
+     *         in="path",
+     *         required=true,
+     *         description="ID của món ăn",
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Response(response=200, description="Chi tiết món ăn"),
+     *     @OA\Response(response=404, description="Không tìm thấy món ăn")
+     * )
+     */
+    #[Get('/{id}')]
+    public function show(string $id): JsonResponse
+    {
+        $dish = Dish::with('category')->findOrFail($id);
+        return $this->successResponse($dish, 'Dish retrieved successfully');
     }
 }

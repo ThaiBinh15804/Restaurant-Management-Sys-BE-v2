@@ -21,20 +21,61 @@ class JWTAuthService
 
     public function authenticate(array $credentials, Request $request): ?array
     {
+        // Kiểm tra email có tồn tại không
         $user = User::where('email', $credentials['email'])->first();
 
-        if (!$user || !$user->isActive()) {
-            return null;
+        if (!$user) {
+            Log::warning('Login failed - Email not found', ['email' => $credentials['email']]);
+            return [
+                'success' => false,
+                'message' => 'Email chưa được đăng ký',
+                'error_code' => 'EMAIL_NOT_FOUND'
+            ];
         }
 
+        // Kiểm tra xem user có phải đăng ký bằng Google không
+        if ($user->isGoogleUser()) {
+            Log::warning('Login failed - Account registered via Google', [
+                'user_id' => $user->id,
+                'email' => $user->email
+            ]);
+            return [
+                'success' => false,
+                'message' => 'Tài khoản này đã được đăng ký với Google. Vui lòng đăng nhập bằng Google.',
+                'error_code' => 'GOOGLE_ACCOUNT_ONLY'
+            ];
+        }
+
+        // Kiểm tra trạng thái tài khoản
+        if (!$user->isActive()) {
+            Log::warning('Login failed - Account inactive', ['user_id' => $user->id, 'email' => $user->email]);
+            return [
+                'success' => false,
+                'message' => 'Account is inactive. Please contact administrator.',
+                'error_code' => 'ACCOUNT_INACTIVE'
+            ];
+        }
+
+        // Kiểm tra password
         if (!Hash::check($credentials['password'], $user->password)) {
-            return null;
+            Log::warning('Login failed - Incorrect password', ['user_id' => $user->id, 'email' => $user->email]);
+            return [
+                'success' => false,
+                'message' => 'Incorrect password',
+                'error_code' => 'INVALID_PASSWORD'
+            ];
         }
 
+        // Tạo access token
         $accessToken = JWTAuth::fromUser($user);
 
         if (!$accessToken) {
-            return null;
+            Log::error('Failed to generate access token', ['user_id' => $user->id]);
+            return [
+                'success' => false,
+                'message' => 'Failed to generate access token',
+                'error_code' => 'TOKEN_GENERATION_FAILED'
+            ];
         }
 
         $this->revokeUserDeviceTokens($user->id, $this->getDeviceFingerprint($request));
@@ -43,7 +84,14 @@ class JWTAuthService
 
         $this->setRefreshTokenCookie($refreshToken->token);
 
+        Log::info('User authenticated successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'ip' => $request->ip()
+        ]);
+
         return [
+            'success' => true,
             'user' => $user->load('role'),
             'access_token' => $accessToken,
             'token_type' => 'Bearer',

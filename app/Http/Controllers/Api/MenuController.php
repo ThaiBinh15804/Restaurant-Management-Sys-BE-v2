@@ -690,7 +690,7 @@ class MenuController extends Controller
      *     @OA\Response(response=404, description="No menu found")
      * )
      */
-    #[Get('/active/categories', middleware: ['permission:table-sessions.view'])]
+    #[Get('/active/categories')]
     public function getActiveMenuCategoriesWithDishes(Request $request): JsonResponse
     {
         $menu = Menu::where('is_active', 1)->first();
@@ -708,5 +708,171 @@ class MenuController extends Controller
             ->get();
 
         return $this->successResponse($categories, 'Danh mục và món ăn trong menu active');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/menus/filter-dishes",
+     *     tags={"Menus"},
+     *     summary="Lọc món ăn theo giá, danh mục, trạng thái và từ khóa",
+     *     @OA\Parameter(
+     *         name="q",
+     *         in="query",
+     *         description="Từ khóa (tên món, mô tả, tên danh mục)",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="sort_price",
+     *         in="query",
+     *         description="asc: giá thấp đến cao, desc: giá cao đến thấp",
+     *         required=false,
+     *         @OA\Schema(type="string", enum={"asc", "desc"})
+     *     ),
+     *     @OA\Parameter(
+     *         name="category_id",
+     *         in="query",
+     *         description="ID danh mục món ăn",
+     *         required=false,
+     *         @OA\Schema(type="string")
+     *     ),
+     *     @OA\Parameter(
+     *         name="is_active",
+     *         in="query",
+     *         description="Trạng thái món ăn (true/false hoặc 1/0)",
+     *         required=false,
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Response(response=200, description="Danh sách món ăn đã lọc")
+     * )
+     */
+    #[Get('/filter-dishes', middleware: ['permission:table-sessions.view'])]
+    public function filterDishes(Request $request): JsonResponse
+    {
+        $query = Dish::query()->with('category');
+
+        // Tìm theo từ khóa: luôn dùng starts-with, case-insensitive
+        if ($request->filled('q')) {
+            $kw = trim((string) $request->q);
+            if ($kw !== '') {
+                $prefix = mb_strtolower($kw, 'UTF-8') . '%';
+                $query->where(function ($sub) use ($prefix) {
+                    $sub->whereRaw('LOWER(name) LIKE ?', [$prefix])
+                        ->orWhereRaw('LOWER(`desc`) LIKE ?', [$prefix])
+                        ->orWhereHas('category', function ($cat) use ($prefix) {
+                            $cat->whereRaw('LOWER(name) LIKE ?', [$prefix]);
+                        });
+                });
+            }
+        }
+
+        // Lọc theo danh mục
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        // Lọc theo trạng thái
+        if (!is_null($request->is_active)) {
+            $isActive = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($isActive !== null) {
+                $query->where('is_active', $isActive);
+            }
+        }
+
+        // Sắp xếp theo giá
+        if ($request->sort_price === 'asc') {
+            $query->orderBy('price', 'asc');
+        } elseif ($request->sort_price === 'desc') {
+            $query->orderBy('price', 'desc');
+        }
+
+        $dishes = $query->get();
+
+        return $this->successResponse($dishes, 'Danh sách món ăn đã lọc');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/auth/menus/with-items",
+     *     tags={"Menus"},
+     *     summary="Lấy tất cả menu kèm các món (menu items)",
+     *     @OA\Parameter(
+     *         name="is_active",
+     *         in="query",
+     *         required=false,
+     *         description="Lọc menu theo trạng thái (true/false)",
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Parameter(
+     *         name="limit_items",
+     *         in="query",
+     *         required=false,
+     *         description="Giới hạn số menu_item mỗi menu (vd: 5)",
+     *         @OA\Schema(type="integer")
+     *     ),
+     *     @OA\Parameter(
+     *         name="only_active_dishes",
+     *         in="query",
+     *         required=false,
+     *         description="Chỉ lấy menu items có dish đang active (true/false)",
+     *         @OA\Schema(type="boolean")
+     *     ),
+     *     @OA\Response(response=200, description="Danh sách menu kèm items")
+     * )
+     */
+    #[Get('/with-items')]
+    public function listMenusWithItems(Request $request): JsonResponse
+    {
+        $isActive          = $request->has('is_active') ? filter_var($request->query('is_active'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
+        $limitItems        = $request->integer('limit_items') ?: null;
+        $onlyActiveDishes  = $request->has('only_active_dishes')
+            ? filter_var($request->query('only_active_dishes'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE)
+            : false;
+
+        $menusQuery = Menu::query()->with(['items.dish']);
+
+        if (!is_null($isActive)) {
+            $menusQuery->where('is_active', $isActive);
+        }
+
+        $menus = $menusQuery
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($menu) use ($limitItems, $onlyActiveDishes) {
+                $items = $menu->items
+                    ->filter(function ($item) use ($onlyActiveDishes) {
+                        if ($onlyActiveDishes) {
+                            return optional($item->dish)->is_active === 1;
+                        }
+                        return true;
+                    })
+                    ->values();
+
+                if ($limitItems && $limitItems > 0) {
+                    $items = $items->take($limitItems);
+                }
+
+                return [
+                    'id'          => $menu->id,
+                    'name'        => $menu->name,
+                    'description' => $menu->description,
+                    'version'     => $menu->version,
+                    'is_active'   => (bool)$menu->is_active,
+                    'items'       => $items->map(function ($it) {
+                        return [
+                            'id'          => $it->id,
+                            'dish_id'     => $it->dish_id,
+                            'dish_name'   => $it->dish->name ?? null,
+                            'dish_image'  => $it->dish->image ?? null,
+                            'price_base'  => $it->dish->price ?? null,
+                            'price'       => $it->price,
+                            'notes'       => $it->notes,
+                            'dish_active' => optional($it->dish)->is_active ? true : false,
+                        ];
+                    }),
+                ];
+            });
+
+        return $this->successResponse($menus, 'Menus with items retrieved successfully');
     }
 }

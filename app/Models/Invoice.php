@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Invoice extends BaseModel
 {
@@ -63,6 +66,11 @@ class Invoice extends BaseModel
     public function scopePaid($query)
     {
         return $query->where('status', self::STATUS_PAID);
+    }
+
+    public function scopeUnpaid($query)
+    {
+        return $query->where('status', 0);
     }
 
     /**
@@ -127,6 +135,16 @@ class Invoice extends BaseModel
     public function tableSession()
     {
         return $this->belongsTo(TableSession::class, 'table_session_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     /**

@@ -6,7 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Customer;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Post;
@@ -22,6 +26,7 @@ use Spatie\RouteAttributes\Attributes\Prefix;
  * )
  */
 #[Prefix('users')]
+#[Middleware('auth:api')]
 class UserController extends Controller
 {
     /**
@@ -350,5 +355,150 @@ class UserController extends Controller
             [],
             'User deleted successfully'
         );
+    }
+
+    /**
+     * @OA\Post(
+     *   path="/api/auth/profile/avatar",
+     *   tags={"Profile"},
+     *   summary="Cập nhật ảnh đại diện",
+     *   @OA\Response(
+     *     response=200,
+     *     description="Cập nhật ảnh đại diện thành công"
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Validation error"
+     *   )
+     * )
+     */
+    #[Post('/avatar')]
+    public function uploadAvatar(Request $request): JsonResponse
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
+        ]);
+
+        $user = $request->user();
+        if (!$user) {
+            return $this->errorResponse('Unauthenticated.', [], 401);
+        }
+
+        $path = $request->file('avatar')->store('avatars', 'public');
+        $user->avatar = '/storage/' . $path;
+        $user->save();
+
+        return $this->successResponse(['avatar' => $user->avatar], 'Cập nhật ảnh đại diện thành công');
+    }
+
+    /**
+     * @OA\Post(
+     *   path="/api/auth/profile/change-password",
+     *   tags={"Profile"},
+     *   summary="Đổi mật khẩu",
+     *   @OA\Response(
+     *     response=200,
+     *     description="Đổi mật khẩu thành công"
+     *   ),
+     *   @OA\Response(
+     *     response=422,
+     *     description="Validation error"
+     *   ),
+     *   @OA\Response(
+     *     response=401,
+     *     description="Unauthenticated"
+     *   )
+     * )
+     */
+    #[Post('/changePassword')]
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'current_password'      => 'required|string|min:6',
+            'new_password'          => 'required|string|min:8|confirmed', 
+        ]);
+
+        $user = $request->user();
+
+        if (!Hash::check($validated['current_password'], $user->password)) {
+            return $this->errorResponse('Mật khẩu hiện tại không đúng', 422);
+        }
+
+        $user->password = Hash::make($validated['new_password']);
+        $user->save();
+
+        try {
+            Mail::raw('Bạn vừa đổi mật khẩu thành công.', function ($m) use ($user) {
+                $m->to($user->email)->subject('Đổi mật khẩu thành công');
+            });
+        } catch (\Throwable $e) {
+            Log::error('Gửi email thất bại: ' . $e->getMessage());
+        }
+
+        return $this->successResponse(null, 'Đổi mật khẩu thành công');
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/users/show/my-profile",
+     *     tags={"Profile"},
+     *     summary="Update customer profile",
+     *     description="Customer update their own profile",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             @OA\Property(property="email", type="string", example="john@example.com"),
+     *             @OA\Property(property="full_name", type="string", example="John Michael Doe"),
+     *             @OA\Property(property="phone", type="string", example="0123456789"),
+     *             @OA\Property(property="gender", type="string", enum={"male", "female", "other"}, example="male"),
+     *             @OA\Property(property="address", type="string", example="123 Main St, City")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Profile updated successfully"
+     *     ),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
+    #[Put('/show/my-profile')]
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'email'     => 'sometimes|email|unique:users,email,' . $user->id . '|max:100',
+            'full_name' => 'sometimes|nullable|string|max:100',
+            'phone'     => 'sometimes|nullable|string|max:30',
+            'gender'    => 'sometimes|nullable|string|in:male,female,other',
+            'address'   => 'sometimes|nullable|string|max:255',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', $validator->errors(), 422);
+        }
+
+        // Update user email if provided
+        if ($request->has('email')) {
+            $user->email = $request->email;
+            $user->save();
+        }
+
+        // Update customer profile
+        $customerPayload = array_filter(
+            $request->only(['full_name', 'phone', 'gender', 'address']),
+            fn($v) => $v !== null
+        );
+
+        if (!empty($customerPayload)) {
+            $customer = $user->customerProfile ?: Customer::firstOrCreate(['user_id' => $user->id]);
+            $customer->fill($customerPayload)->save();
+            $user->setRelation('customerProfile', $customer);
+        }
+
+        $user->load(['role', 'customerProfile', 'employeeProfile']);
+
+        return $this->successResponse($user, 'Profile updated successfully');
     }
 }

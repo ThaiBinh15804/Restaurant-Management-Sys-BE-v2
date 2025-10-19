@@ -39,6 +39,9 @@ class User extends BaseAuthenticatable implements JWTSubject
     public const STATUS_BANNED = 3;
     public const STATUS_DELETED = 4;
 
+    public const TYPE_SYSTEM_USER = '0';
+    public const TYPE_GOOGLE_USER = '1';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -47,6 +50,7 @@ class User extends BaseAuthenticatable implements JWTSubject
     protected $fillable = [
         'email',
         'password',
+        'type',
         'status',
         'avatar',
         'role_id',
@@ -116,6 +120,22 @@ class User extends BaseAuthenticatable implements JWTSubject
         return $this->hasOne(Customer::class, 'user_id');
     }
 
+     /**
+     * Check if user is Google user
+     */
+    public function isGoogleUser(): bool
+    {
+        return $this->type === self::TYPE_GOOGLE_USER;
+    }
+
+    /**
+     * Check if user is System user
+     */
+    public function isSystemUser(): bool
+    {
+        return $this->type === self::TYPE_SYSTEM_USER;
+    }
+    
     /**
      * Get the employee profile linked to the user.
      */

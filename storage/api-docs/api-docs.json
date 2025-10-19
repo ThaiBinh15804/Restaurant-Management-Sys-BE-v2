@@ -934,6 +934,225 @@
                 }
             }
         },
+        "/api/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Request password reset OTP",
+                "description": "Send 6-digit OTP code to user's email for password reset",
+                "operationId": "f51c7074de53475eab87e336cc4e06a6",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP sent successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP code has been sent to your email"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "email": {
+                                                    "type": "string",
+                                                    "example": "user@example.com"
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 300
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "404": {
+                        "description": "Email not found"
+                    }
+                }
+            }
+        },
+        "/api/auth/verify-otp": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Verify OTP code",
+                "description": "Verify 6-digit OTP code and get reset token",
+                "operationId": "abcb5741589707b15c7ecac7a67c13aa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "otp"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "user@example.com"
+                                    },
+                                    "otp": {
+                                        "type": "string",
+                                        "maxLength": 6,
+                                        "minLength": 6,
+                                        "example": "123456"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OTP verified successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "OTP verified successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "reset_token": {
+                                                    "type": "string",
+                                                    "example": "abc123xyz..."
+                                                },
+                                                "expires_in": {
+                                                    "type": "integer",
+                                                    "example": 600
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "400": {
+                        "description": "Invalid or expired OTP"
+                    }
+                }
+            }
+        },
+        "/api/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Reset password",
+                "description": "Reset user password with reset token",
+                "operationId": "96e44e1ebcd811418fd95ee4c56162f0",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "reset_token",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "reset_token": {
+                                        "type": "string",
+                                        "example": "abc123xyz..."
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "minLength": 8,
+                                        "example": "newpassword123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "newpassword123"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Password has been reset successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "400": {
+                        "description": "Invalid or expired reset token"
+                    }
+                }
+            }
+        },
         "/api/customers": {
             "get": {
                 "tags": [
@@ -2134,6 +2353,34 @@
                 "responses": {
                     "200": {
                         "description": "Danh sách món ăn phổ biến"
+                    }
+                }
+            }
+        },
+        "/api/auth/dishes/{id}": {
+            "get": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Lấy thông tin chi tiết món ăn theo ID",
+                "operationId": "1534891bd7e9bf8fbc0cae7d13345756",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của món ăn",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Chi tiết món ăn"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy món ăn"
                     }
                 }
             }
@@ -3867,6 +4114,26 @@
                 ]
             }
         },
+        "/api/invoices/my-invoices": {
+            "get": {
+                "tags": [
+                    "Customer Invoice"
+                ],
+                "summary": "Get all customer invoices",
+                "description": "Get all invoices history for logged-in customer",
+                "operationId": "c7ca39a6a06780357e8ca6bd181b5f25",
+                "responses": {
+                    "200": {
+                        "description": "Invoices list retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/invoices": {
             "get": {
                 "tags": [
@@ -5309,6 +5576,105 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/auth/menus/filter-dishes": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Lọc món ăn theo giá, danh mục, trạng thái và từ khóa",
+                "operationId": "8e381742ded0351846039c5b18b64732",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "Từ khóa (tên món, mô tả, tên danh mục)",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort_price",
+                        "in": "query",
+                        "description": "asc: giá thấp đến cao, desc: giá cao đến thấp",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "description": "ID danh mục món ăn",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Trạng thái món ăn (true/false hoặc 1/0)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách món ăn đã lọc"
+                    }
+                }
+            }
+        },
+        "/api/auth/menus/with-items": {
+            "get": {
+                "tags": [
+                    "Menus"
+                ],
+                "summary": "Lấy tất cả menu kèm các món (menu items)",
+                "operationId": "c9ee6d2770be0a19d7adf1ffa9487cb3",
+                "parameters": [
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Lọc menu theo trạng thái (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "limit_items",
+                        "in": "query",
+                        "description": "Giới hạn số menu_item mỗi menu (vd: 5)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "only_active_dishes",
+                        "in": "query",
+                        "description": "Chỉ lấy menu items có dish đang active (true/false)",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách menu kèm items"
+                    }
+                }
             }
         },
         "/api/order-items/{id}": {
@@ -6909,6 +7275,33 @@
                 ]
             }
         },
+        "/api/auth/promotions/{code}": {
+            "get": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "Lấy chi tiết promotion theo code hoặc id",
+                "operationId": "d160d6f0087f3557926fde36d2959bd0",
+                "parameters": [
+                    {
+                        "name": "code",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                }
+            }
+        },
         "/api/reservations": {
             "get": {
                 "tags": [
@@ -7152,6 +7545,123 @@
                         "bearerAuth": []
                     }
                 ]
+            }
+        },
+        "/api/auth/reservations": {
+            "post": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Tạo đặt bàn mới",
+                "operationId": "b4fd8593d0aa424016944fa7fc4d4d8a",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "guest_count",
+                                    "reserved_at"
+                                ],
+                                "properties": {
+                                    "guest_count": {
+                                        "description": "Số lượng khách",
+                                        "type": "integer",
+                                        "example": 4
+                                    },
+                                    "note": {
+                                        "description": "Ghi chú đặt bàn",
+                                        "type": "string",
+                                        "example": "Cần chỗ ngồi gần cửa sổ"
+                                    },
+                                    "reserved_at": {
+                                        "description": "Thời gian đặt bàn",
+                                        "type": "string",
+                                        "format": "date-time",
+                                        "example": "2025-10-15 19:00:00"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Đặt bàn thành công"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Quá số lần đặt bàn cho phép trong 1 giờ"
+                    }
+                }
+            }
+        },
+        "/api/auth/reservations/my": {
+            "get": {
+                "tags": [
+                    "Reservations"
+                ],
+                "summary": "Lấy danh sách đặt bàn của người dùng hiện tại",
+                "operationId": "429de13e2f8662b539ba2ddff0ec8c2a",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "enum": [
+                                0,
+                                1,
+                                2,
+                                3
+                            ]
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 10
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách reservation của tôi"
+                    }
+                }
             }
         },
         "/api/roles": {
@@ -11535,6 +12045,103 @@
                     }
                 ]
             }
+        },
+        "/api/auth/profile/avatar": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Cập nhật ảnh đại diện",
+                "operationId": "37c26022a7969ba02dacb505de52ef52",
+                "responses": {
+                    "200": {
+                        "description": "Cập nhật ảnh đại diện thành công"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/auth/profile/change-password": {
+            "post": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Đổi mật khẩu",
+                "operationId": "806c854c8d3955379a2d0847e2f24a20",
+                "responses": {
+                    "200": {
+                        "description": "Đổi mật khẩu thành công"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                }
+            }
+        },
+        "/api/users/show/my-profile": {
+            "put": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update customer profile",
+                "description": "Customer update their own profile",
+                "operationId": "62219f77fff9584f3391b73dde4c62fc",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "john@example.com"
+                                    },
+                                    "full_name": {
+                                        "type": "string",
+                                        "example": "John Michael Doe"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "0123456789"
+                                    },
+                                    "gender": {
+                                        "type": "string",
+                                        "enum": [
+                                            "male",
+                                            "female",
+                                            "other"
+                                        ],
+                                        "example": "male"
+                                    },
+                                    "address": {
+                                        "type": "string",
+                                        "example": "123 Main St, City"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated successfully"
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
         }
     },
     "components": {
@@ -11629,6 +12236,10 @@
             "description": "Health"
         },
         {
+            "name": "Customer Invoice",
+            "description": "Customer Invoice"
+        },
+        {
             "name": "Invoices",
             "description": "Invoices"
         },
@@ -11651,6 +12262,10 @@
         {
             "name": "TableSessions",
             "description": "TableSessions"
+        },
+        {
+            "name": "Profile",
+            "description": "Profile"
         }
     ]
 }

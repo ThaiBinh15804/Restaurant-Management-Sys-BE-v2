@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class InvoicePromotion extends BaseModel
 {
 
@@ -34,5 +36,10 @@ class InvoicePromotion extends BaseModel
     public function promotion()
     {
         return $this->belongsTo(Promotion::class, 'promotion_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

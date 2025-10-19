@@ -282,4 +282,26 @@ class PromotionController extends Controller
 
         return $this->successResponse($data, 'Promotions retrieved successfully');
     }
+
+    /**
+     * @OA\Get(
+     *   path="/api/auth/promotions/{code}",
+     *   tags={"Promotions"},
+     *   summary="Lấy chi tiết promotion theo code hoặc id",
+     *   @OA\Parameter(name="code", in="path", required=true, @OA\Schema(type="string")),
+     *   @OA\Response(response=200, description="OK"),
+     *   @OA\Response(response=404, description="Not found")
+     * )
+     */
+    #[Get('/{code}', middleware: ['permission:table-sessions.view'])]
+    public function show(string $code): JsonResponse
+    {
+        $promotion = Promotion::where('code', $code)->orWhere('id', $code)->first();
+
+        if (!$promotion) {
+            return $this->errorResponse('Promotion not found', [], 404);
+        }
+
+        return $this->successResponse($promotion, 'Promotion detail');
+    }
 }

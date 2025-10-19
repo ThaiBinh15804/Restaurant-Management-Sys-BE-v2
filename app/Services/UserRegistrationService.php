@@ -57,7 +57,7 @@ class UserRegistrationService
 
             return [
                 'success' => true,
-                'message' => 'Registration initiated. Please check your email to verify your account.',
+                'message' => 'Đăng ký đã được khởi tạo. Vui lòng kiểm tra email của bạn để xác minh tài khoản.',
                 'data' => [
                     'email' => $email,
                     'expires_at' => $verificationToken->expires_at,
@@ -112,6 +112,7 @@ class UserRegistrationService
             $user = User::create([
                 'email' => $verificationToken->email,
                 'password' => $verificationToken->temp_password,
+                'type' => User::TYPE_SYSTEM_USER,
                 'status' => User::STATUS_ACTIVE,
                 'role_id' => $defaultRole?->id,
                 'email_verified_at' => Carbon::now(),

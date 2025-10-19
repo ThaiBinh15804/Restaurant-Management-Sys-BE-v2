@@ -89,17 +89,8 @@ class RolePermissionSeeder extends Seeder
                 $permissionCodes = $this->getAllPermissionCodesFromConfig();
             }
 
-            // Only create role permissions that don't exist
-            foreach ($permissionCodes as $permissionCode) {
-                $permission = Permission::where('code', $permissionCode)->first();
-                
-                if ($permission) {
-                    RolePermission::firstOrCreate([
-                        'role_id' => $role->id,
-                        'permission_id' => $permission->id,
-                    ]);
-                }
-            }
+             $permissionIds = Permission::whereIn('code', $permissionCodes)->pluck('id');
+            $role->permissions()->sync($permissionIds);
         }
     }
 
