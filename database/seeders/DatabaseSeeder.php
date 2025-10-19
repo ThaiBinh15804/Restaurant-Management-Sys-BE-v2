@@ -10,6 +10,8 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Reservation;
+use App\Models\Employee;
+use App\Models\Customer;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\TableSession;
@@ -27,7 +29,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RolePermissionSeeder::class);
         $this->createDefaultUsers();
-        $this->call(EmployeeManagementSeeder::class);
+        // $this->call(EmployeeManagementSeeder::class);
         $this->createDefaultTableDiskMenuData();
         $this->call(InventoryManagementSeeder::class);
     }
@@ -37,6 +39,8 @@ class DatabaseSeeder extends Seeder
      */
     private function createDefaultUsers(): void
     {
+        $now = \Carbon\Carbon::now();
+
         $superAdminRole = Role::where('name', 'Super Administrator')->first();
         $adminRole = Role::where('name', 'Administrator')->first();
         $managerRole = Role::where('name', 'Manager')->first();
@@ -54,6 +58,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeSuperAdmin = $superAdmin->employeeProfile()->create([
             'full_name' => 'Super Admin',
+            'phone' => '0900000001',
+            'gender' => 'Other',
+            'address' => 'Tầng 15, Tháp Vinhomes Central Park, TP.HCM',
+            'bank_account' => '9704000000001',
+            'contract_type' => Employee::CONTRACT_FULL_TIME,
+            'base_salary' => 100000,
+            'hire_date' => $now->copy()->subYears(5)->toDateString(),
+            'is_active' => true,
         ]);
 
         $admin = User::create([
@@ -64,6 +76,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeAdmin = $admin->employeeProfile()->create([
             'full_name' => 'Admin User',
+            'phone' => '0900000002',
+            'gender' => 'Female',
+            'address' => '25 Nguyễn Huệ, Quận 1, TP.HCM',
+            'bank_account' => '9704000000002',
+            'contract_type' => Employee::CONTRACT_FULL_TIME,
+            'base_salary' => 52000,
+            'hire_date' => $now->copy()->subYears(3)->toDateString(),
+            'is_active' => true,
         ]);
 
         $manager = User::create([
@@ -74,6 +94,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeManager = $manager->employeeProfile()->create([
             'full_name' => 'Quản lý',
+            'phone' => '0900000003',
+            'gender' => 'Male',
+            'address' => '88 Lý Thường Kiệt, Quận 10, TP.HCM',
+            'bank_account' => '9704000000003',
+            'contract_type' => Employee::CONTRACT_FULL_TIME,
+            'base_salary' => 46000,
+            'hire_date' => $now->copy()->subYears(4)->toDateString(),
+            'is_active' => true,
         ]);
 
         $staff = User::create([
@@ -84,6 +112,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeStaff = $staff->employeeProfile()->create([
             'full_name' => 'Nhân viên phục vụ',
+            'phone' => '0900000004',
+            'gender' => 'Female',
+            'address' => '12 Phan Xích Long, Phú Nhuận, TP.HCM',
+            'bank_account' => '9704000000004',
+            'contract_type' => Employee::CONTRACT_PART_TIME,
+            'base_salary' => 30000,
+            'hire_date' => $now->copy()->subYear()->toDateString(),
+            'is_active' => true,
         ]);
 
         $cashierUser = User::create([
@@ -93,7 +129,15 @@ class DatabaseSeeder extends Seeder
             'role_id' => $cashier?->id,
         ]);
         $employeeCashier = $cashierUser->employeeProfile()->create([
-            'full_name' => 'Thu ngân ',
+            'full_name' => 'Thu ngân',
+            'phone' => '0900000005',
+            'gender' => 'Male',
+            'address' => '45 Võ Thị Sáu, Quận 3, TP.HCM',
+            'bank_account' => '9704000000005',
+            'contract_type' => Employee::CONTRACT_FULL_TIME,
+            'base_salary' => 31000,
+            'hire_date' => $now->copy()->subYears(2)->toDateString(),
+            'is_active' => true,
         ]);
 
         $kitchenUser = User::create([
@@ -104,6 +148,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeKitchen = $kitchenUser->employeeProfile()->create([
             'full_name' => 'Chef Ngọc Tài',
+            'phone' => '0900000006',
+            'gender' => 'Male',
+            'address' => '220 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
+            'bank_account' => '9704000000006',
+            'contract_type' => Employee::CONTRACT_FULL_TIME,
+            'base_salary' => 48000,
+            'hire_date' => $now->copy()->subYears(6)->toDateString(),
+            'is_active' => true,
         ]);
 
         $waiterUser = User::create([
@@ -114,6 +166,14 @@ class DatabaseSeeder extends Seeder
         ]);
         $employeeWaiter = $waiterUser->employeeProfile()->create([
             'full_name' => 'Đức Nghĩa',
+            'phone' => '0900000007',
+            'gender' => 'Male',
+            'address' => '15 Bis Trần Quang Khải, Quận 1, TP.HCM',
+            'bank_account' => '9704000000007',
+            'contract_type' => Employee::CONTRACT_PART_TIME,
+            'base_salary' => 30000,
+            'hire_date' => $now->copy()->subMonths(9)->toDateString(),
+            'is_active' => true,
         ]);
 
         $customerUser = User::create([
@@ -124,6 +184,10 @@ class DatabaseSeeder extends Seeder
         ]);
         $customerProfile = $customerUser->customerProfile()->create([
             'full_name' => 'Công Tiến',
+            'phone' => '0900100001',
+            'gender' => 'Male',
+            'address' => '181 Điện Biên Phủ, Quận Bình Thạnh, TP.HCM',
+            'membership_level' => Customer::MEMBERSHIP_GOLD,
         ]);
 
         $customerUser2 = User::create([
@@ -134,6 +198,10 @@ class DatabaseSeeder extends Seeder
         ]);
         $customerProfile2 = $customerUser2->customerProfile()->create([
             'full_name' => 'Minh Thuận',
+            'phone' => '0900100002',
+            'gender' => 'Female',
+            'address' => '56 Phú Gia, Quận 7, TP.HCM',
+            'membership_level' => Customer::MEMBERSHIP_SILVER,
         ]);
 
         $customerUserOffline = User::create([
@@ -144,6 +212,10 @@ class DatabaseSeeder extends Seeder
         ]);
         $customerProfileOffline = $customerUserOffline->customerProfile()->create([
             'full_name' => 'Khách vãng lai',
+            'phone' => '0900100099',
+            'gender' => 'Other',
+            'address' => 'Không xác định',
+            'membership_level' => Customer::MEMBERSHIP_BRONZE,
         ]);
     }
 

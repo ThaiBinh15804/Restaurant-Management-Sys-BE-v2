@@ -18,6 +18,7 @@ class EmployeeShiftQueryRequest extends BaseQueryRequest
                 EmployeeShift::STATUS_PRESENT,
                 EmployeeShift::STATUS_LATE,
                 EmployeeShift::STATUS_EARLY_LEAVE,
+                EmployeeShift::STATUS_ABSENT,
             ])],
             'date_from' => ['sometimes', 'date'],
             'date_to' => ['sometimes', 'date', 'after_or_equal:date_from'],

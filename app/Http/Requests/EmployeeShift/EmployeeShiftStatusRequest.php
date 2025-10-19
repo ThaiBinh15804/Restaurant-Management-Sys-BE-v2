@@ -21,6 +21,7 @@ class EmployeeShiftStatusRequest extends FormRequest
                 EmployeeShift::STATUS_PRESENT,
                 EmployeeShift::STATUS_LATE,
                 EmployeeShift::STATUS_EARLY_LEAVE,
+                EmployeeShift::STATUS_ABSENT,
             ])],
             'notes' => ['nullable', 'string', 'max:255'],
         ];

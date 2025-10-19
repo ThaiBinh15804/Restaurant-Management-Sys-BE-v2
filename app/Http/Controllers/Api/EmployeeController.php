@@ -262,7 +262,7 @@ class EmployeeController extends Controller
      *     path="/api/employees/{id}",
      *     tags={"Employees"},
      *     summary="Update employee and user account",
-     *     description="Update employee information and optionally update their user account (email, password, role, avatar). Note: Use POST method with _method=PUT for file upload support.",
+     *     description="Update employee information and optionally update their user account (email, password, role, avatar).",
      *     security={{"bearerAuth":{}}},
      *     @OA\Parameter(
      *         name="id",

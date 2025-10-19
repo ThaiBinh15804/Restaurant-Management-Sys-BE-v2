@@ -27,6 +27,7 @@ class EmployeeShift extends BaseModel
     public const STATUS_PRESENT = 1;
     public const STATUS_LATE = 2;
     public const STATUS_EARLY_LEAVE = 3;
+    public const STATUS_ABSENT = 4;
 
     /**
      * The attributes that are mass assignable.
@@ -91,6 +92,7 @@ class EmployeeShift extends BaseModel
             self::STATUS_PRESENT => 'Present',
             self::STATUS_LATE => 'Late',
             self::STATUS_EARLY_LEAVE => 'Early Leave',
+            self::STATUS_ABSENT => 'Absent',
             default => 'Scheduled',
         };
     }
