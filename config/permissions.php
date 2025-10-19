@@ -352,6 +352,57 @@ return [
             ],
         ],
 
+        'orderItems' => [
+            'name' => 'Order Item Management',
+            'description' => 'Permissions related to managing individual order items',
+            'permissions' => [
+                'orderItems.view' => [
+                    'name' => 'View Order Items',
+                    'description' => 'Permission to view order item listings and details',
+                ],
+                'orderItems.create' => [
+                    'name' => 'Create Order Items',
+                    'description' => 'Permission to add new items to an order',
+                ],
+                'orderItems.edit' => [
+                    'name' => 'Edit Order Items',
+                    'description' => 'Permission to edit existing order items (e.g., quantity, status)',
+                ],
+                'orderItems.delete' => [
+                    'name' => 'Delete Order Items',
+                    'description' => 'Permission to remove items from an order',
+                ],
+                'orderItems.updateStatus' => [
+                    'name' => 'Update Order Item Status',
+                    'description' => 'Permission to change the status of an order item (e.g., cooking, served, cancelled)',
+                ],
+            ],
+        ],
+
+        'menus' => [
+            'name' => 'Menus Management',
+            'description' => 'Permissions related to managing multiple menus and menu items',
+            'permissions' => [
+                'menus.view' => [
+                    'name' => 'View Menus',
+                    'description' => 'Permission to view menu listings and their items',
+                ],
+                'menus.create' => [
+                    'name' => 'Create Menu',
+                    'description' => 'Permission to create new menus and add menu items',
+                ],
+                'menus.edit' => [
+                    'name' => 'Edit Menu',
+                    'description' => 'Permission to edit existing menus and their items',
+                ],
+                'menus.delete' => [
+                    'name' => 'Delete Menu',
+                    'description' => 'Permission to remove menus and their items',
+                ],
+
+            ],
+        ],
+
         'dining-tables' => [
             'name' => 'Dining Table Management',
             'description' => 'Permissions related to restaurant dining table management',
@@ -437,6 +488,52 @@ return [
                 'reservations.confirm' => [
                     'name' => 'Confirm Reservations',
                     'description' => 'Permission to confirm table reservations',
+                ],
+            ],
+        ],
+
+        'promotions' => [
+            'name' => 'Promotion Management',
+            'description' => 'Permissions related to promotion management',
+            'permissions' => [
+                'promotions.view' => [
+                    'name' => 'View Promotions',
+                    'description' => 'Permission to view promotion listings and details',
+                ],
+                'promotions.create' => [
+                    'name' => 'Create Promotions',
+                    'description' => 'Permission to create new promotions',
+                ],
+                'promotions.edit' => [
+                    'name' => 'Edit Promotions',
+                    'description' => 'Permission to edit existing promotions',
+                ],
+                'promotions.delete' => [
+                    'name' => 'Delete Promotions',
+                    'description' => 'Permission to delete promotions',
+                ],
+            ],
+        ],
+
+        'invoices' => [
+            'name' => 'Invoice Management',
+            'description' => 'Permissions related to managing invoices and billing',
+            'permissions' => [
+                'invoices.view' => [
+                    'name' => 'View Invoices',
+                    'description' => 'Permission to view invoice listings and details',
+                ],
+                'invoices.create' => [
+                    'name' => 'Create Invoices',
+                    'description' => 'Permission to create new invoices',
+                ],
+                'invoices.edit' => [
+                    'name' => 'Edit Invoices',
+                    'description' => 'Permission to edit existing invoices',
+                ],
+                'invoices.delete' => [
+                    'name' => 'Delete Invoices',
+                    'description' => 'Permission to delete invoices',
                 ],
             ],
         ],

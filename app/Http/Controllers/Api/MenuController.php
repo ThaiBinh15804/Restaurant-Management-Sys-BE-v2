@@ -55,7 +55,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Danh sách menu")
      * )
      */
-    #[Get('/', middleware: ['permission:table-sessions.view'])]
+    #[Get('/', middleware: ['permission:menus.view'])]
     public function index(MenuQueryRequest $request): JsonResponse
     {
         $filters = $request->filters();
@@ -112,7 +112,7 @@ class MenuController extends Controller
      *     )
      * )
      */
-    #[Get('/active/items', middleware: ['permission:table-sessions.view'])]
+    #[Get('/active/items', middleware: ['permission:menus.view'])]
     public function getActiveMenuItems(): JsonResponse
     {
         // Lấy menu đang hoạt động
@@ -167,7 +167,7 @@ class MenuController extends Controller
      *     @OA\Response(response=201, description="Menu created successfully")
      * )
      */
-    #[Post('/', middleware: ['permission:table-sessions.create'])]
+    #[Post('/', middleware: ['permission:menus.create'])]
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
@@ -212,7 +212,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Menu updated successfully")
      * )
      */
-    #[Put('/{id}', middleware: ['permission:table-sessions.edit'])]
+    #[Put('/{id}', middleware: ['permission:menus.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
         $menu = Menu::findOrFail($id);
@@ -252,7 +252,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Menu deleted successfully")
      * )
      */
-    #[Delete('/{id}', middleware: ['permission:table-sessions.delete'])]
+    #[Delete('/{id}', middleware: ['permission:menus.delete'])]
     public function destroy(string $id): JsonResponse
     {
         $menu = Menu::findOrFail($id);
@@ -301,7 +301,7 @@ class MenuController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}/items', middleware: ['permission:table-sessions.view'])]
+    #[Get('/{id}/items', middleware: ['permission:menus.view'])]
     public function getMenuItems(string $id): JsonResponse
     {
         $menu = Menu::findOrFail($id);
@@ -358,7 +358,7 @@ class MenuController extends Controller
      *     @OA\Response(response=404, description="Không tìm thấy menu hoặc món ăn")
      * )
      */
-    #[Post('/{menuId}/items', middleware: ['permission:table-sessions.create'])]
+    #[Post('/{menuId}/items', middleware: ['permission:menus.create'])]
     public function addMenuItem(Request $request, string $menuId): JsonResponse
     {
         $menu = Menu::find($menuId);
@@ -470,7 +470,7 @@ class MenuController extends Controller
      *     ),
      * )
      */
-    #[Put('/{menuId}/items/{itemId}', middleware: ['permission:table-sessions.edit'])]
+    #[Put('/{menuId}/items/{itemId}', middleware: ['permission:menus.edit'])]
     public function updateMenuItem(Request $request, string $menuId, string $itemId): JsonResponse
     {
         // Kiểm tra menu tồn tại
@@ -565,7 +565,7 @@ class MenuController extends Controller
      *     )
      * )
      */
-    #[Delete('/{menuId}/items/{itemId}', middleware: ['permission:table-sessions.delete'])]
+    #[Delete('/{menuId}/items/{itemId}', middleware: ['permission:menus.delete'])]
     public function deleteMenuItem(string $menuId, string $itemId): JsonResponse
     {
         $menu = Menu::find($menuId);
@@ -622,7 +622,7 @@ class MenuController extends Controller
      *     @OA\Response(response=500, description="Lỗi server")
      * )
      */
-    #[Get('/{menuId}/available-dishes', middleware: ['permission:table-sessions.view'])]
+    #[Get('/{menuId}/available-dishes', middleware: ['permission:menus.view'])]
     public function getAvailableDishes(string $menuId): JsonResponse
     {
         $menu = Menu::find($menuId);
@@ -746,7 +746,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Danh sách món ăn đã lọc")
      * )
      */
-    #[Get('/filter-dishes', middleware: ['permission:table-sessions.view'])]
+    #[Get('/filter-dishes', middleware: ['permission:menus.view'])]
     public function filterDishes(Request $request): JsonResponse
     {
         $query = Dish::query()->with('category');

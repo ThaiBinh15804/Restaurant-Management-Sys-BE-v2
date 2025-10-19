@@ -43,4 +43,11 @@ class Dish extends BaseModel
     {
         return $this->hasMany(MenuItem::class, 'dish_id');
     }
+
+    public function ingredients()
+    {
+        return $this->belongsToMany(Ingredient::class, 'dish_ingredient', 'dish_id', 'ingredient_id')
+            ->withPivot('quantity', 'note')
+            ->withTimestamps();
+    }
 }

@@ -102,7 +102,7 @@ class InvoicePaymentController extends Controller
      *     )
      * )
      */
-    #[Get('/', middleware: ['permission:table-sessions.view'])]
+    #[Get('/', middleware: ['permission:invoices.view'])]
     public function index(InvoiceQueryRequest $request)
     {
         $filters = $request->filters();
@@ -192,7 +192,7 @@ class InvoicePaymentController extends Controller
      *     )
      * )
      */
-    #[Get('/{id}', middleware: ['permission:table-sessions.view'])]
+    #[Get('/{id}', middleware: ['permission:invoices.view'])]
     public function show(string $id)
     {
         // Lấy hóa đơn và các payment kèm nhân viên
@@ -280,7 +280,7 @@ class InvoicePaymentController extends Controller
      *     )
      * )
      */
-    #[Get('/table-session/{id}', middleware: ['permission:table-sessions.view'])]
+    #[Get('/table-session/{id}', middleware: ['permission:invoices.view'])]
     public function showByTableSession(string $id)
     {
         // Lấy hóa đơn theo table_session_id kèm theo payments và nhân viên
@@ -356,7 +356,7 @@ class InvoicePaymentController extends Controller
      *     )
      * )
      */
-    #[Post('/', middleware: ['permission:table-sessions.view'])]
+    #[Post('/', middleware: ['permission:invoices.create'])]
     public function createInvoiceWithPayment(Request $request)
     {
         $request->validate([
@@ -476,7 +476,7 @@ class InvoicePaymentController extends Controller
                     'ended_at' => now(),
                     'updated_by' => $request->employee_id
                 ]);
-                
+
                 TableSession::where('merged_into_session_id', $tableSession->id)
                     ->update([
                         'status' => TableSession::STATUS_COMPLETED,
@@ -558,7 +558,7 @@ class InvoicePaymentController extends Controller
      *     )
      * )
      */
-    #[Put('/{invoice_id}', middleware: ['permission:table-sessions.view'])]
+    #[Put('/{invoice_id}', middleware: ['permission:invoices.edit'])]
     public function payRemainingInvoice(Request $request, string $invoice_id)
     {
         $request->validate([

@@ -84,7 +84,7 @@ class DishCategoryController extends Controller
      * )
      */
 
-    #[Get('/', middleware: ['permission:table-sessions.view'])]
+    #[Get('/', middleware: ['permission:dish_categories.view'])]
     public function index(DishCategoryQueryRequest $request): JsonResponse
     {
         $query = DishCategory::withCount('dishes')
@@ -129,7 +129,7 @@ class DishCategoryController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    #[Post('/', middleware: ['permission:table-sessions.create'])]
+    #[Post('/', middleware: ['permission:dish_categories.create'])]
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -171,7 +171,7 @@ class DishCategoryController extends Controller
      *     @OA\Response(response=404, description="Dish category not found")
      * )
      */
-    #[Put('/{id}', middleware: ['permission:table-sessions.edit'])]
+    #[Put('/{id}', middleware: ['permission:dish_categories.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
         $category = DishCategory::find($id);
@@ -213,7 +213,7 @@ class DishCategoryController extends Controller
      *     @OA\Response(response=404, description="Dish category not found")
      * )
      */
-    #[Delete('/{id}', middleware: ['permission:table-sessions.delete'])]
+    #[Delete('/{id}', middleware: ['permission:dish_categories.delete'])]
     public function destroy(string $id): JsonResponse
     {
         $category = DishCategory::withCount('dishes')->find($id);
@@ -257,7 +257,7 @@ class DishCategoryController extends Controller
      *     )
      * )
      */
-    #[Get('/get-name-list-dish-category', middleware: ['permission:table-sessions.view'])]
+    #[Get('/get-name-list-dish-category', middleware: ['permission:dish_categories.view'])]
     public function getListNameDishCategory(Request $request): JsonResponse
     {
         // Lấy danh sách id + name danh mục món ăn
