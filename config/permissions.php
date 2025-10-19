@@ -538,32 +538,17 @@ return [
             ],
         ],
 
-        'reports' => [
-            'name' => 'Reporting & Analytics',
-            'description' => 'Permissions related to reports and analytics',
+        'statistics' => [
+            'name' => 'Statistics & Reports',
+            'description' => 'Permissions related to viewing system reports and analytics',
             'permissions' => [
-                'reports.sales' => [
-                    'name' => 'View Sales Reports',
-                    'description' => 'Permission to view sales and revenue reports',
-                ],
-                'reports.inventory' => [
-                    'name' => 'View Inventory Reports',
-                    'description' => 'Permission to view inventory and stock reports',
-                ],
-                'reports.financial' => [
-                    'name' => 'View Financial Reports',
-                    'description' => 'Permission to view financial and accounting reports',
-                ],
-                'reports.customer' => [
-                    'name' => 'View Customer Reports',
-                    'description' => 'Permission to view customer analytics and reports',
-                ],
-                'reports.export' => [
-                    'name' => 'Export Reports',
-                    'description' => 'Permission to export reports in various formats',
-                ],
+                'statistics.view' => [
+                    'name' => 'Get reports and statistics',
+                    'description' => 'Permission to access various reports and statistics in the system',
+                ]
             ],
         ],
+
 
         'system' => [
             'name' => 'System Administration',
@@ -809,16 +794,16 @@ return [
                 'auth.verify_email',
                 'auth.resend_verification',
                 'auth.google_login',
-                
+
                 'table-sessions.view',
                 'products.view',
-                
+
                 'orders.view',
-                
+
                 'reservations.view',
                 'reservations.create',
                 'users.view',
-                
+
                 'employees.view',
             ],
         ],
