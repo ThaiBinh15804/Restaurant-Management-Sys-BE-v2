@@ -271,53 +271,48 @@ return [
             ],
         ],
 
-
-        'categories' => [
-            'name' => 'Category Management',
-            'description' => 'Permissions related to menu category management',
+        'dish_categories' => [
+            'name' => 'Dish Category Management',
+            'description' => 'Permissions related to managing dish categories in the menu',
             'permissions' => [
-                'categories.view' => [
-                    'name' => 'View Categories',
-                    'description' => 'Permission to view menu categories',
+                'dish_categories.view' => [
+                    'name' => 'View Dish Categories',
+                    'description' => 'Permission to view list and details of dish categories',
                 ],
-                'categories.create' => [
-                    'name' => 'Create Categories',
-                    'description' => 'Permission to create new menu categories',
+                'dish_categories.create' => [
+                    'name' => 'Create Dish Categories',
+                    'description' => 'Permission to create new dish categories',
                 ],
-                'categories.edit' => [
-                    'name' => 'Edit Categories',
-                    'description' => 'Permission to edit menu categories',
+                'dish_categories.edit' => [
+                    'name' => 'Edit Dish Categories',
+                    'description' => 'Permission to edit existing dish categories',
                 ],
-                'categories.delete' => [
-                    'name' => 'Delete Categories',
-                    'description' => 'Permission to delete menu categories',
+                'dish_categories.delete' => [
+                    'name' => 'Delete Dish Categories',
+                    'description' => 'Permission to delete dish categories',
                 ],
             ],
         ],
 
-        'products' => [
-            'name' => 'Product Management',
-            'description' => 'Permissions related to product/menu item management',
+        'dishes' => [
+            'name' => 'Dish Management',
+            'description' => 'Permissions related to managing dishes (menu items) in the restaurant',
             'permissions' => [
-                'products.view' => [
-                    'name' => 'View Products',
-                    'description' => 'Permission to view products and menu items',
+                'dishes.view' => [
+                    'name' => 'View Dishes',
+                    'description' => 'Permission to view list and details of dishes',
                 ],
-                'products.create' => [
-                    'name' => 'Create Products',
-                    'description' => 'Permission to create new products and menu items',
+                'dishes.create' => [
+                    'name' => 'Create Dishes',
+                    'description' => 'Permission to add new dishes to the menu',
                 ],
-                'products.edit' => [
-                    'name' => 'Edit Products',
-                    'description' => 'Permission to edit products and menu items',
+                'dishes.edit' => [
+                    'name' => 'Edit Dishes',
+                    'description' => 'Permission to modify dish information, pricing, or category',
                 ],
-                'products.delete' => [
-                    'name' => 'Delete Products',
-                    'description' => 'Permission to delete products and menu items',
-                ],
-                'products.manage_pricing' => [
-                    'name' => 'Manage Product Pricing',
-                    'description' => 'Permission to manage product prices and pricing strategies',
+                'dishes.delete' => [
+                    'name' => 'Delete Dishes',
+                    'description' => 'Permission to remove dishes from the menu',
                 ],
             ],
         ],
@@ -627,15 +622,14 @@ return [
                 'roles.edit',
                 'roles.manage_permissions',
                 'permissions.view',
-                'categories.view',
-                'categories.create',
-                'categories.edit',
-                'categories.delete',
-                'products.view',
-                'products.create',
-                'products.edit',
-                'products.delete',
-                'products.manage_pricing',
+                'dish_categories.view',
+                'dish_categories.create',
+                'dish_categories.edit',
+                'dish_categories.delete',
+                'dishes.view',
+                'dishes.create',
+                'dishes.edit',
+                'dishes.delete',
                 'orders.view',
                 'orders.create',
                 'orders.edit',
@@ -691,13 +685,12 @@ return [
                 'users.create',
                 'users.edit',
                 'roles.view',
-                'categories.view',
-                'categories.create',
-                'categories.edit',
-                'products.view',
-                'products.create',
-                'products.edit',
-                'products.manage_pricing',
+                'dish_categories.view',
+                'dish_categories.create',
+                'dish_categories.edit',
+                'dishes.view',
+                'dishes.create',
+                'dishes.edit',
                 'orders.view',
                 'orders.create',
                 'orders.edit',
@@ -736,8 +729,8 @@ return [
             'name' => 'Staff',
             'description' => 'Restaurant staff with limited permissions',
             'permissions' => [
-                'categories.view',
-                'products.view',
+                'dish_categories.view',
+                'dishes.view',
                 'orders.view',
                 'orders.create',
                 'orders.edit',
@@ -755,8 +748,8 @@ return [
             'name' => 'Cashier',
             'description' => 'Point of sale and order processing permissions',
             'permissions' => [
-                'categories.view',
-                'products.view',
+                'dish_categories.view',
+                'dishes.view',
                 'orders.view',
                 'orders.create',
                 'orders.edit',
@@ -773,7 +766,7 @@ return [
             'name' => 'Kitchen Staff',
             'description' => 'Kitchen operations and order management',
             'permissions' => [
-                'products.view',
+                'dishes.view',
                 'orders.view',
                 'orders.process',
                 'orders.complete',
@@ -788,8 +781,8 @@ return [
             'name' => 'Waiter',
             'description' => 'Order taking and table service permissions',
             'permissions' => [
-                'categories.view',
-                'products.view',
+                'dish_categories.view',
+                'dishes.view',
                 'orders.view',
                 'orders.create',
                 'orders.edit',
@@ -809,16 +802,16 @@ return [
                 'auth.verify_email',
                 'auth.resend_verification',
                 'auth.google_login',
-                
+
                 'table-sessions.view',
-                'products.view',
-                
+                'dishes.view',
+
                 'orders.view',
-                
+
                 'reservations.view',
                 'reservations.create',
                 'users.view',
-                
+
                 'employees.view',
             ],
         ],

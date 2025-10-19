@@ -357,7 +357,7 @@ class TableSessionController extends Controller
      *     )
      * )
      */
-    #[Post('/reservation')]
+    #[Post('/reservation', middleware: ['permission:table-sessions.create'])]
     public function store(Request $request): JsonResponse
     {
         $request->validate([
