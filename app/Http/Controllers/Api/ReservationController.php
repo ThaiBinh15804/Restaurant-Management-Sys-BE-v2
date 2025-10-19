@@ -354,7 +354,7 @@ class ReservationController extends Controller
      *   @OA\Response(response=200, description="Danh sách reservation của tôi")
      * )
      */
-    #[Get('/my')]
+    #[Get('/my', middleware: ['auth:api'])]
     public function my(ReservationQueryRequest $request): JsonResponse
     {
         $userId = Auth::id();
@@ -367,8 +367,9 @@ class ReservationController extends Controller
         $filters = $request->filters();
         $query = Reservation::with('customer')->where('customer_id', $customerId);
 
-        if (!is_null($filters['status'])) {
-            $query->where('status', $filters['status']);
+        $status = $filters['status'] ?? null;
+        if (!is_null($status)) {
+            $query->where('status', $status);
         }
         if (!empty($filters['date_from'])) {
             $query->whereDate('reserved_at', '>=', $filters['date_from']);

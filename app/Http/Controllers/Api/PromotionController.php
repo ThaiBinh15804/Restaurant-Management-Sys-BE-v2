@@ -25,7 +25,7 @@ class PromotionController extends Controller
      *     summary="List promotions",
      *     description="Retrieve a paginated list of promotions with optional filters such as code, description, discount percent, and active status.",
      *     operationId="getPromotions",
-     *     security={{"bearerAuth":{}}},
+     *     security={},
      *
      *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", example=1)),
      *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", example=15)),
@@ -67,7 +67,7 @@ class PromotionController extends Controller
      *     )
      * )
      */
-    #[Get('/', middleware: ['permission:table-sessions.view'])]
+    #[Get('/')]
     public function index(PromotionQueryRequest $request)
     {
         $query = Promotion::withCount(['invoicePromotions as used_count'])
