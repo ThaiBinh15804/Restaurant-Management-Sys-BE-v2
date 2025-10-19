@@ -60,10 +60,11 @@ class InvoiceController extends Controller
         ->orderBy('created_at', 'desc')
         ->get()
         ->map(function ($invoice) {
+            $tableNumber = $invoice->tableSession->diningTables->first()->table_number ?? 'N/A';
             return [
                 'invoice_id' => $invoice->id,
                 'table_session_id' => $invoice->table_session_id,
-                'table_id' => $invoice->tableSession->table_id ?? 'N/A',
+                'table_id' => $tableNumber,
                 'total_amount' => number_format($invoice->total_amount, 2),
                 'discount_amount' => number_format($invoice->discount, 2),
                 'tax_amount' => number_format($invoice->tax, 2),
