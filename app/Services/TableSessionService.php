@@ -86,7 +86,7 @@ class TableSessionService
 
                 if ($hasSourceInvoices) {
                     // Gộp invoice nguồn vào invoice đích
-                    
+
                     // 5.1. Tính tổng total_amount từ các invoice nguồn
                     $sourceTotal = $sourceInvoices->sum('total_amount');
                     $newTotalAmount = $targetInvoice->total_amount + $sourceTotal;
@@ -162,19 +162,53 @@ class TableSessionService
                         'new_status' => $newStatus
                     ]);
                 } else {
-                    // Bàn đích có invoice, bàn nguồn không có invoice
-                    // Chỉ cần cập nhật operation info
+                    // Bàn đích có invoice, bàn nguồn không có invoice nhưng có order
+                    $mergedInvoice = $targetInvoice;
+
+                    // Lấy tất cả order hiện tại của target session (bao gồm order từ bàn nguồn vừa merge)
+                    $orders = Order::where('table_session_id', $targetTableSessionId)->get();
+                    $newTotalAmount = $orders->sum('total_amount');
+
+                    // Giữ nguyên discount & tax của bàn đích
+                    $discount = $targetInvoice->discount;
+                    $tax = $targetInvoice->tax;
+
+                    // Tính final_amount mới
+                    $finalAmount = round($newTotalAmount * (1 - $discount / 100) * (1 + $tax / 100), 2);
+
+                    // Lấy tổng payment đã thanh toán trước đó
+                    $totalPaid = Payment::where('invoice_id', $targetInvoice->id)
+                        ->where('status', Payment::STATUS_COMPLETED)
+                        ->sum('amount');
+
+                    $newStatus = Invoice::STATUS_UNPAID;
+                    if ($totalPaid >= $finalAmount) {
+                        $newStatus = Invoice::STATUS_PAID;
+                    } elseif ($totalPaid > 0) {
+                        $newStatus = Invoice::STATUS_PARTIALLY_PAID;
+                    }
+
+                    // Cập nhật invoice đích
                     $mergedInvoice->update([
+                        'total_amount' => $newTotalAmount,
+                        'discount' => $discount,
+                        'tax' => $tax,
+                        'final_amount' => $finalAmount,
+                        'status' => $newStatus,
                         'operation_type' => Invoice::OPERATION_MERGE,
-                        'operation_notes' => "Merged orders from sessions without invoices",
+                        'operation_notes' => "Merged orders from sessions without invoices. Total paid: {$totalPaid}",
                         'operation_at' => now(),
                         'operation_by' => $employeeId,
                         'updated_by' => $employeeId
                     ]);
 
-                    Log::info('Merged tables without source invoices', [
+                    Log::info('Merged tables without source invoices but with orders', [
                         'target_invoice_id' => $mergedInvoice->id,
-                        'source_sessions' => $sourceTableSessionIds
+                        'source_sessions' => $sourceTableSessionIds,
+                        'new_total' => $newTotalAmount,
+                        'new_final' => $finalAmount,
+                        'total_paid' => $totalPaid,
+                        'new_status' => $newStatus
                     ]);
                 }
             } else {
@@ -243,7 +277,7 @@ class TableSessionService
 
     /**
      * Tách hóa đơn theo tỷ lệ % của số tiền còn lại (Split Invoice)
-     * 
+     *
      * @param string $invoiceId ID hóa đơn cần tách
      * @param array $splits Mảng các phần tách [['percentage' => 40, 'note' => '...']]
      * @param string $employeeId ID nhân viên thực hiện
@@ -310,7 +344,7 @@ class TableSessionService
 
                 // Tính số tiền tách (final_amount sau discount & tax)
                 $splitFinal = round($remainingAmount * ($percentage / 100), 2);
-                
+
                 // Tính ngược total_amount (trước discount & tax)
                 $splitTotal = round($splitFinal / (
                     (1 - $invoice->discount / 100) * (1 + $invoice->tax / 100)
@@ -367,7 +401,7 @@ class TableSessionService
             // 7. Verify tổng với tolerance lớn hơn (do rounding)
             $verifyTotal = round($invoice->fresh()->total_amount + collect($childInvoices)->sum('total_amount'), 2);
             $difference = abs($verifyTotal - $originalTotalAmount);
-            
+
             if ($difference > 0.10) { // Tăng tolerance lên 0.10 VND
                 Log::error('Split verification failed - detailed info', [
                     'invoice_id' => $invoiceId,
@@ -429,7 +463,7 @@ class TableSessionService
 
     /**
      * Tách bàn - Di chuyển món ăn từ bàn này sang bàn khác (Split Table)
-     * 
+     *
      * @param string $sourceSessionId ID session nguồn
      * @param array $orderItems Mảng các món cần tách [['order_item_id' => '...', 'quantity_to_transfer' => 2]]
      * @param string|null $targetSessionId ID session đích (nếu có)
@@ -447,7 +481,7 @@ class TableSessionService
         ?string $note = null
     ): array {
         DB::beginTransaction();
-        
+
         try {
             // 1. Validate source session
             $sourceSession = TableSession::find($sourceSessionId);
@@ -466,7 +500,7 @@ class TableSessionService
 
             foreach ($orderItems as $item) {
                 $orderItem = OrderItem::with('order')->find($item['order_item_id']);
-                
+
                 if (!$orderItem) {
                     continue;
                 }
@@ -595,8 +629,8 @@ class TableSessionService
                 // Cập nhật invoice bàn nguồn
                 $sourceInvoice->update([
                     'total_amount' => $sourceInvoice->total_amount - $transferredTotal,
-                    'final_amount' => ($sourceInvoice->total_amount - $transferredTotal) 
-                        * (1 - $sourceInvoice->discount / 100) 
+                    'final_amount' => ($sourceInvoice->total_amount - $transferredTotal)
+                        * (1 - $sourceInvoice->discount / 100)
                         * (1 + $sourceInvoice->tax / 100),
                     'operation_type' => Invoice::OPERATION_SPLIT_TABLE,
                     'transferred_item_ids' => $transferredItemIds,
@@ -622,7 +656,7 @@ class TableSessionService
                     if ($newTotal > 0) {
                         $weightedDiscount = ($targetInvoice->discount * $oldTotal) / $newTotal;
                         $weightedTax = (
-                            ($targetInvoice->tax * $oldTotal) + 
+                            ($targetInvoice->tax * $oldTotal) +
                             (10 * $transferredTotal) // Default tax 10%
                         ) / $newTotal;
                     }
@@ -669,10 +703,9 @@ class TableSessionService
                     ]
                 ]
             ];
-
         } catch (Exception $e) {
             DB::rollBack();
-            
+
             Log::error('Split table failed', [
                 'source_session' => $sourceSessionId,
                 'error' => $e->getMessage(),

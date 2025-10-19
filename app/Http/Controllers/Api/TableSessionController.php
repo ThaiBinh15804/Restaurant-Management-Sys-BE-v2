@@ -23,6 +23,7 @@ use Spatie\RouteAttributes\Attributes\Get;
 use Spatie\RouteAttributes\Attributes\Prefix;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Spatie\RouteAttributes\Attributes\Post;
 use Spatie\RouteAttributes\Attributes\Put;
 
@@ -133,10 +134,9 @@ class TableSessionController extends Controller
             }
         }
 
-        $perPage = $request->perPage();
-        $paginator = $query->paginate($perPage);
+        $results = $query->get();
 
-        return $this->successResponse($paginator, 'Table sessions retrieved successfully');
+        return $this->successResponse($results, 'Table sessions retrieved successfully');
     }
 
     /**
@@ -188,23 +188,125 @@ class TableSessionController extends Controller
         if (!$session) {
             return response()->json(['message' => 'Table session not found'], 404);
         }
-        
-        if (!$session->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists() 
-            && $session->started_at != null) 
-        {
+
+        if (
+            !$session->invoices()->where('status', '!=', Invoice::STATUS_PAID)->exists()
+            && $session->started_at != null
+        ) {
             $session->status = 2;
-        }
-        else {
-            $session->status = 1; // Đang phục vụ 
+        } else {
+            $session->status = 1; // Đang phục vụ
+
+            // 🔹 Khi set phiên "đang phục vụ" → đánh dấu reservation liên quan là "hoàn thành"
+            $reservations = TableSessionReservation::where('table_session_id', $session->id)
+                ->with('reservation')
+                ->get();
+
+            foreach ($reservations as $tsr) {
+                $reservation = $tsr->reservation;
+                if ($reservation && $reservation->status == 1) { // 1 = đang chờ / đang đặt
+                    $reservation->status = 3; // 3 = hoàn thành
+                    $reservation->save();
+                }
+            }
         }
         $session->started_at = now();
-            
+
         $session->save();
         return response()->json([
             'id' => $session->id,
             'status' => $session->status,
             'message' => 'Table session status updated to active'
         ], 200);
+    }
+
+    /**
+     * @OA\Put(
+     *     path="/api/table-sessions/{tableSession}/cancel",
+     *     summary="Hủy phiên bàn (Table Session)",
+     *     description="Cập nhật trạng thái của table session thành 'đã hủy' (3) và đồng thời cập nhật tất cả reservation liên quan cũng thành 'đã hủy' (3).",
+     *     tags={"TableSessions"},
+     *     security={{"bearerAuth":{}}},
+     *
+     *     @OA\Parameter(
+     *         name="tableSession",
+     *         in="path",
+     *         description="ID của table session cần hủy",
+     *         required=true,
+     *         @OA\Schema(type="string")
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Hủy phiên bàn thành công",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="id", type="string", example="TS123"),
+     *             @OA\Property(property="status", type="integer", example=3),
+     *             @OA\Property(property="message", type="string", example="Table session and related reservations cancelled successfully")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=404,
+     *         description="Không tìm thấy table session",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Table session not found")
+     *         )
+     *     ),
+     *
+     *     @OA\Response(
+     *         response=500,
+     *         description="Lỗi server nội bộ",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="message", type="string", example="Internal server error")
+     *         )
+     *     )
+     * )
+     */
+    #[Put('/{tableSession}/cancel', middleware: ['permission:table-sessions.edit'])]
+    public function cancelSession(Request $request, string $tableSession): JsonResponse
+    {
+        try {
+            $session = TableSession::find($tableSession);
+
+            if (!$session) {
+                return response()->json(['message' => 'Table session not found'], 404);
+            }
+
+            // 🔹 Cập nhật trạng thái phiên bàn thành "đã hủy"
+            $session->status = 3; // 3 = Cancelled
+            $session->ended_at = now();
+            $session->save();
+
+            // 🔹 Lấy tất cả reservation liên quan và cập nhật status = 3
+            $reservations = TableSessionReservation::where('table_session_id', $session->id)
+                ->with('reservation')
+                ->get();
+
+            foreach ($reservations as $tsr) {
+                $reservation = $tsr->reservation;
+                if ($reservation && $reservation->status !== 3) {
+                    $reservation->status = 3; // 3 = Cancelled
+                    $reservation->save();
+                }
+            }
+
+            return response()->json([
+                'id' => $session->id,
+                'status' => $session->status,
+                'message' => 'Table session and related reservations cancelled successfully'
+            ], 200);
+        } catch (\Throwable $e) {
+            Log::error('Cancel table session failed', [
+                'error' => $e->getMessage(),
+                'table_session_id' => $tableSession
+            ]);
+
+            return response()->json(['message' => 'Internal server error'], 500);
+        }
     }
 
     /**
@@ -454,35 +556,44 @@ class TableSessionController extends Controller
             ->orderBy('dt.table_number')
             ->get();
 
-        // 🔴 Lấy danh sách bàn đang bận (trong Pending hoặc Active)
-        $busyTables = DB::table('table_session_dining_table as tsdt')
-            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+        // 1. Lấy tất cả session đang bận (Pending/Active) tại thời điểm $reservedAt
+        $busySessionIds = DB::table('table_sessions as ts')
             ->leftJoin('table_session_reservations as tsr', 'ts.id', '=', 'tsr.table_session_id')
             ->leftJoin('reservations as r', 'r.id', '=', 'tsr.reservation_id')
-            ->whereIn('ts.status', [0, 1]) // chỉ Pending & Active mới coi là bận
+            ->whereIn('ts.status', [0, 1])
             ->where(function ($q) use ($reservedAt) {
                 $q->where(function ($q2) use ($reservedAt) {
-                    // nếu chưa kết thúc: bận trong 2 tiếng kể từ thời gian đặt bàn (reservation hoặc fallback started_at)
-                    // sử dụng < để exclusive thời điểm kết thúc
                     $q2->whereNull('ts.ended_at')
                         ->whereRaw(
                             '? >= COALESCE(r.reserved_at, ts.started_at)
-                        AND ? < DATE_ADD(COALESCE(r.reserved_at, ts.started_at), INTERVAL 2 HOUR)',
+                            AND ? < DATE_ADD(COALESCE(r.reserved_at, ts.started_at), INTERVAL 2 HOUR)',
                             [$reservedAt, $reservedAt]
                         );
                 })
                     ->orWhere(function ($q2) use ($reservedAt) {
-                        // nếu đã có ended_at: bận trong khoảng từ reserved_at (hoặc started_at) đến ended_at (inclusive)
                         $q2->whereNotNull('ts.ended_at')
-                            ->whereRaw(
-                                '? BETWEEN COALESCE(r.reserved_at, ts.started_at) AND ts.ended_at',
-                                [$reservedAt]
-                            );
+                            ->whereRaw('? BETWEEN COALESCE(r.reserved_at, ts.started_at) AND ts.ended_at', [$reservedAt]);
                     });
             })
-            ->distinct()
+            ->pluck('ts.id')
+            ->toArray();
+
+        // 2. Lấy tất cả bàn chính đang bận
+        $mainTables = DB::table('table_session_dining_table as tsdt')
+            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+            ->whereIn('ts.id', $busySessionIds)
             ->pluck('tsdt.dining_table_id')
             ->toArray();
+
+        // 3. Lấy tất cả bàn phụ gộp vào các session chính đang bận
+        $mergedTables = DB::table('table_session_dining_table as tsdt')
+            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+            ->whereIn('ts.merged_into_session_id', $busySessionIds)
+            ->pluck('tsdt.dining_table_id')
+            ->toArray();
+
+        // 4. Gộp lại tất cả bàn bận
+        $busyTables = array_unique(array_merge($mainTables, $mergedTables));
 
         // 🟡 Gắn trạng thái cho từng bàn
         $result = $tables->map(function ($table) use ($busyTables, $numberOfPeople) {
@@ -1360,7 +1471,7 @@ class TableSessionController extends Controller
     public function splitTable(SplitTableRequest $request): JsonResponse
     {
         $validated = $request->validated();
-        
+
         $result = $this->tableSessionService->splitTable(
             $validated['source_session_id'],
             $validated['order_items'],
@@ -1550,7 +1661,7 @@ class TableSessionController extends Controller
 
         // Lấy tất cả invoices của table session kèm payments
         $invoices = Invoice::where('table_session_id', $tableSessionId)
-            ->with(['payments' => function($query) {
+            ->with(['payments' => function ($query) {
                 $query->where('status', \App\Models\Payment::STATUS_COMPLETED);
             }])
             ->orderBy('created_at', 'desc')
@@ -1561,7 +1672,7 @@ class TableSessionController extends Controller
         $totalAmount = 0;
         $totalPaid = 0;
         $totalRemaining = 0;
-        
+
         $unpaidCount = 0;
         $partiallyPaidCount = 0;
         $paidCount = 0;

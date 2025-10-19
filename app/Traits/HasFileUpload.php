@@ -62,13 +62,13 @@ trait HasFileUpload
     protected function deleteFileByUrl(string $fileUrl): bool
     {
         $urlPath = parse_url($fileUrl, PHP_URL_PATH);
-        
+
         if (!$urlPath) {
             return false;
         }
 
         $relativePath = preg_replace('#^/storage/#', '', $urlPath);
-        
+
         return $this->deleteFile($relativePath);
     }
 
@@ -100,9 +100,9 @@ trait HasFileUpload
     protected function getEntityTypeFromController(): string
     {
         $className = class_basename(get_class($this));
-        
+
         $entityName = str_replace('Controller', '', $className);
-        
+
         return Str::lower($entityName);
     }
 }

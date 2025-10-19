@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Dish\DishQueryRequest;
 use App\Models\Dish;
 use App\Models\OrderItem;
+use App\Traits\HasFileUpload;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use OpenApi\Attributes as OA;
 use Spatie\RouteAttributes\Attributes\Delete;
 use Spatie\RouteAttributes\Attributes\Get;
@@ -24,6 +26,8 @@ use Spatie\RouteAttributes\Attributes\Put;
 #[Prefix('dishes')]
 class DishController extends Controller
 {
+    use HasFileUpload;
+
     /**
      * @OA\Get(
      *     path="/api/dishes",
@@ -116,16 +120,34 @@ class DishController extends Controller
     #[Post('/', middleware: ['permission:table-sessions.create'])]
     public function store(Request $request): JsonResponse
     {
+        $request->merge([
+            'is_active' => filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
         $validated = $request->validate([
             'name'         => 'required|string|max:255',
             'price'        => 'required|numeric|min:0',
-            'desc'         => 'nullable|string',
+            'desc'         => 'required|string',
             'category_id'  => 'required|exists:dish_categories,id',
-            'cooking_time' => 'nullable|integer|min:0',
-            'image'        => 'nullable|string',
+            'cooking_time' => 'required|integer|min:0',
+            'is_active'    => 'required|boolean',
+            'image' => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'],
         ]);
 
         $dish = Dish::create($validated);
+
+        if ($request->hasFile('image')) {
+            $entityType = $this->getEntityTypeFromController(); // => "dish"
+            $oldImage = $dish->image;
+            $imageUrl = $this->uploadFile(
+                $request->file('image'),
+                $entityType,      // tự động lấy từ tên controller
+                $dish->id,
+                $oldImage
+            );
+
+            $dish->update(['image' => $imageUrl]);
+        }
 
         return $this->successResponse($dish, 'Dish created successfully', 201);
     }
@@ -154,6 +176,10 @@ class DishController extends Controller
     #[Put('/{id}', middleware: ['permission:table-sessions.edit'])]
     public function update(Request $request, string $id): JsonResponse
     {
+        $request->merge([
+            'is_active' => filter_var($request->input('is_active'), FILTER_VALIDATE_BOOLEAN),
+        ]);
+
         $dish = Dish::findOrFail($id);
 
         $validated = $request->validate([
@@ -162,13 +188,38 @@ class DishController extends Controller
             'desc'         => 'nullable|string',
             'category_id'  => 'sometimes|exists:dish_categories,id',
             'cooking_time' => 'nullable|integer|min:0',
-            'image'        => 'nullable|string',
             'is_active'    => 'boolean',
+            'image'        => ['sometimes', 'nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:2048'],
         ]);
+
+        if ($request->has('image')) {
+            Log::info('has image field', ['type' => gettype($request->input('image'))]);
+        }
+
+        if ($request->hasFile('image')) {
+            Log::info('✅ hasFile true');
+        } else {
+            Log::warning('❌ hasFile false');
+        }
+
+        // 🟢 Upload ảnh trước khi update DB
+        if ($request->hasFile('image')) {
+            $entityType = $this->getEntityTypeFromController();
+            $oldImage = $dish->image;
+
+            $imageUrl = $this->uploadFile(
+                $request->file('image'),
+                $entityType,
+                $dish->id,
+                $oldImage
+            );
+
+            $validated['image'] = $imageUrl; // thêm image mới vào payload
+        }
 
         $dish->update($validated);
 
-        return $this->successResponse($dish, 'Dish updated successfully');
+        return $this->successResponse($dish->fresh(), 'Dish updated successfully');
     }
 
     /**

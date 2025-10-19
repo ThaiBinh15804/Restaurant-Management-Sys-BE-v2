@@ -1492,7 +1492,7 @@
         "/api/dining-tables/{idDiningTable}/reservations": {
             "get": {
                 "tags": [
-                    "TableSessions"
+                    "DiningTables"
                 ],
                 "summary": "Lấy danh sách các đặt bàn đã có phiên cho một bàn cụ thể",
                 "description": "Trả về danh sách tất cả các đặt bàn đã có phiên bàn (table_session) của một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
@@ -1524,6 +1524,113 @@
                     },
                     "404": {
                         "description": "Không tìm thấy bàn hoặc không có đặt bàn nào"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/dining-tables/{idDiningTable}/reservations-offline": {
+            "get": {
+                "tags": [
+                    "DiningTables"
+                ],
+                "summary": "Lấy danh sách đặt bàn (online) và phiên bàn offline cho một bàn cụ thể",
+                "description": "Trả về danh sách tất cả các đặt bàn online (có reservation) và các phiên bàn offline (không có reservation) thuộc về một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
+                "operationId": "2d2fb37f0bb72200377b040c01c7f9bd",
+                "parameters": [
+                    {
+                        "name": "idDiningTable",
+                        "in": "path",
+                        "description": "ID của bàn ăn (dining_table_id)",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Danh sách đặt bàn và phiên offline được lấy thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "properties": {
+                                            "type": {
+                                                "description": "Loại phiên: online (có reservation) hoặc offline (phiên không đặt trước)",
+                                                "type": "string",
+                                                "example": "online"
+                                            },
+                                            "reservation_id": {
+                                                "type": "string",
+                                                "example": "rsv_12345",
+                                                "nullable": true
+                                            },
+                                            "reserved_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-10-19T10:30:00Z"
+                                            },
+                                            "number_of_people": {
+                                                "type": "integer",
+                                                "example": 4,
+                                                "nullable": true
+                                            },
+                                            "reservation_status": {
+                                                "description": "0: Pending, 1: Active, 2: Completed, 3: Cancelled",
+                                                "type": "integer",
+                                                "example": 1,
+                                                "nullable": true
+                                            },
+                                            "notes": {
+                                                "type": "string",
+                                                "example": "Bàn gần cửa sổ",
+                                                "nullable": true
+                                            },
+                                            "customer_name": {
+                                                "type": "string",
+                                                "example": "Nguyễn Văn A",
+                                                "nullable": true
+                                            },
+                                            "customer_phone": {
+                                                "type": "string",
+                                                "example": "0987654321",
+                                                "nullable": true
+                                            },
+                                            "table_session_id": {
+                                                "type": "string",
+                                                "example": "ts_abc123"
+                                            },
+                                            "table_session_status": {
+                                                "description": "0: Pending, 1: Active, 2: Completed, 3: Cancelled",
+                                                "type": "integer",
+                                                "example": 2
+                                            },
+                                            "started_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": "2025-10-19T10:00:00Z"
+                                            },
+                                            "ended_at": {
+                                                "type": "string",
+                                                "format": "date-time",
+                                                "example": null,
+                                                "nullable": true
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy đặt bàn hoặc phiên offline nào cho bàn này"
                     }
                 },
                 "security": [
@@ -5207,7 +5314,7 @@
         "/api/order-items/{id}": {
             "delete": {
                 "tags": [
-                    "Order Items"
+                    "OrderItems"
                 ],
                 "summary": "Xóa một món trong order",
                 "description": "Xóa order item theo ID. Nếu món chưa thuộc hóa đơn thì chỉ cần xóa, không cập nhật gì thêm.",
@@ -5358,7 +5465,7 @@
         "/api/order-items/add-order": {
             "post": {
                 "tags": [
-                    "Orders"
+                    "OrderItems"
                 ],
                 "summary": "Thêm order mới cùng danh sách món",
                 "operationId": "0e972a7824cf82214e994a94dc0f5ed3",
@@ -9570,6 +9677,90 @@
                 }
             }
         },
+        "/api/table-sessions/{tableSession}/cancel": {
+            "put": {
+                "tags": [
+                    "TableSessions"
+                ],
+                "summary": "Hủy phiên bàn (Table Session)",
+                "description": "Cập nhật trạng thái của table session thành 'đã hủy' (3) và đồng thời cập nhật tất cả reservation liên quan cũng thành 'đã hủy' (3).",
+                "operationId": "4141c362f604161862a359d432de4547",
+                "parameters": [
+                    {
+                        "name": "tableSession",
+                        "in": "path",
+                        "description": "ID của table session cần hủy",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Hủy phiên bàn thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "example": "TS123"
+                                        },
+                                        "status": {
+                                            "type": "integer",
+                                            "example": 3
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session and related reservations cancelled successfully"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy table session",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Table session not found"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Lỗi server nội bộ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Internal server error"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/table-sessions/reservation": {
             "post": {
                 "tags": [
@@ -11434,10 +11625,6 @@
             "description": "API Endpoints for User Management"
         },
         {
-            "name": "TableSessions",
-            "description": "TableSessions"
-        },
-        {
             "name": "Health",
             "description": "Health"
         },
@@ -11450,16 +11637,8 @@
             "description": "Menu Items"
         },
         {
-            "name": "Order Items",
-            "description": "Order Items"
-        },
-        {
             "name": "OrderItems",
             "description": "OrderItems"
-        },
-        {
-            "name": "Orders",
-            "description": "Orders"
         },
         {
             "name": "Promotions",
@@ -11468,6 +11647,10 @@
         {
             "name": "Reservations",
             "description": "Reservations"
+        },
+        {
+            "name": "TableSessions",
+            "description": "TableSessions"
         }
     ]
 }

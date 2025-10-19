@@ -45,7 +45,7 @@ class OrderItemController extends Controller
      *     path="/api/order-items/{id}",
      *     summary="Xóa một món trong order",
      *     description="Xóa order item theo ID. Nếu món chưa thuộc hóa đơn thì chỉ cần xóa, không cập nhật gì thêm.",
-     *     tags={"Order Items"},
+     *     tags={"OrderItems"},
      *     security={{"bearerAuth":{}}},
      *
      *     @OA\Parameter(
@@ -305,7 +305,7 @@ class OrderItemController extends Controller
      * @OA\Post(
      *     path="/api/order-items/add-order",
      *     summary="Thêm order mới cùng danh sách món",
-     *     tags={"Orders"},
+     *     tags={"OrderItems"},
      *     security={{"bearerAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,

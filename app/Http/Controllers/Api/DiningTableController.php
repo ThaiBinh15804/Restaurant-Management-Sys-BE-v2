@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\DiningTable;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -294,7 +296,7 @@ class DiningTableController extends Controller
     /**
      * @OA\Get(
      *     path="/api/dining-tables/{idDiningTable}/reservations",
-     *     tags={"TableSessions"},
+     *     tags={"DiningTables"},
      *     summary="Lấy danh sách các đặt bàn đã có phiên cho một bàn cụ thể",
      *     description="Trả về danh sách tất cả các đặt bàn đã có phiên bàn (table_session) của một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
      *     security={{"bearerAuth":{}}},
@@ -348,5 +350,129 @@ class DiningTableController extends Controller
         }
 
         return $this->successResponse($reservations, 'The table reservation list was successfully retrieved.');
+    }
+
+    /**
+     * @OA\Get(
+     *     path="/api/dining-tables/{idDiningTable}/reservations-offline",
+     *     tags={"DiningTables"},
+     *     summary="Lấy danh sách đặt bàn (online) và phiên bàn offline cho một bàn cụ thể",
+     *     description="Trả về danh sách tất cả các đặt bàn online (có reservation) và các phiên bàn offline (không có reservation) thuộc về một bàn cụ thể, bao gồm cả 4 trạng thái: Pending, Active, Completed, Cancelled.",
+     *     security={{"bearerAuth":{}}},
+
+     *     @OA\Parameter(
+     *         name="idDiningTable",
+     *         in="path",
+     *         required=true,
+     *         description="ID của bàn ăn (dining_table_id)",
+     *         @OA\Schema(type="string")
+     *     ),
+
+     *     @OA\Response(
+     *         response=200,
+     *         description="Danh sách đặt bàn và phiên offline được lấy thành công",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 type="object",
+     *                 @OA\Property(property="type", type="string", example="online", description="Loại phiên: online (có reservation) hoặc offline (phiên không đặt trước)"),
+     *                 @OA\Property(property="reservation_id", type="string", nullable=true, example="rsv_12345"),
+     *                 @OA\Property(property="reserved_at", type="string", format="date-time", example="2025-10-19T10:30:00Z"),
+     *                 @OA\Property(property="number_of_people", type="integer", nullable=true, example=4),
+     *                 @OA\Property(property="reservation_status", type="integer", nullable=true, example=1, description="0: Pending, 1: Active, 2: Completed, 3: Cancelled"),
+     *                 @OA\Property(property="notes", type="string", nullable=true, example="Bàn gần cửa sổ"),
+     *                 @OA\Property(property="customer_name", type="string", nullable=true, example="Nguyễn Văn A"),
+     *                 @OA\Property(property="customer_phone", type="string", nullable=true, example="0987654321"),
+     *                 @OA\Property(property="table_session_id", type="string", example="ts_abc123"),
+     *                 @OA\Property(property="table_session_status", type="integer", example=2, description="0: Pending, 1: Active, 2: Completed, 3: Cancelled"),
+     *                 @OA\Property(property="started_at", type="string", format="date-time", example="2025-10-19T10:00:00Z"),
+     *                 @OA\Property(property="ended_at", type="string", format="date-time", nullable=true, example=null)
+     *             )
+     *         )
+     *     ),
+
+     *     @OA\Response(
+     *         response=404,
+     *         description="Không tìm thấy đặt bàn hoặc phiên offline nào cho bàn này"
+     *     )
+     * )
+     */
+    #[Get('/{idDiningTable}/reservations-offline', middleware: ['permission:dining-tables.view'])]
+    public function getReservationsAndOfflineByDiningTable(string $idDiningTable): JsonResponse
+    {
+        // --- 1️⃣. Lấy danh sách đặt bàn (ONLINE) ---
+        $onlineReservations = DB::table('dining_tables as dt')
+            ->join('table_session_dining_table as tsdt', 'dt.id', '=', 'tsdt.dining_table_id')
+            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+            ->join('table_session_reservations as tsr', 'ts.id', '=', 'tsr.table_session_id')
+            ->join('reservations as r', 'tsr.reservation_id', '=', 'r.id')
+            ->leftJoin('customers as c', 'r.customer_id', '=', 'c.id')
+            ->where('dt.id', $idDiningTable)
+            ->whereIn('ts.status', [0, 1, 2, 3])
+            ->select(
+                'r.id as reservation_id',
+                'r.reserved_at',
+                'r.number_of_people',
+                'r.status as reservation_status',
+                'r.notes',
+                'c.full_name as customer_name',
+                'c.phone as customer_phone',
+                'ts.id as table_session_id',
+                'ts.status as table_session_status',
+                'ts.started_at',
+                'ts.ended_at',
+                DB::raw("'online' as type")
+            );
+
+        $user = User::where('email', 'customerOffline@restaurant.com')->first();
+        if (!$user) {
+            return response()->json(['message' => 'Offline customer user not found'], 404);
+        }
+
+        $customer = Customer::where('user_id', $user->id)->first();
+
+        if (!$customer) {
+            return response()->json(['message' => 'Customer record not found for offline user'], 404);
+        }
+
+        // --- 2️⃣. Lấy danh sách phiên bàn OFFLINE (không qua đặt bàn) ---
+        $offlineSessions = DB::table('dining_tables as dt')
+            ->join('table_session_dining_table as tsdt', 'dt.id', '=', 'tsdt.dining_table_id')
+            ->join('table_sessions as ts', 'tsdt.table_session_id', '=', 'ts.id')
+            ->leftJoin('employees as e', 'ts.created_by', '=', 'e.id') // nếu muốn lấy nhân viên mở bàn
+            ->where('dt.id', $idDiningTable)
+            ->whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('table_session_reservations as tsr')
+                    ->whereColumn('tsr.table_session_id', 'ts.id');
+            }) // ✅ đảm bảo không có record trong table_session_reservations
+            ->whereIn('ts.status', [0, 1, 2, 3])
+            ->select(
+                DB::raw('NULL as reservation_id'),
+                DB::raw('NULL as reserved_at'),
+                DB::raw('NULL as number_of_people'),
+                DB::raw('NULL as reservation_status'),
+                DB::raw('NULL as notes'),
+                DB::raw("'" . addslashes($customer->full_name) . "' as customer_name"),
+                DB::raw("'" . addslashes($customer->phone) . "' as customer_phone"),
+                'ts.id as table_session_id',
+                'ts.status as table_session_status',
+                'ts.started_at',
+                'ts.ended_at',
+                DB::raw("'offline' as type")
+            );
+
+        // --- 3️⃣. Gộp hai loại lại ---
+        $combined = $onlineReservations
+            ->unionAll($offlineSessions)
+            ->orderBy('reserved_at', 'desc')
+            ->orderBy('started_at', 'desc')
+            ->get();
+
+        if ($combined->isEmpty()) {
+            return $this->successResponse([], 'Không tìm thấy lịch đặt bàn hoặc phiên bàn offline cho bàn này.');
+        }
+
+        return $this->successResponse($combined, 'Danh sách đặt bàn (online) và phiên bàn offline được lấy thành công.');
     }
 }
