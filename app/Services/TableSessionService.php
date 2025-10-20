@@ -338,17 +338,28 @@ class TableSessionService
             $totalSplitFinal = 0;
             $totalSplitBase = 0;
 
+
+            $discountPct = (float) ($invoice->discount ?? 0.0);
+            $taxPct = (float) ($invoice->tax ?? 0.0);
+
+            $multiplier = (1 - $discountPct / 100.0) * (1 + $taxPct / 100.0);
+
+            if ($multiplier <= 0) {
+                throw new Exception('Invalid invoice discount/tax values resulting in non-positive multiplier');
+            }
+
             foreach ($splits as $split) {
                 $percentage = $split['percentage'];
                 $note = $split['note'] ?? null;
 
-                // Tính số tiền tách (final_amount sau discount & tax)
-                $splitFinal = round($remainingAmount * ($percentage / 100), 2);
+                // Tính số tiền tách (final_amount sau discount & tax) — dựa trên remaining final_amount
+                $splitFinal = round($remainingAmount * ($percentage / 100.0), 2);
 
-                // Tính ngược total_amount (trước discount & tax)
-                $splitTotal = round($splitFinal / (
-                    (1 - $invoice->discount / 100) * (1 + $invoice->tax / 100)
-                ), 2);
+                // Tính ngược total_amount (trước discount & tax) bằng cách chia cho multiplier
+                $splitTotal = round($splitFinal / $multiplier, 2);
+                // For traceability compute discount and tax amounts on this split (not stored on invoice model)
+                $splitDiscountAmount = round($splitTotal * ($discountPct / 100.0), 2);
+                $splitTaxAmount = round($splitTotal * ($taxPct / 100.0), 2);
 
                 // Tạo invoice con
                 $childInvoice = Invoice::create([

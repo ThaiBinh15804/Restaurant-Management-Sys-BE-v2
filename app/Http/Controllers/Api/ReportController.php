@@ -428,21 +428,24 @@ class ReportController extends Controller
             ->where('invoices.status', Invoice::STATUS_PAID)
             ->whereBetween(DB::raw('COALESCE(invoice_promotions.applied_at, invoice_promotions.created_at)'), [$start, $end]);
 
-        $totalDiscount = (clone $promotionQuery)->sum('invoices.discount * invoices.total_amount');
-
-        $breakdown = (clone $promotionQuery)
+        $breakdownRows = (clone $promotionQuery)
             ->join('promotions', 'promotions.id', '=', 'invoice_promotions.promotion_id')
             ->select([
                 'invoice_promotions.promotion_id',
                 'promotions.code',
                 'promotions.description',
             ])
-            ->selectRaw('COUNT(*) as applied_count, SUM(invoices.discount * invoices.total_amount) as total_discount')
+            ->selectRaw('COUNT(*) as applied_count')
+            ->selectRaw('SUM(invoices.total_amount * (COALESCE(invoice_promotions.discount_value, 0) / 100)) as total_discount_amount')
             ->groupBy('invoice_promotions.promotion_id', 'promotions.code', 'promotions.description')
-            ->orderByDesc('total_discount')
-            ->get()
+            ->orderByDesc('total_discount_amount')
+            ->get();
+
+        $totalDiscount = (float) $breakdownRows->sum('total_discount_amount');
+
+        $breakdown = $breakdownRows
             ->map(function ($row) use ($totalDiscount) {
-                $amount = (float) $row->total_discount;
+                $amount = (float) $row->total_discount_amount;
                 $percentage = $totalDiscount > 0 ? ($amount / $totalDiscount) * 100 : 0.0;
 
                 return [
@@ -453,14 +456,15 @@ class ReportController extends Controller
                     'total_discount' => round($amount, 2),
                     'percentage' => round($percentage, 2),
                 ];
-            });
+            })
+            ->values();
 
         return $this->successResponse([
             'range' => [
                 'start' => $start->toDateString(),
                 'end' => $end->toDateString(),
             ],
-            'total_discount' => round((float) $totalDiscount, 2),
+            'total_discount' => round($totalDiscount, 2),
             'dataset' => $breakdown,
         ], 'Promotion summary retrieved');
     }
