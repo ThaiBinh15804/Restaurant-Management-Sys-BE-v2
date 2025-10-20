@@ -715,8 +715,7 @@ return [
             'name' => 'Manager',
             'description' => 'Restaurant manager with operational permissions',
             'permissions' => [
-                'dashboard.view',
-
+                'statistics.view',
                 // Bàn & Đặt bàn
                 'dining-tables.view',
                 'dining-tables.create',
@@ -728,7 +727,14 @@ return [
                 'reservations.create',
                 'reservations.edit',
                 'reservations.delete',
-                'reservations.confirm',
+
+                'table-sessions.view',
+                'table-sessions.create',
+                'table-sessions.edit',
+                'table-sessions.delete',
+                'table-sessions.merge',
+                'table-sessions.split',
+                'table-sessions.unmerge',
 
                 // Khách hàng
                 'customers.view',
@@ -795,7 +801,7 @@ return [
             'name' => 'Staff',
             'description' => 'Restaurant staff with limited view-only permissions',
             'permissions' => [
-                'dashboard.view',
+                'statistics.view',
                 'dining-tables.view',
                 'reservations.view',
                 'customers.view',
@@ -816,7 +822,7 @@ return [
             'name' => 'Cashier',
             'description' => 'Handles billing, promotions, and customer management at the front desk',
             'permissions' => [
-                'dashboard.view',
+                'statistics.view',
                 'customers.view',
                 'customers.create',
                 'customers.edit',
@@ -837,7 +843,7 @@ return [
             'name' => 'Kitchen Staff',
             'description' => 'Manages menu, ingredients, and warehouse operations',
             'permissions' => [
-                'dashboard.view',
+                'statistics.view',
                 'dish_categories.view',
                 'dish_categories.create',
                 'dish_categories.edit',
@@ -869,14 +875,13 @@ return [
             'name' => 'Waiter',
             'description' => 'Handles table service and reservations, with access to menu information',
             'permissions' => [
-                'dashboard.view',
+                'statistics.view',
                 'dining-tables.view',
                 'dining-tables.manage_status',
                 'reservations.view',
                 'reservations.create',
                 'reservations.edit',
                 'reservations.delete',
-                'reservations.confirm',
                 'customers.view',
                 'menus.view',
                 'dishes.view',
