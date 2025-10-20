@@ -304,4 +304,89 @@ class PromotionController extends Controller
 
         return $this->successResponse($promotion, 'Promotion detail');
     }
+
+    /**
+     * @OA\Get(
+     *     path="/api/promotions/PromotionsClient",
+     *     tags={"Promotions"},
+     *     summary="List promotions for client",
+     *     description="Retrieve a paginated list of promotions for client with optional filters such as code, description, discount percent, and active status.",
+     *     operationId="getPromotionsClient",
+     *     security={},
+     *
+     *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer", example=1)),
+     *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer", example=15)),
+     *     @OA\Parameter(name="code", in="query", description="Filter by promotion code (partial match)", @OA\Schema(type="string", example="SALE10")),
+     *     @OA\Parameter(name="desc", in="query", description="Filter by description (partial match)", @OA\Schema(type="string", example="Giảm 10%")),
+     *     @OA\Parameter(name="discount_percent", in="query", description="Filter by exact discount percent", @OA\Schema(type="number", format="float", example=10)),
+     *     @OA\Parameter(name="is_active", in="query", description="Filter by active status", @OA\Schema(type="boolean", example=true)),
+     *
+     *     @OA\Response(
+     *         response=200,
+     *         description="Promotions retrieved successfully",
+     *         @OA\JsonContent(
+     *             type="object",
+     *             @OA\Property(property="success", type="boolean", example=true),
+     *             @OA\Property(property="message", type="string", example="Promotions retrieved successfully"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer", example=1),
+     *                 @OA\Property(property="per_page", type="integer", example=15),
+     *                 @OA\Property(
+     *                     property="data",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="id", type="string", example="PROMO001"),
+     *                         @OA\Property(property="code", type="string", example="SALE10"),
+     *                         @OA\Property(property="description", type="string", example="Giảm 10% cho đơn hàng đầu tiên"),
+     *                         @OA\Property(property="discount_percent", type="number", format="float", example=10),
+     *                         @OA\Property(property="usage_limit", type="integer", example=50),
+     *                         @OA\Property(property="used_count", type="integer", example=5),
+     *                         @OA\Property(property="is_active", type="boolean", example=true),
+     *                         @OA\Property(property="start_date", type="string", format="date-time", example="2025-01-01T00:00:00Z"),
+     *                         @OA\Property(property="end_date", type="string", format="date-time", example="2025-12-31T23:59:59Z")
+     *                     )
+     *                 )
+     *             )
+     *         )
+     *     )
+     * )
+     */
+    #[Get('/Promotions/clients')]
+    public function PromotionClients(PromotionQueryRequest $request)
+    {
+        $query = Promotion::withCount(['invoicePromotions as used_count'])
+            ->orderBy('created_at', 'desc');
+
+        $filters = $request->filters();
+
+        if (!empty($filters['code'])) {
+            $query->where('code', 'like', '%' . $filters['code'] . '%');
+        }
+
+        if (!empty($filters['desc'])) {
+            $query->where('description', 'like', '%' . $filters['desc'] . '%');
+        }
+
+        if (!is_null($filters['is_active'] ?? null)) {
+            $query->where('is_active', $filters['is_active']);
+        }
+
+        // Thêm filter discount_percent
+        if (!empty($filters['discount_percent'])) {
+            // Cast sang float để chắc chắn query hợp lệ
+            $discount = (float) $filters['discount_percent'];
+            $query->where('discount_percent', $discount);
+        }
+
+        $perPage = $request->perPage();
+
+        $paginator = $query->paginate(
+            $perPage
+        );
+
+        return $this->successResponse($paginator, 'Promotions retrieved successfully');
+    }
 }

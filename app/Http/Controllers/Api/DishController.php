@@ -623,7 +623,7 @@ class DishController extends Controller
      *             @OA\Property(
      *                 property="errors",
      *                 type="object",
-     *                 example={"quantity": ["The quantity field is required."]}
+     *                 example={"quantity": {"The quantity field is required."}}
      *             )
      *         )
      *     )

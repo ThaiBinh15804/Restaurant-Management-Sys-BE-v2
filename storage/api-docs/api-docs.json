@@ -2385,6 +2385,477 @@
                 }
             }
         },
+        "/api/auth/dishes/{id}/ingredients": {
+            "get": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Lấy danh sách nguyên liệu của một món ăn",
+                "description": "Trả về danh sách nguyên liệu, định lượng và ghi chú cho món ăn theo ID.",
+                "operationId": "5f84652ee7a71dd7a5c46a4cde0dfbd9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của món ăn cần lấy nguyên liệu",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "DISH0001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy danh sách nguyên liệu thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lấy danh sách nguyên liệu thành công"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "ING0001"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Thịt bò"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string",
+                                                        "example": "gram"
+                                                    },
+                                                    "quantity": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 200
+                                                    },
+                                                    "note": {
+                                                        "type": "string",
+                                                        "example": "Thịt nạc vai",
+                                                        "nullable": true
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy món ăn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy món ăn"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/dishes/{id}/available-ingredients": {
+            "get": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Lấy danh sách nguyên liệu chưa được gắn với món ăn",
+                "description": "Trả về danh sách tất cả nguyên liệu chưa liên kết với món ăn cụ thể.",
+                "operationId": "8dc597a326a48e4a735dfeaf5d8907ef",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "ID của món ăn",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "DISH0001"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lấy danh sách nguyên liệu chưa gắn thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Lấy danh sách nguyên liệu chưa gắn thành công"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "type": "string",
+                                                        "example": "ING0005"
+                                                    },
+                                                    "name": {
+                                                        "type": "string",
+                                                        "example": "Hành lá"
+                                                    },
+                                                    "unit": {
+                                                        "type": "string",
+                                                        "example": "gram"
+                                                    },
+                                                    "current_stock": {
+                                                        "type": "number",
+                                                        "format": "float",
+                                                        "example": 50
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy món ăn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Không tìm thấy món ăn"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dishes/{dishId}/ingredients": {
+            "post": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Thêm nguyên liệu vào món ăn",
+                "description": "Tạo liên kết mới giữa món ăn và nguyên liệu.",
+                "operationId": "bec25cd3f16e00fcaad4c7d183c8bfc3",
+                "parameters": [
+                    {
+                        "name": "dishId",
+                        "in": "path",
+                        "description": "ID của món ăn",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "DISH0001"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "ingredient_id",
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "ingredient_id": {
+                                        "description": "ID của nguyên liệu muốn thêm",
+                                        "type": "string",
+                                        "example": "ING0005"
+                                    },
+                                    "quantity": {
+                                        "description": "Số lượng nguyên liệu",
+                                        "type": "string",
+                                        "example": "50"
+                                    },
+                                    "notes": {
+                                        "description": "Ghi chú (tùy chọn)",
+                                        "type": "string",
+                                        "example": "Dùng cho món canh"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Thêm nguyên liệu thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ingredient added to dish successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "dish_id": {
+                                                    "type": "string",
+                                                    "example": "DISH0001"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING0005"
+                                                },
+                                                "ingredient_name": {
+                                                    "type": "string",
+                                                    "example": "Hành lá"
+                                                },
+                                                "quantity": {
+                                                    "type": "string",
+                                                    "example": "50"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Dùng cho món canh"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Nguyên liệu đã được gắn cho món ăn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "This ingredient is already assigned to the dish."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Không tìm thấy món ăn",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dish not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/dishes/{dishId}/ingredients/{ingredientId}": {
+            "put": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Cập nhật nguyên liệu thuộc món ăn",
+                "description": "Cập nhật quantity và notes của một nguyên liệu thuộc một món ăn",
+                "operationId": "41ac1d691bb49a9455e200046bd74d08",
+                "parameters": [
+                    {
+                        "name": "dishId",
+                        "in": "path",
+                        "description": "ID của món ăn",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "DISH0001"
+                        }
+                    },
+                    {
+                        "name": "ingredientId",
+                        "in": "path",
+                        "description": "ID của nguyên liệu",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "example": "ING0005"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quantity"
+                                ],
+                                "properties": {
+                                    "quantity": {
+                                        "description": "Số lượng sử dụng của nguyên liệu",
+                                        "type": "string",
+                                        "example": "0.5 kg"
+                                    },
+                                    "notes": {
+                                        "description": "Ghi chú về nguyên liệu",
+                                        "type": "string",
+                                        "example": "Nguyên liệu tươi"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Nguyên liệu cập nhật thành công",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Ingredient updated successfully."
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "dish_id": {
+                                                    "type": "string",
+                                                    "example": "DISH0001"
+                                                },
+                                                "ingredient_id": {
+                                                    "type": "string",
+                                                    "example": "ING0005"
+                                                },
+                                                "ingredient_name": {
+                                                    "type": "string",
+                                                    "example": "Hành lá"
+                                                },
+                                                "quantity": {
+                                                    "type": "string",
+                                                    "example": "0.5 kg"
+                                                },
+                                                "notes": {
+                                                    "type": "string",
+                                                    "example": "Nguyên liệu tươi"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Món ăn hoặc nguyên liệu không tồn tại",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Dish not found."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Dữ liệu gửi lên không hợp lệ",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": false
+                                        },
+                                        "errors": {
+                                            "type": "object",
+                                            "example": {
+                                                "quantity": [
+                                                    "The quantity field is required."
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -7076,11 +7547,7 @@
                         }
                     }
                 },
-                "security": [
-                    {
-                        "bearerAuth": []
-                    }
-                ]
+                "security": []
             },
             "post": {
                 "tags": [
@@ -7320,6 +7787,156 @@
                         "description": "Not found"
                     }
                 }
+            }
+        },
+        "/api/promotions/PromotionsClient": {
+            "get": {
+                "tags": [
+                    "Promotions"
+                ],
+                "summary": "List promotions for client",
+                "description": "Retrieve a paginated list of promotions for client with optional filters such as code, description, discount percent, and active status.",
+                "operationId": "getPromotionsClient",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "schema": {
+                            "type": "integer",
+                            "example": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Items per page",
+                        "schema": {
+                            "type": "integer",
+                            "example": 15
+                        }
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by promotion code (partial match)",
+                        "schema": {
+                            "type": "string",
+                            "example": "SALE10"
+                        }
+                    },
+                    {
+                        "name": "desc",
+                        "in": "query",
+                        "description": "Filter by description (partial match)",
+                        "schema": {
+                            "type": "string",
+                            "example": "Giảm 10%"
+                        }
+                    },
+                    {
+                        "name": "discount_percent",
+                        "in": "query",
+                        "description": "Filter by exact discount percent",
+                        "schema": {
+                            "type": "number",
+                            "format": "float",
+                            "example": 10
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "description": "Filter by active status",
+                        "schema": {
+                            "type": "boolean",
+                            "example": true
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Promotions retrieved successfully",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean",
+                                            "example": true
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Promotions retrieved successfully"
+                                        },
+                                        "data": {
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "example": 1
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "example": 15
+                                                },
+                                                "data": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "string",
+                                                                "example": "PROMO001"
+                                                            },
+                                                            "code": {
+                                                                "type": "string",
+                                                                "example": "SALE10"
+                                                            },
+                                                            "description": {
+                                                                "type": "string",
+                                                                "example": "Giảm 10% cho đơn hàng đầu tiên"
+                                                            },
+                                                            "discount_percent": {
+                                                                "type": "number",
+                                                                "format": "float",
+                                                                "example": 10
+                                                            },
+                                                            "usage_limit": {
+                                                                "type": "integer",
+                                                                "example": 50
+                                                            },
+                                                            "used_count": {
+                                                                "type": "integer",
+                                                                "example": 5
+                                                            },
+                                                            "is_active": {
+                                                                "type": "boolean",
+                                                                "example": true
+                                                            },
+                                                            "start_date": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-01-01T00:00:00Z"
+                                                            },
+                                                            "end_date": {
+                                                                "type": "string",
+                                                                "format": "date-time",
+                                                                "example": "2025-12-31T23:59:59Z"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": []
             }
         },
         "/api/reports/revenue": {
