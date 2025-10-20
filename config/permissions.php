@@ -747,6 +747,7 @@ return [
                 'employees.create',
                 'employees.edit',
                 'employees.delete',
+                'employees.manage_roles',
                 'shifts.view',
                 'shifts.create',
                 'shifts.edit',
