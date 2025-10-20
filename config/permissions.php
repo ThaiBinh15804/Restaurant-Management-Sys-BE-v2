@@ -484,11 +484,7 @@ return [
                 'reservations.delete' => [
                     'name' => 'Cancel Reservations',
                     'description' => 'Permission to cancel table reservations',
-                ],
-                'reservations.confirm' => [
-                    'name' => 'Confirm Reservations',
-                    'description' => 'Permission to confirm table reservations',
-                ],
+                ]
             ],
         ],
 
@@ -641,7 +637,6 @@ return [
             ],
         ],
 
-
         'system' => [
             'name' => 'System Administration',
             'description' => 'Permissions related to system administration and maintenance',
@@ -716,18 +711,13 @@ return [
             'description' => 'Restaurant manager with operational permissions',
             'permissions' => [
                 'statistics.view',
-                // Bàn & Đặt bàn
+
+                // Bàn & phiên bàn
                 'dining-tables.view',
                 'dining-tables.create',
                 'dining-tables.edit',
                 'dining-tables.delete',
                 'dining-tables.manage_status',
-
-                'reservations.view',
-                'reservations.create',
-                'reservations.edit',
-                'reservations.delete',
-
                 'table-sessions.view',
                 'table-sessions.create',
                 'table-sessions.edit',
@@ -735,6 +725,12 @@ return [
                 'table-sessions.merge',
                 'table-sessions.split',
                 'table-sessions.unmerge',
+
+                // đặt bàn
+                'reservations.view',
+                'reservations.create',
+                'reservations.edit',
+                'reservations.delete',
 
                 // Khách hàng
                 'customers.view',
@@ -747,25 +743,34 @@ return [
                 'employees.create',
                 'employees.edit',
                 'employees.delete',
+                'employees.manage_roles',
+
+                // Ca làm việc
                 'shifts.view',
                 'shifts.create',
                 'shifts.edit',
                 'shifts.delete',
+
+                // bảng lương
                 'payrolls.view',
                 'payrolls.create',
                 'payrolls.edit',
                 'payrolls.delete',
                 'payrolls.process',
 
-                // Menu
+                // Thể loại món ăn
                 'dish_categories.view',
                 'dish_categories.create',
                 'dish_categories.edit',
                 'dish_categories.delete',
+
+                // món ăn
                 'dishes.view',
                 'dishes.create',
                 'dishes.edit',
                 'dishes.delete',
+
+                // menu
                 'menus.view',
                 'menus.create',
                 'menus.edit',
@@ -776,10 +781,12 @@ return [
                 'ingredients.create',
                 'ingredients.edit',
                 'ingredients.delete',
+
                 'suppliers.view',
                 'suppliers.create',
                 'suppliers.edit',
                 'suppliers.delete',
+
                 'stocks.view',
                 'stocks.create',
                 'stocks.edit',
@@ -790,6 +797,7 @@ return [
                 'invoices.create',
                 'invoices.edit',
                 'invoices.delete',
+
                 'promotions.view',
                 'promotions.create',
                 'promotions.edit',
@@ -803,6 +811,7 @@ return [
             'permissions' => [
                 'statistics.view',
                 'dining-tables.view',
+                'table-sessions.view',
                 'reservations.view',
                 'customers.view',
                 'employees.view',
