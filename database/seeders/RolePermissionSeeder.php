@@ -25,10 +25,10 @@ class RolePermissionSeeder extends Seeder
     private function syncPermissions(): void
     {
         $permissionConfig = config('permissions.modules', []);
-        
+
         foreach ($permissionConfig as $moduleKey => $moduleData) {
             $permissions = $moduleData['permissions'] ?? [];
-            
+
             foreach ($permissions as $code => $permissionData) {
                 Permission::updateOrCreate(
                     ['code' => $code],
@@ -56,7 +56,7 @@ class RolePermissionSeeder extends Seeder
     private function createRolesIfNotExist(): void
     {
         $roleConfig = config('permissions.roles', []);
-        
+
         foreach ($roleConfig as $roleKey => $roleData) {
             Role::firstOrCreate(
                 ['name' => $roleData['name']], // Search criteria
@@ -74,22 +74,42 @@ class RolePermissionSeeder extends Seeder
     private function createRolePermissionsIfNotExist(): void
     {
         $roleConfig = config('permissions.roles', []);
-        
+
         foreach ($roleConfig as $roleKey => $roleData) {
             $role = Role::where('name', $roleData['name'])->first();
-            
+
             if (!$role) {
                 continue;
             }
 
             $permissionCodes = $roleData['permissions'];
-            
+
             // Handle wildcard permissions (all permissions)
-            if ($permissionCodes === '*') {
+            if ($permissionCodes === '*' || (is_array($permissionCodes) && in_array('*', $permissionCodes))) {
                 $permissionCodes = $this->getAllPermissionCodesFromConfig();
+
+                // Nếu có exclude_permissions thì loại trừ
+                if (!empty($roleData['exclude_permissions'])) {
+                    $exclude = $roleData['exclude_permissions'];
+                    // Hỗ trợ wildcard như 'permissions.*'
+                    $excludeExpanded = [];
+                    foreach ($exclude as $pattern) {
+                        if (str_ends_with($pattern, '.*')) {
+                            $prefix = rtrim($pattern, '.*');
+                            foreach ($permissionCodes as $code) {
+                                if (str_starts_with($code, $prefix . '.')) {
+                                    $excludeExpanded[] = $code;
+                                }
+                            }
+                        } else {
+                            $excludeExpanded[] = $pattern;
+                        }
+                    }
+                    $permissionCodes = array_values(array_diff($permissionCodes, $excludeExpanded));
+                }
             }
 
-             $permissionIds = Permission::whereIn('code', $permissionCodes)->pluck('id');
+            $permissionIds = Permission::whereIn('code', $permissionCodes)->pluck('id');
             $role->permissions()->sync($permissionIds);
         }
     }
@@ -101,12 +121,12 @@ class RolePermissionSeeder extends Seeder
     {
         $permissionConfig = config('permissions.modules', []);
         $allCodes = [];
-        
+
         foreach ($permissionConfig as $moduleData) {
             $permissions = $moduleData['permissions'] ?? [];
             $allCodes = array_merge($allCodes, array_keys($permissions));
         }
-        
+
         return $allCodes;
     }
 }

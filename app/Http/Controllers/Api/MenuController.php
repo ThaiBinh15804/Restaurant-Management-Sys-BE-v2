@@ -746,7 +746,7 @@ class MenuController extends Controller
      *     @OA\Response(response=200, description="Danh sách món ăn đã lọc")
      * )
      */
-    #[Get('/filter-dishes', middleware: ['permission:menus.view'])]
+    #[Get('/filter-dishes')]
     public function filterDishes(Request $request): JsonResponse
     {
         $query = Dish::query()->with('category');
