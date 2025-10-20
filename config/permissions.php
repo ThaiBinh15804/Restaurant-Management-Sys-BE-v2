@@ -693,16 +693,9 @@ return [
                 '*',
             ],
             'exclude_permissions' => [
-                'permissions.view',
                 'permissions.create',
                 'permissions.edit',
                 'permissions.delete',
-                'roles.view',
-                'roles.create',
-                'roles.edit',
-                'roles.delete',
-                'roles.manage_permissions',
-                'users.manage_roles',
             ],
         ],
 
@@ -744,6 +737,11 @@ return [
                 'employees.edit',
                 'employees.delete',
                 'employees.manage_roles',
+                'employee_shifts.view',
+                'employee_shifts.create',
+                'employee_shifts.edit',
+                'employee_shifts.delete',
+                'employee_shifts.assign',
 
                 // Ca làm việc
                 'shifts.view',
@@ -770,11 +768,29 @@ return [
                 'dishes.edit',
                 'dishes.delete',
 
+                'ingredient_categories.view',
+                'ingredient_categories.create',
+                'ingredient_categories.edit',
+                'ingredient_categories.delete',
+
                 // menu
                 'menus.view',
                 'menus.create',
                 'menus.edit',
                 'menus.delete',
+
+                'orders.view',
+                'orders.create',
+                'orders.edit',
+                'orders.delete',
+                'orders.process',
+                'orders.complete',
+                'orders.refund',
+                'orderItems.view',
+                'orderItems.create',
+                'orderItems.edit',
+                'orderItems.delete',
+                'orderItems.updateStatus',
 
                 // Nguyên liệu & Kho
                 'ingredients.view',
@@ -802,6 +818,8 @@ return [
                 'promotions.create',
                 'promotions.edit',
                 'promotions.delete',
+
+                'roles.view',
             ],
         ],
 
