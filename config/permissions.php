@@ -702,6 +702,12 @@ return [
                 'permissions.create',
                 'permissions.edit',
                 'permissions.delete',
+                'roles.view',
+                'roles.create',
+                'roles.edit',
+                'roles.delete',
+                'roles.manage_permissions',
+                'users.manage_roles',
             ],
         ],
 
@@ -709,52 +715,79 @@ return [
             'name' => 'Manager',
             'description' => 'Restaurant manager with operational permissions',
             'permissions' => [
-                // Dashboard
                 'dashboard.view',
 
                 // Bàn & Đặt bàn
                 'dining-tables.view',
+                'dining-tables.create',
+                'dining-tables.edit',
+                'dining-tables.delete',
                 'dining-tables.manage_status',
+
                 'reservations.view',
-                'reservations.manage',
+                'reservations.create',
+                'reservations.edit',
+                'reservations.delete',
+                'reservations.confirm',
 
                 // Khách hàng
                 'customers.view',
-                'customers.manage',
+                'customers.create',
+                'customers.edit',
+                'customers.delete',
 
                 // Nhân sự
                 'employees.view',
-                'employees.manage',
+                'employees.create',
+                'employees.edit',
+                'employees.delete',
                 'shifts.view',
-                'shifts.manage',
-                'payroll.view',
-                'payroll.manage',
+                'shifts.create',
+                'shifts.edit',
+                'shifts.delete',
+                'payrolls.view',
+                'payrolls.create',
+                'payrolls.edit',
+                'payrolls.delete',
+                'payrolls.process',
 
                 // Menu
                 'dish_categories.view',
-                'dish_categories.manage',
+                'dish_categories.create',
+                'dish_categories.edit',
+                'dish_categories.delete',
                 'dishes.view',
-                'dishes.manage',
-                'menu.view',
-                'menu.manage',
+                'dishes.create',
+                'dishes.edit',
+                'dishes.delete',
+                'menus.view',
+                'menus.create',
+                'menus.edit',
+                'menus.delete',
 
                 // Nguyên liệu & Kho
                 'ingredients.view',
-                'ingredients.manage',
+                'ingredients.create',
+                'ingredients.edit',
+                'ingredients.delete',
                 'suppliers.view',
-                'suppliers.manage',
-                'warehouse_import.view',
-                'warehouse_import.manage',
-                'warehouse_export.view',
-                'warehouse_export.manage',
-                'warehouse_loss.view',
-                'warehouse_loss.manage',
+                'suppliers.create',
+                'suppliers.edit',
+                'suppliers.delete',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
+                'stocks.delete',
 
                 // Tài chính
                 'invoices.view',
-                'invoices.manage',
+                'invoices.create',
+                'invoices.edit',
+                'invoices.delete',
                 'promotions.view',
-                'promotions.manage',
+                'promotions.create',
+                'promotions.edit',
+                'promotions.delete',
             ],
         ],
 
@@ -770,12 +803,10 @@ return [
                 'shifts.view',
                 'dish_categories.view',
                 'dishes.view',
-                'menu.view',
+                'menus.view',
                 'ingredients.view',
                 'suppliers.view',
-                'warehouse_import.view',
-                'warehouse_export.view',
-                'warehouse_loss.view',
+                'stocks.view',
                 'invoices.view',
                 'promotions.view',
             ],
@@ -785,21 +816,20 @@ return [
             'name' => 'Cashier',
             'description' => 'Handles billing, promotions, and customer management at the front desk',
             'permissions' => [
-                // Dashboard
                 'dashboard.view',
-
-                // Khách hàng
                 'customers.view',
-                'customers.manage',
-
-                // Đặt bàn (chỉ xem)
+                'customers.create',
+                'customers.edit',
+                'customers.delete',
                 'reservations.view',
-
-                // Tài chính
                 'invoices.view',
-                'invoices.manage',
+                'invoices.create',
+                'invoices.edit',
+                'invoices.delete',
                 'promotions.view',
-                'promotions.manage',
+                'promotions.create',
+                'promotions.edit',
+                'promotions.delete',
             ],
         ],
 
@@ -807,27 +837,31 @@ return [
             'name' => 'Kitchen Staff',
             'description' => 'Manages menu, ingredients, and warehouse operations',
             'permissions' => [
-                // Dashboard
                 'dashboard.view',
-
-                // Menu
                 'dish_categories.view',
-                'dish_categories.manage',
+                'dish_categories.create',
+                'dish_categories.edit',
+                'dish_categories.delete',
                 'dishes.view',
-                'dishes.manage',
-                'menu.view',
-                'menu.manage',
-
-                // Nguyên liệu & Kho
+                'dishes.create',
+                'dishes.edit',
+                'dishes.delete',
+                'menus.view',
+                'menus.create',
+                'menus.edit',
+                'menus.delete',
                 'ingredients.view',
-                'ingredients.manage',
+                'ingredients.create',
+                'ingredients.edit',
+                'ingredients.delete',
                 'suppliers.view',
-                'warehouse_import.view',
-                'warehouse_import.manage',
-                'warehouse_export.view',
-                'warehouse_export.manage',
-                'warehouse_loss.view',
-                'warehouse_loss.manage',
+                'suppliers.create',
+                'suppliers.edit',
+                'suppliers.delete',
+                'stocks.view',
+                'stocks.create',
+                'stocks.edit',
+                'stocks.delete',
             ],
         ],
 
@@ -835,22 +869,16 @@ return [
             'name' => 'Waiter',
             'description' => 'Handles table service and reservations, with access to menu information',
             'permissions' => [
-                // Dashboard
                 'dashboard.view',
-
-                // Bàn
                 'dining-tables.view',
                 'dining-tables.manage_status',
-
-                // Đặt bàn
                 'reservations.view',
-                'reservations.manage',
-
-                // Khách hàng (chỉ xem)
+                'reservations.create',
+                'reservations.edit',
+                'reservations.delete',
+                'reservations.confirm',
                 'customers.view',
-
-                // Menu (chỉ xem)
-                'menu.view',
+                'menus.view',
                 'dishes.view',
             ],
         ],
