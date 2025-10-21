@@ -60,7 +60,7 @@ class StockController extends Controller
         $filters = $request->filters();
 
         $query = StockImport::with(['supplier', 'details.ingredient'])
-            ->orderBy('import_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->when(
                 $filters['date_from'] ?? null,
                 fn($q, $v) => $q->whereDate('import_date', '>=', $v)
@@ -432,7 +432,7 @@ class StockController extends Controller
         $filters = $request->filters();
 
         $query = StockExport::with(['details.ingredient'])
-            ->orderBy('export_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->when(
                 $filters['date_from'] ?? null,
                 fn($q, $v) => $q->whereDate('export_date', '>=', $v)
@@ -910,7 +910,7 @@ class StockController extends Controller
         $filters = $request->filters();
 
         $query = StockLoss::with(['ingredient', 'employee.user'])
-            ->orderBy('loss_date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->when(
                 $filters['date_from'] ?? null,
                 fn($q, $v) => $q->whereDate('loss_date', '>=', $v)
