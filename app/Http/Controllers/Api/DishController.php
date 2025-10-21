@@ -683,4 +683,56 @@ class DishController extends Controller
             'notes'           => $dishIngredient->notes,
         ], 'Ingredient updated successfully.');
     }
+
+    /**
+     * @OA\Delete(
+     *     path="/api/dishes/{dishId}/ingredients/{idIngredientDish}",
+     *     tags={"Dishes"},
+     *     summary="Xóa liên kết nguyên liệu khỏi món ăn",
+     *     description="Xóa bản ghi dish_ingredient theo id (idDishIngredient)",
+     *     @OA\Parameter(name="dishId", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Parameter(name="idIngredientDish", in="path", required=true, @OA\Schema(type="string")),
+     *     @OA\Response(response=200, description="Xóa thành công"),
+     *     @OA\Response(response=404, description="Không tìm thấy món ăn hoặc bản ghi nguyên liệu"),
+     *     @OA\Response(response=500, description="Lỗi server")
+     * )
+     */
+    #[Delete('/{dishId}/ingredients/{idIngredientDish}', middleware: ['permission:dishes.edit'])]
+    public function deleteIngredientFromDish(string $dishId, string $idIngredientDish): JsonResponse
+    {
+        // Kiểm tra món ăn tồn tại
+        $dish = Dish::find($dishId);
+        if (!$dish) {
+            return $this->errorResponse('Dish not found.', [], 404);
+        }
+
+        // Tìm bản ghi dish_ingredient theo id và dish_id
+        $dishIngredient = DishIngredient::where('dish_id', $dishId)
+            ->where('id', $idIngredientDish)
+            ->first();
+
+        if (!$dishIngredient) {
+            return $this->errorResponse('Ingredient record not found for this dish.', [], 404);
+        }
+
+        try {
+            $dishIngredient->delete();
+
+            Log::info('Dish ingredient removed', [
+                'dish_id' => $dishId,
+                'dish_ingredient_id' => $idIngredientDish,
+                'removed_by' => auth('api')->id(),
+            ]);
+
+            return $this->successResponse([], 'Ingredient removed from dish successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to remove dish ingredient', [
+                'dish_id' => $dishId,
+                'dish_ingredient_id' => $idIngredientDish,
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->errorResponse('Failed to remove ingredient from dish: ' . $e->getMessage(), 500);
+        }
+    }
 }
