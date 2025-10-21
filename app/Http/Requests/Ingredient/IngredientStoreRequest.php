@@ -14,6 +14,7 @@ class IngredientStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'ingredient_category_id' => ['sometimes', 'nullable', 'string', 'exists:ingredient_categories,id'],
             'name' => ['required', 'string', 'max:100', 'unique:ingredients,name'],
             'unit' => ['required', 'string', 'max:20'],
             'current_stock' => ['sometimes', 'numeric', 'min:0'],

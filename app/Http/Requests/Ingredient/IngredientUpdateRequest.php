@@ -17,9 +17,10 @@ class IngredientUpdateRequest extends FormRequest
         $ingredientId = $this->route('id');
 
         return [
+            'ingredient_category_id' => ['sometimes', 'nullable', 'string', 'exists:ingredient_categories,id'],
             'name' => ['sometimes', 'nullable', 'string', 'max:100', Rule::unique('ingredients', 'name')->ignore($ingredientId)],
             'unit' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'current_stock' => ['sometimes', 'nullable','numeric', 'min:0'],
+            'current_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'min_stock' => ['sometimes', 'nullable', 'numeric', 'min:0'],
             'max_stock' => ['nullable', 'nullable', 'numeric', 'min:0'],
             'is_active' => ['sometimes', 'nullable', 'boolean'],
@@ -49,7 +50,7 @@ class IngredientUpdateRequest extends FormRequest
         $validator->after(function ($validator) {
             $maxStock = $this->input('max_stock');
             $minStock = $this->input('min_stock');
-            
+
             // If both are provided, validate max > min
             if ($maxStock !== null && $minStock !== null && $maxStock <= $minStock) {
                 $validator->errors()->add('max_stock', 'Maximum stock must be greater than minimum stock.');

@@ -689,9 +689,7 @@ return [
         'admin' => [
             'name' => 'Administrator',
             'description' => 'Administrative access with most permissions',
-            'permissions' => [
-                '*',
-            ],
+            'permissions' => '*',
             'exclude_permissions' => [
                 'permissions.create',
                 'permissions.edit',
