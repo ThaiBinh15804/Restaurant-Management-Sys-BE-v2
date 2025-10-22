@@ -16,10 +16,10 @@ class Invoice extends BaseModel
     const STATUS_MERGED = 4; // 🔥 Trạng thái hóa đơn đã được gộp
 
     // Operation Type constants - Phân loại thao tác
-    const OPERATION_NORMAL = 'normal';        
-    const OPERATION_MERGE = 'merge';          
+    const OPERATION_NORMAL = 'normal';
+    const OPERATION_MERGE = 'merge';
     const OPERATION_SPLIT_INVOICE = 'split_invoice';
-    const OPERATION_SPLIT_TABLE = 'split_table'; 
+    const OPERATION_SPLIT_TABLE = 'split_table';
 
     protected $table = 'invoices';
     protected $idPrefix = 'IN'; // Ví dụ: IN0001, IN0002,...
@@ -31,7 +31,7 @@ class Invoice extends BaseModel
         'tax',
         'final_amount',
         'status',
-        'parent_invoice_id',   
+        'parent_invoice_id',
         'merged_invoice_id',
         'operation_type',
         'source_invoice_ids',
@@ -132,6 +132,7 @@ class Invoice extends BaseModel
     /**
      * (Tùy chọn) Quan hệ với TableSession nếu bạn dùng bảng đó
      */
+
     public function tableSession()
     {
         return $this->belongsTo(TableSession::class, 'table_session_id');
@@ -220,7 +221,7 @@ class Invoice extends BaseModel
         if (empty($this->source_invoice_ids)) {
             return collect([]);
         }
-        
+
         return Invoice::whereIn('id', $this->source_invoice_ids)->get();
     }
 

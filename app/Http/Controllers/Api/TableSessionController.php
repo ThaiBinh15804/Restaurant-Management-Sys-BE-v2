@@ -139,6 +139,8 @@ class TableSessionController extends Controller
         return $this->successResponse($results, 'Table sessions retrieved successfully');
     }
 
+
+
     /**
      * @OA\Put(
      *     path="/api/table-sessions/{tableSession}",
@@ -982,6 +984,18 @@ class TableSessionController extends Controller
             $grouped,
             'Orders retrieved successfully'
         );
+    }
+
+    #[Get('/{id}/invoice', middleware: 'permission:table-sessions.view')]
+    public function show(string $id): JsonResponse
+    {
+        $tableSession = TableSession::with(['diningTables'])->find($id);
+
+        if (!$tableSession) {
+            return $this->errorResponse('Table-session not found', [], 404);
+        }
+
+        return $this->successResponse($tableSession, 'Employee retrieved successfully');
     }
 
     /**

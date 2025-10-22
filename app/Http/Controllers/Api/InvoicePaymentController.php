@@ -286,7 +286,7 @@ class InvoicePaymentController extends Controller
         // Lấy hóa đơn theo table_session_id kèm theo payments và nhân viên
         $invoice = Invoice::with(['payments.employee'])
             ->where('table_session_id', $id)
-            ->first();
+            ->get();
 
         if (!$invoice) {
             return $this->errorResponse('Invoice for this table session not found', [], 404);
