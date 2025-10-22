@@ -588,7 +588,7 @@ class AuthController extends BaseController
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Google OAuth URL generated successfully"),
      *             @OA\Property(
-     *                 property="data", 
+     *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="url", type="string", example="https://accounts.google.com/oauth/authorize..."),
      *                 @OA\Property(property="provider", type="string", example="google")
@@ -652,7 +652,7 @@ class AuthController extends BaseController
      *             @OA\Property(property="success", type="boolean", example=true),
      *             @OA\Property(property="message", type="string", example="Login successful via Google"),
      *             @OA\Property(
-     *                 property="data", 
+     *                 property="data",
      *                 type="object",
      *                 @OA\Property(property="access_token", type="string"),
      *                 @OA\Property(property="refresh_token", type="string"),
@@ -686,11 +686,10 @@ class AuthController extends BaseController
     #[Get('google/callback')]
     public function googleCallback(Request $request)
     {
+        $frontendUrl = 'http://localhost:4200';
         $result = $this->socialAuthService->handleGoogleCallback();
 
         if ($result['success']) {
-            $frontendUrl = config('app.frontend_url', 'http://localhost:4200');
-
             if (!isset($result['data']['access_token'])) {
                 return redirect("{$frontendUrl}/login?error=missing_token&provider=google");
             }
@@ -702,10 +701,10 @@ class AuthController extends BaseController
             // Redirect về /auth/callback để xử lý token, sau đó Angular sẽ redirect về home
             $redirectUrl = "{$frontendUrl}/auth/callback?access_token={$accessToken}&expires_in={$expiresIn}&provider=google";
 
+            Log::info('Google OAuth callback successful, preparing to redirect.', ['result' => $redirectUrl]);
             return redirect($redirectUrl);
         }
 
-        $frontendUrl = config('app.frontend_url', 'http://localhost:4200');
         $errorMessage = urlencode($result['message'] ?? 'Authentication failed');
         $errorCode = $result['error_code'] ?? 'AUTH_FAILED';
 
