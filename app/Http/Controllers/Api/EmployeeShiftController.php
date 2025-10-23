@@ -365,9 +365,10 @@ class EmployeeShiftController extends Controller
             return $this->errorResponse('Employee shift not found', [], 404);
         }
 
-        $timestamp = $request->input('check_in')
-            ? Carbon::createFromFormat('Y-m-d H:i:s', $request->input('check_in'))
+        $timestamp = $request->filled('check_in')
+            ? Carbon::today()->setTimeFromTimeString($request->input('check_in'))
             : Carbon::now();
+
 
         $assignment->check_in = $timestamp;
         $assignment->status = $assignment->status === EmployeeShift::STATUS_SCHEDULED
@@ -418,8 +419,8 @@ class EmployeeShiftController extends Controller
             return $this->errorResponse('Employee shift not found', [], 404);
         }
 
-        $timestamp = $request->input('check_out')
-            ? Carbon::createFromFormat('Y-m-d H:i:s', $request->input('check_out'))
+        $timestamp = $request->filled('check_out')
+            ? Carbon::today()->setTimeFromTimeString($request->input('check_out'))
             : Carbon::now();
 
         if ($assignment->check_in && $timestamp->lessThan($assignment->check_in)) {

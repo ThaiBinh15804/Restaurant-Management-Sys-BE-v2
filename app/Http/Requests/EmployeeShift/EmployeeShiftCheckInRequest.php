@@ -14,7 +14,7 @@ class EmployeeShiftCheckInRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'check_in' => ['sometimes', 'date_format:Y-m-d H:i:s'],
+            'check_in' => ['sometimes', 'date_format:H:i:s'],
             'notes' => ['nullable', 'string', 'max:255'],
         ];
     }
