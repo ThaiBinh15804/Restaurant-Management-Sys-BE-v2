@@ -16,15 +16,15 @@ return new class extends Migration
             $table->string('name', 100)->unique();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             // Audit fields
             $table->string('created_by', 10)->nullable();
             $table->string('updated_by', 10)->nullable();
-            
+
             // Foreign keys for audit
             $table->foreign('created_by')->references('id')->on('employees')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('employees')->onDelete('set null');
-            
+
             // Indexes
             $table->index('is_active');
             $table->index('created_at');

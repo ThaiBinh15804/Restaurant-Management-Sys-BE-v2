@@ -14,7 +14,7 @@ class EmployeeShiftCheckOutRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'check_out' => ['sometimes', 'date_format:Y-m-d H:i:s'],
+            'check_out' => ['sometimes', 'date_format:H:i:s'],
             'overtime_hours' => ['sometimes', 'integer', 'min:0'],
             'notes' => ['nullable', 'string', 'max:255'],
         ];

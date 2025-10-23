@@ -636,6 +636,26 @@ class TableSessionService
                 }
             }
 
+            // Cập nhật total_amount cho source order
+            $sourceOrder = $sourceInvoice?->order ?? Order::where('table_session_id', $sourceSession->id)->first();
+            if ($sourceOrder) {
+                $total = $sourceOrder->items()->sum('total_price');
+                $sourceOrder->update([
+                    'total_amount' => $total,
+                    'updated_by' => $employeeId,
+                ]);
+            }
+
+            // Cập nhật total_amount cho target order
+            if ($targetOrder) {
+                $total = $targetOrder->items()->sum('total_price');
+                $targetOrder->update([
+                    'total_amount' => $total,
+                    'updated_by' => $employeeId,
+                ]);
+            }
+
+
             // 7. Cập nhật invoice (nếu có)
             if ($sourceInvoice) {
                 // Cập nhật invoice bàn nguồn
