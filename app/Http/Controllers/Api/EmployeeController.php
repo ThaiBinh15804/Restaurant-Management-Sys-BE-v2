@@ -469,6 +469,7 @@ class EmployeeController extends Controller
         })
             ->where('is_active', true)
             ->with(['user.role'])
+            ->take(3)
             ->get();
 
         if ($chefs->isEmpty()) {

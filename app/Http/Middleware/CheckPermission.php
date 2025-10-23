@@ -34,7 +34,7 @@ class CheckPermission
         
         if (!($user instanceof User) || !$user->hasPermission($permission)) {
             return $this->errorResponse(
-                'Forbidden - You do not have permission to access this resource',
+                'Bị cấm - Bạn không có quyền truy cập vào tài nguyên này',
                 [
                     'required_permission' => $permission
                 ],

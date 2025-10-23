@@ -41,11 +41,11 @@ class InvoiceController extends Controller
         $customer = $user->customerProfile;
         
         if (!$customer) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Customer profile not found',
-                'errors' => []
-            ], 404);
+            return $this->errorResponse(
+            'Customer profile not found',
+            [],
+            404
+        );
         }
 
         // Lấy tất cả invoices của customer thông qua reservations
@@ -75,10 +75,9 @@ class InvoiceController extends Controller
             ];
         });
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Invoices retrieved successfully',
-            'data' => $invoices
-        ], 200);
+        return $this->successResponse(
+        $invoices,
+        'Invoices retrieved successfully'
+    );
     }
 }
