@@ -231,11 +231,11 @@ if (Nhóm lớn?) then (Có)
 endif
 
 :Tạo order cho bàn;
-:Khách chọn món - Nhân viên nhập vào POS;
+:Khách chọn món;
 :Gửi order xuống bếp;
 
 :Chế biến và phục vụ món;
-:Hệ thống cập nhật tồn kho và trạng thái order;
+:Cập nhật tồn kho và trạng thái order;
 
 if (Khách gọi thêm món?) then (Có)
     :Tạo order bổ sung;
@@ -247,14 +247,13 @@ if (Thanh toán thành công?) then (Có)
     if (Bàn gộp?) then (Có)
         :Tách bàn về trạng thái ban đầu;
     endif
-    :Dọn bàn - Chuẩn bị cho lượt khách mới;
+    
 else (Không)
     :Xử lý thanh toán lại;
 endif
 
 stop
 @enduml
-
 ```
 
 ---

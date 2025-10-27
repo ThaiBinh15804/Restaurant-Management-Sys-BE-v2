@@ -68,7 +68,6 @@ actor "Quản lý" as Manager
 actor "Đầu bếp" as Chef
 actor "Thu ngân" as Cashier
 actor "Khách hàng" as Customer
-actor "Hệ thống" as System
 
 rectangle "Hệ Thống Quản Lý Menu & Khuyến Mãi" {
     usecase "Quản Lý Món Ăn" as UC1
@@ -85,11 +84,9 @@ rectangle "Hệ Thống Quản Lý Menu & Khuyến Mãi" {
 
 ' --- Quan hệ giữa actor và use case ---
 Manager --> UC1
-Manager --> UC2
 Manager --> UC3
 Manager --> UC5
 Manager --> UC6
-Manager --> UC7
 Manager --> UC9
 Manager --> UC10
 
@@ -100,13 +97,12 @@ Cashier --> UC8
 Customer --> UC8
 
 ' --- Quan hệ giữa các use case ---
-UC1 .> UC2 : <<include>>
+UC1 .down.> UC2 : <<include>>
 UC1 .> UC4 : <<include>>
 UC6 .> UC7 : <<extend>>
-UC8 --> System
+
 
 @enduml
-
 ```
 
 ### Giải Thích Use Case

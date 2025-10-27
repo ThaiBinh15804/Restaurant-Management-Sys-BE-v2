@@ -156,9 +156,11 @@ Customer --> UC7
 Staff --> UC1
 Staff --> UC5
 Staff --> UC10
+Staff --> UC8
 
 Manager --> UC7
 Manager --> UC10
+Manager --> UC8
 
 '--- Quan hệ giữa các Use Case ---
 UC2 .> UC3 : <<include>>
@@ -170,7 +172,6 @@ UC4 --> PaymentGateway
 UC5 --> NotificationSys
 
 @enduml
-
 ```
 
 ### Giải Thích Activity Diagram
