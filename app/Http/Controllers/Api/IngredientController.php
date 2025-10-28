@@ -396,7 +396,7 @@ class IngredientController extends Controller
                 $ingredient->stockExportDetails()->exists() || 
                 $ingredient->stockLosses()->exists()) {
                 return $this->errorResponse(
-                    'Cannot delete ingredient with existing stock movements. Please deactivate instead.',
+                    'Không thể xóa thành phần có số lượng tồn kho hiện tại. Vui lòng hủy kích hoạt.',
                     [],
                     409
                 );
