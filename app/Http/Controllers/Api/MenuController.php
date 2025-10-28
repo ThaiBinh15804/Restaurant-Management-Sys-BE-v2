@@ -866,6 +866,7 @@ class MenuController extends Controller
                             'dish_image'  => $it->dish->image ?? null,
                             'price_base'  => $it->dish->price ?? null,
                             'price'       => $it->price,
+                            'desc'   => $it->dish->desc ?? null,
                             'notes'       => $it->notes,
                             'dish_active' => optional($it->dish)->is_active ? true : false,
                         ];
