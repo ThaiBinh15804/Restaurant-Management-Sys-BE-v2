@@ -445,6 +445,15 @@ class EmployeeController extends Controller
             return $this->errorResponse('Employee not found', [], 404);
         }
 
+        $currentUserId = auth('api')->id();
+        if ($currentUserId && $employee->user_id === $currentUserId || $employee->user->role->name === 'Super Admin') {
+            return $this->errorResponse(
+                'Không thể thực hiện xoá nhân viên đang đăng nhập và super admin',
+                [],
+                403
+            );
+        }
+
         $employee->delete();
 
         Log::info('Employee deleted', ['employee_id' => $id]);
