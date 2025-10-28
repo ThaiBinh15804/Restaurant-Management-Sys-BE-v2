@@ -59,7 +59,7 @@ class DatabaseSeeder extends Seeder
         $employeeSuperAdmin = $superAdmin->employeeProfile()->create([
             'full_name' => 'Super Admin',
             'phone' => '0900000001',
-            'gender' => 'Other',
+            'gender' => 'Khác',
             'address' => 'Tầng 15, Tháp Vinhomes Central Park, TP.HCM',
             'bank_account' => '9704000000001',
             'contract_type' => Employee::CONTRACT_FULL_TIME,
@@ -77,7 +77,7 @@ class DatabaseSeeder extends Seeder
         $employeeAdmin = $admin->employeeProfile()->create([
             'full_name' => 'Admin User',
             'phone' => '0900000002',
-            'gender' => 'Female',
+            'gender' => 'Nữ',
             'address' => '25 Nguyễn Huệ, Quận 1, TP.HCM',
             'bank_account' => '9704000000002',
             'contract_type' => Employee::CONTRACT_FULL_TIME,
@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
         $employeeManager = $manager->employeeProfile()->create([
             'full_name' => 'Quản lý',
             'phone' => '0900000003',
-            'gender' => 'Male',
+            'gender' => 'Nam',
             'address' => '88 Lý Thường Kiệt, Quận 10, TP.HCM',
             'bank_account' => '9704000000003',
             'contract_type' => Employee::CONTRACT_FULL_TIME,
@@ -113,7 +113,7 @@ class DatabaseSeeder extends Seeder
         $employeeStaff = $staff->employeeProfile()->create([
             'full_name' => 'Nhân viên phục vụ',
             'phone' => '0900000004',
-            'gender' => 'Female',
+            'gender' => 'Nữ',
             'address' => '12 Phan Xích Long, Phú Nhuận, TP.HCM',
             'bank_account' => '9704000000004',
             'contract_type' => Employee::CONTRACT_PART_TIME,
@@ -131,7 +131,7 @@ class DatabaseSeeder extends Seeder
         $employeeCashier = $cashierUser->employeeProfile()->create([
             'full_name' => 'Thu ngân',
             'phone' => '0900000005',
-            'gender' => 'Male',
+            'gender' => 'Nam',
             'address' => '45 Võ Thị Sáu, Quận 3, TP.HCM',
             'bank_account' => '9704000000005',
             'contract_type' => Employee::CONTRACT_FULL_TIME,
@@ -149,7 +149,7 @@ class DatabaseSeeder extends Seeder
         $employeeKitchen = $kitchenUser->employeeProfile()->create([
             'full_name' => 'Chef Ngọc Tài',
             'phone' => '0900000006',
-            'gender' => 'Male',
+            'gender' => 'Nam',
             'address' => '220 Nguyễn Đình Chiểu, Quận 3, TP.HCM',
             'bank_account' => '9704000000006',
             'contract_type' => Employee::CONTRACT_FULL_TIME,
@@ -167,7 +167,7 @@ class DatabaseSeeder extends Seeder
         $employeeWaiter = $waiterUser->employeeProfile()->create([
             'full_name' => 'Đức Nghĩa',
             'phone' => '0900000007',
-            'gender' => 'Male',
+            'gender' => 'Nam',
             'address' => '15 Bis Trần Quang Khải, Quận 1, TP.HCM',
             'bank_account' => '9704000000007',
             'contract_type' => Employee::CONTRACT_PART_TIME,
@@ -185,7 +185,7 @@ class DatabaseSeeder extends Seeder
         $customerProfile = $customerUser->customerProfile()->create([
             'full_name' => 'Công Tiến',
             'phone' => '0900100001',
-            'gender' => 'Male',
+            'gender' => 'Nam',
             'address' => '181 Điện Biên Phủ, Quận Bình Thạnh, TP.HCM',
             'membership_level' => Customer::MEMBERSHIP_GOLD,
         ]);
@@ -199,7 +199,7 @@ class DatabaseSeeder extends Seeder
         $customerProfile2 = $customerUser2->customerProfile()->create([
             'full_name' => 'Minh Thuận',
             'phone' => '0900100002',
-            'gender' => 'Female',
+            'gender' => 'Nữ',
             'address' => '56 Phú Gia, Quận 7, TP.HCM',
             'membership_level' => Customer::MEMBERSHIP_SILVER,
         ]);
@@ -213,7 +213,7 @@ class DatabaseSeeder extends Seeder
         $customerProfileOffline = $customerUserOffline->customerProfile()->create([
             'full_name' => 'Khách vãng lai',
             'phone' => '0900100099',
-            'gender' => 'Other',
+            'gender' => 'Khác',
             'address' => 'Không xác định',
             'membership_level' => Customer::MEMBERSHIP_BRONZE,
         ]);

@@ -2856,6 +2856,45 @@
                 }
             }
         },
+        "/api/dishes/{dishId}/ingredients/{idIngredientDish}": {
+            "delete": {
+                "tags": [
+                    "Dishes"
+                ],
+                "summary": "Xóa liên kết nguyên liệu khỏi món ăn",
+                "description": "Xóa bản ghi dish_ingredient theo id (idDishIngredient)",
+                "operationId": "8656a661d63e24a098f568235d2dc9f3",
+                "parameters": [
+                    {
+                        "name": "dishId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "idIngredientDish",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Xóa thành công"
+                    },
+                    "404": {
+                        "description": "Không tìm thấy món ăn hoặc bản ghi nguyên liệu"
+                    },
+                    "500": {
+                        "description": "Lỗi server"
+                    }
+                }
+            }
+        },
         "/api/employees": {
             "get": {
                 "tags": [
@@ -9352,43 +9391,48 @@
                 ]
             }
         },
-        "/api/roles/{id}/permissions/sync": {
+        "/api/roles/permissions/sync": {
             "put": {
                 "tags": [
                     "Roles"
                 ],
-                "summary": "Sync role permissions",
-                "description": "Replace all role permissions with the provided list",
-                "operationId": "b734c9c22a988864de993b49bb9396fe",
-                "parameters": [
-                    {
-                        "name": "id",
-                        "in": "path",
-                        "description": "Role ID",
-                        "required": true,
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
+                "summary": "Bulk sync role permissions",
+                "description": "Synchronize permissions for many roles using a single payload",
+                "operationId": "503f808a9bf7138ca8c4890dec961cc8",
                 "requestBody": {
                     "required": true,
                     "content": {
                         "application/json": {
                             "schema": {
                                 "required": [
-                                    "permission_ids"
+                                    "role_permissions"
                                 ],
                                 "properties": {
-                                    "permission_ids": {
+                                    "role_permissions": {
                                         "type": "array",
                                         "items": {
-                                            "type": "string"
-                                        },
-                                        "example": [
-                                            "PERM1",
-                                            "PERM2"
-                                        ]
+                                            "required": [
+                                                "role_id",
+                                                "permission_ids"
+                                            ],
+                                            "properties": {
+                                                "role_id": {
+                                                    "type": "string",
+                                                    "example": "ROLE001"
+                                                },
+                                                "permission_ids": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "example": [
+                                                        "PERM1",
+                                                        "PERM2"
+                                                    ]
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
                                     }
                                 },
                                 "type": "object"
@@ -9412,10 +9456,15 @@
                                             "example": "Permissions synced successfully"
                                         },
                                         "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "object"
-                                            }
+                                            "properties": {
+                                                "roles": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object"
+                                                    }
+                                                }
+                                            },
+                                            "type": "object"
                                         }
                                     },
                                     "type": "object"

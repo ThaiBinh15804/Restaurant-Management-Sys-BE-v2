@@ -7,6 +7,7 @@ use App\Http\Requests\Role\RoleQueryRequest;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use OpenApi\Attributes as OA;
@@ -584,58 +585,119 @@ class RoleController extends Controller
     }
 
     /**
-     * @OA\Put(
-     *     path="/api/roles/{id}/permissions/sync",
-     *     tags={"Roles"},
-     *     summary="Sync role permissions",
-     *     description="Replace all role permissions with the provided list",
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         description="Role ID",
-     *         required=true,
-     *         @OA\Schema(type="string")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"permission_ids"},
-     *             @OA\Property(
-     *                 property="permission_ids",
-     *                 type="array",
-     *                 @OA\Items(type="string"),
-     *                 example={"PERM1", "PERM2"}
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Permissions synced successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="status", type="string", example="success"),
-     *             @OA\Property(property="message", type="string", example="Permissions synced successfully"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object",))
-     *         )
-     *     )
-     * )
+    * @OA\Put(
+    *     path="/api/roles/permissions/sync",
+    *     tags={"Roles"},
+    *     summary="Bulk sync role permissions",
+    *     description="Synchronize permissions for many roles using a single payload",
+    *     security={{"bearerAuth":{}}},
+    *     @OA\RequestBody(
+    *         required=true,
+    *         @OA\JsonContent(
+    *             required={"role_permissions"},
+    *             @OA\Property(
+    *                 property="role_permissions",
+    *                 type="array",
+    *                 @OA\Items(
+    *                     type="object",
+    *                     required={"role_id", "permission_ids"},
+    *                     @OA\Property(property="role_id", type="string", example="ROLE001"),
+    *                     @OA\Property(
+    *                         property="permission_ids",
+    *                         type="array",
+    *                         @OA\Items(type="string"),
+    *                         example={"PERM1", "PERM2"}
+    *                     )
+    *                 )
+    *             )
+    *         )
+    *     ),
+    *     @OA\Response(
+    *         response=200,
+    *         description="Permissions synced successfully",
+    *         @OA\JsonContent(
+    *             @OA\Property(property="status", type="string", example="success"),
+    *             @OA\Property(property="message", type="string", example="Permissions synced successfully"),
+    *             @OA\Property(property="data", type="object",
+    *                 @OA\Property(
+    *                     property="roles",
+    *                     type="array",
+    *                     @OA\Items(type="object"))
+    *             )
+    *         )
+    *     )
+    * )
      */
-    #[Put('/{id}/permissions/sync', middleware: 'permission:roles.edit')]
-    public function syncPermissions(Request $request, string $id): JsonResponse
+    #[Put('/permissions/sync', middleware: 'permission:roles.edit')]
+    public function syncPermissions(Request $request, ?string $id = null): JsonResponse
     {
-        $role = Role::find($id);
+        $payload = $request->all();
 
-        if (!$role) {
-            return $this->errorResponse(
-                'Role not found',
-                [],
-                404
+        $usesRoleMappings = array_key_exists('role_permissions', $payload);
+
+        if ($usesRoleMappings) {
+            $validator = Validator::make($payload, [
+                'role_permissions' => 'required|array|min:1',
+                'role_permissions.*.role_id' => 'required|string|distinct',
+                'role_permissions.*.permission_ids' => 'required|array',
+                'role_permissions.*.permission_ids.*' => 'required|string|exists:permissions,id',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->errorResponse(
+                    'Validation failed',
+                    $validator->errors(),
+                    422
+                );
+            }
+
+            $rolePermissions = collect($validator->validated()['role_permissions']);
+            $roleIds = $rolePermissions->pluck('role_id')->unique()->values();
+
+            $roles = Role::whereIn('id', $roleIds)->get()->keyBy('id');
+
+            $missingRoleIds = $roleIds->diff($roles->keys());
+
+            if ($missingRoleIds->isNotEmpty()) {
+                return $this->errorResponse(
+                    'Some roles were not found',
+                    ['role_ids' => $missingRoleIds->values()],
+                    404
+                );
+            }
+
+            $syncedPermissionIds = $rolePermissions->pluck('permission_ids')->flatten()->unique()->values();
+
+            $updatedRoles = DB::transaction(function () use ($rolePermissions, $roles) {
+                return $rolePermissions->map(function (array $mapping) use ($roles) {
+                    /** @var \App\Models\Role $role */
+                    $role = $roles->get($mapping['role_id']);
+                    $role->permissions()->sync($mapping['permission_ids']);
+                    $role->load('permissions');
+
+                    Log::info('Role permissions synced via bulk payload', [
+                        'role_id' => $role->id,
+                        'permission_ids' => $mapping['permission_ids'],
+                    ]);
+
+                    return $role;
+                })->values();
+            });
+
+            return $this->successResponse(
+                [
+                    'roles' => $updatedRoles,
+                    'synced_permission_ids' => $syncedPermissionIds,
+                ],
+                'Permissions synced successfully'
             );
         }
 
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($payload, [
             'permission_ids' => 'required|array',
-            'permission_ids.*' => 'exists:permissions,id'
+            'permission_ids.*' => 'required|string|exists:permissions,id',
+            'role_ids' => 'sometimes|array',
+            'role_ids.*' => 'required|string|distinct',
         ]);
 
         if ($validator->fails()) {
@@ -646,11 +708,58 @@ class RoleController extends Controller
             );
         }
 
-        $role->permissions()->sync($request->permission_ids);
-        $permissions = $role->permissions()->get();
+        $validated = $validator->validated();
+
+        $roleIds = collect($validated['role_ids'] ?? []);
+
+        if ($id !== null) {
+            $roleIds->push($id);
+        }
+
+        $roleIds = $roleIds->filter()->unique()->values();
+
+        if ($roleIds->isEmpty()) {
+            return $this->errorResponse(
+                'At least one role must be specified',
+                ['role_ids' => ['No roles were provided']],
+                422
+            );
+        }
+
+        $roles = Role::whereIn('id', $roleIds)->get()->keyBy('id');
+        $missingRoleIds = $roleIds->diff($roles->keys());
+
+        if ($missingRoleIds->isNotEmpty()) {
+            return $this->errorResponse(
+                'Some roles were not found',
+                ['role_ids' => $missingRoleIds->values()],
+                404
+            );
+        }
+
+        $permissionIds = $validated['permission_ids'];
+
+        $syncedPermissionIds = collect($permissionIds)->unique()->values();
+
+        $updatedRoles = DB::transaction(function () use ($roles, $permissionIds) {
+            return $roles->map(function (Role $role) use ($permissionIds) {
+                $role->permissions()->sync($permissionIds);
+                $role->load('permissions');
+
+                Log::info('Role permissions synced', [
+                    'role_id' => $role->id,
+                    'permission_ids' => $permissionIds,
+                ]);
+
+                return $role;
+            })->values();
+        });
 
         return $this->successResponse(
-            $permissions,
+            [
+                'roles' => $updatedRoles,
+                'synced_permission_ids' => $syncedPermissionIds,
+            ],
             'Permissions synced successfully'
         );
     }
