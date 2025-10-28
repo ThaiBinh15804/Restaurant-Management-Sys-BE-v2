@@ -11,7 +11,8 @@ class ReservationQueryRequest extends BaseQueryRequest
         return [
             'customer_name' => ['sometimes', 'string', 'max:255'],
             'customer_phone' => ['sometimes', 'string', 'max:11'],
-            'reserved_at' => ['sometimes', 'date_format:Y-m-d H:i:s'],
+            'reserved_at_from' => ['sometimes', 'date_format:Y-m-d H:i:s'],
+            'reserved_at_to' => ['sometimes', 'date_format:Y-m-d H:i:s'],
         ];
     }
 
@@ -20,7 +21,8 @@ class ReservationQueryRequest extends BaseQueryRequest
         return $this->safe()->only([
             'customer_name',
             'customer_phone',
-            'reserved_at',
+            'reserved_at_from',
+            'reserved_at_to',
         ]);
     }
 }

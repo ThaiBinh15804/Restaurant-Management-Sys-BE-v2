@@ -98,8 +98,11 @@ class ReservationController extends Controller
             });
         }
 
-        if (!empty($filters['reserved_at'])) {
-            $query->where('reserved_at', '=', $filters['reserved_at']);
+        $from = $filters['reserved_at_from'] ?? null;
+        $to   = $filters['reserved_at_to'] ?? null;
+
+        if (!empty($from) && !empty($to)) {
+            $query->whereBetween('reserved_at', [$from, $to]);
         }
 
         $reservations = $query->orderBy('reserved_at', 'desc')->get();
@@ -381,7 +384,7 @@ class ReservationController extends Controller
             $q = $filters['q'];
             $query->where(function ($s) use ($q) {
                 $s->where('id', 'like', "%{$q}%")
-                ->orWhere('notes', 'like', "%{$q}%");
+                    ->orWhere('notes', 'like', "%{$q}%");
             });
         }
 
