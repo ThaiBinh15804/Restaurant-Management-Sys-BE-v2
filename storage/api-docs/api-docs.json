@@ -1187,6 +1187,14 @@
                         }
                     },
                     {
+                        "name": "email",
+                        "in": "query",
+                        "description": "Filter by email",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
                         "name": "phone",
                         "in": "query",
                         "description": "Filter by phone number",

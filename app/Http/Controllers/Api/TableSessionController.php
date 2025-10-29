@@ -435,22 +435,20 @@ class TableSessionController extends Controller
         $data = $request->validate([
             'dining_table_id' => 'required|string|exists:dining_tables,id',
             'employee_id' => 'required|exists:employees,id',
+            'customer_id' => 'nullable|exists:customers,id',
         ]);
 
-        $user = User::where('email', 'customerOffline@restaurant.com')->first();
-        if (!$user) {
-            return response()->json(['message' => 'Offline customer user not found'], 404);
-        }
-
-        $customer = Customer::where('user_id', $user->id)->first();
-
+        $customer = Customer::find($data['customer_id']);
         if (!$customer) {
-            return response()->json(['message' => 'Customer record not found for offline user'], 404);
+            $customer = Customer::where('full_name', '=', 'Khách vãng lai')->first();
+            if (!$customer) {
+                return response()->json(['message' => 'Offline customer record not found'], 404);
+            }
         }
 
         $diningTableId = $data['dining_table_id'];
 
-        // 🧩 1. Tạo session mới
+        // 1. Tạo session mới
         $session = TableSession::create([
             'type' => 0, // Offline
             'status' => 0, // Pending
@@ -458,13 +456,14 @@ class TableSessionController extends Controller
             'merged_into_session_id' => null,
             'started_at' => null,
             'ended_at' => null,
-            'customer_id' => $customer->id, // từ bảng customers
+            'customer_id' => $customer->id,
+            'customer_name' => $customer->full_name,
             'employee_id' => $request->employee_id,
             'created_by' => $request->employee_id,
             'updated_by' => $request->employee_id,
         ]);
 
-        // 🧩 2. Gắn vào bảng table_session_dining_table
+        // 2. Gắn vào bảng table_session_dining_table
         TableSessionDiningTable::create([
             'dining_table_id' => $diningTableId,
             'table_session_id' => $session->id,
@@ -472,7 +471,7 @@ class TableSessionController extends Controller
             'updated_by' => $request->employee_id,
         ]);
 
-        // 🧩 3. Trả về thông tin session vừa tạo
+        // 3. Trả về thông tin session vừa tạo
         return response()->json([
             'message' => 'Successfully created offline session',
             'data' => $session
@@ -772,9 +771,12 @@ class TableSessionController extends Controller
             ->leftJoin('table_sessions as ts', 'ts.id', '=', 'tsdt.table_session_id')
             ->leftJoin('table_session_reservations as tsr', 'tsr.table_session_id', '=', 'ts.id')
             ->leftJoin('reservations as r', 'r.id', '=', 'tsr.reservation_id')
-            ->leftJoin('customers as c', 'c.id', '=', 'r.customer_id')
+            // Join customer từ session (ưu tiên - cho offline/online sessions)
+            ->leftJoin('customers as c_session', 'c_session.id', '=', 'ts.customer_id')
+            // Join customer từ reservation (fallback - cho reservation sessions)
+            ->leftJoin('customers as c_reservation', 'c_reservation.id', '=', 'r.customer_id')
             ->where('dt.id', $idDiningTable)
-            ->where('ts.status', 0) // chỉ lấy phiên đang hoạt động
+            ->where('ts.status', 0) 
             ->select(
                 'dt.id as dining_table_id',
                 'dt.table_number',
@@ -784,6 +786,7 @@ class TableSessionController extends Controller
                 'ts.type as session_type',
                 'ts.status as session_status',
                 'ts.started_at',
+                'ts.created_at',
                 'ts.customer_id',
                 'ts.employee_id',
                 'r.id as reservation_id',
@@ -792,10 +795,16 @@ class TableSessionController extends Controller
                 'r.number_of_people as reservation_number_of_people',
                 'r.status as reservation_status',
                 'r.notes as reservation_notes',
-                'c.full_name as customer_name',
-                'c.phone as customer_phone',
-                'c.gender as customer_gender',
-                'c.address as customer_address'
+                // Customer info từ session (ưu tiên)
+                'c_session.full_name as session_customer_name',
+                'c_session.phone as session_customer_phone',
+                'c_session.gender as session_customer_gender',
+                'c_session.address as session_customer_address',
+                // Customer info từ reservation (fallback)
+                'c_reservation.full_name as reservation_customer_name',
+                'c_reservation.phone as reservation_customer_phone',
+                'c_reservation.gender as reservation_customer_gender',
+                'c_reservation.address as reservation_customer_address'
             )
             ->orderBy('r.reserved_at', 'asc')
             ->get();
@@ -808,6 +817,12 @@ class TableSessionController extends Controller
         }
 
         $formatted = $sessions->map(function ($session) {
+            // Ưu tiên customer từ session, fallback sang reservation
+            $customerName = $session->session_customer_name ?? $session->reservation_customer_name;
+            $customerPhone = $session->session_customer_phone ?? $session->reservation_customer_phone;
+            $customerGender = $session->session_customer_gender ?? $session->reservation_customer_gender;
+            $customerAddress = $session->session_customer_address ?? $session->reservation_customer_address;
+            
             return [
                 'session_id' => $session->session_id,
                 'table_id' => $session->dining_table_id,
@@ -817,6 +832,11 @@ class TableSessionController extends Controller
                 'session_status' => $session->session_status,
                 'started_at' => $session->started_at,
                 'customer_id' => $session->customer_id,
+                'created_at' => $session->created_at,
+                'customer_name' => $customerName, 
+                'customer_phone' => $customerPhone,
+                'customer_gender' => $customerGender,
+                'customer_address' => $customerAddress,
                 'employee_id' => $session->employee_id,
                 'reservation' => [
                     'reservation_id' => $session->reservation_id,
@@ -825,10 +845,10 @@ class TableSessionController extends Controller
                     'number_of_people' => $session->reservation_number_of_people,
                     'status' => $session->reservation_status,
                     'notes' => $session->reservation_notes,
-                    'customer_name' => $session->customer_name,
-                    'customer_phone' => $session->customer_phone,
-                    'customer_gender' => $session->customer_gender,
-                    'customer_address' => $session->customer_address
+                    'customer_name' => $session->reservation_customer_name,
+                    'customer_phone' => $session->reservation_customer_phone,
+                    'customer_gender' => $session->reservation_customer_gender,
+                    'customer_address' => $session->reservation_customer_address,
                 ]
             ];
         });

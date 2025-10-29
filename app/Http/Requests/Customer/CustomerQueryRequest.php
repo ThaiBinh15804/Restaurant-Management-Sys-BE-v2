@@ -25,6 +25,7 @@ class CustomerQueryRequest extends BaseQueryRequest
     {
         return [
             'full_name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|max:255',
             'phone' => 'sometimes|string|max:20',
             'gender' => 'sometimes|string|in:male,female,other',
             'membership_level' => [
@@ -50,6 +51,7 @@ class CustomerQueryRequest extends BaseQueryRequest
     {
         return $this->only([
             'full_name',
+            'email',
             'phone',
             'gender',
             'membership_level',

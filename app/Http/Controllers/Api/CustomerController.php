@@ -44,6 +44,7 @@ class CustomerController extends Controller
      *     @OA\Parameter(name="page", in="query", description="Page number", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="per_page", in="query", description="Items per page", @OA\Schema(type="integer")),
      *     @OA\Parameter(name="full_name", in="query", description="Filter by customer name", @OA\Schema(type="string")),
+     *     @OA\Parameter(name="email", in="query", description="Filter by email", @OA\Schema(type="string")),
      *     @OA\Parameter(name="phone", in="query", description="Filter by phone number", @OA\Schema(type="string")),
      *     @OA\Parameter(name="gender", in="query", description="Filter by gender", @OA\Schema(type="string", enum={"male", "female", "other"})),
      *     @OA\Parameter(name="membership_level", in="query", description="Filter by membership level (1-4)", @OA\Schema(type="integer")),
@@ -61,6 +62,7 @@ class CustomerController extends Controller
         $query = Customer::with('user')
             ->orderBy('full_name')
             ->when($filters['full_name'] ?? null, fn($q, $v) => $q->where('full_name', 'like', "%$v%"))
+            ->when($filters['email'] ?? null, fn($q, $v) => $q->whereHas('user', fn($query) => $query->where('email', 'like', "%$v%")))
             ->when($filters['phone'] ?? null, fn($q, $v) => $q->where('phone', 'like', "%$v%"))
             ->when($filters['gender'] ?? null, fn($q, $v) => $q->where('gender', $v))
             ->when(isset($filters['membership_level']), fn($q) => $q->where('membership_level', $filters['membership_level']))
