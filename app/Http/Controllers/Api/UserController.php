@@ -483,7 +483,7 @@ class UserController extends Controller
             'email'     => 'sometimes|email|unique:users,email,' . $user->id . '|max:100',
             'full_name' => 'sometimes|nullable|string|max:100',
             'phone'     => 'sometimes|nullable|string|max:30',
-            'gender'    => 'sometimes|nullable|string|in:male,female,other',
+            'gender'    => 'sometimes|nullable|string|in:Nam,Nữ,Khác',
             'address'   => 'sometimes|nullable|string|max:255',
         ]);
 
