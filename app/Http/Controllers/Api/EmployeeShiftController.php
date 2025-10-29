@@ -439,7 +439,8 @@ class EmployeeShiftController extends Controller
         } elseif ($assignment->shift && $assignment->shift->shift_date) {
             $scheduledEnd = $assignment->shift->end_time;
             $diffMinutes = $scheduledEnd->diffInMinutes($timestamp, false);
-            $assignment->overtime_hours = $diffMinutes > 0 ? (int) ceil($diffMinutes / 60) : 0;
+            // Chỉ tính overtime khi làm THÊM ít nhất 1 giờ đầy đủ (60 phút)
+            $assignment->overtime_hours = $diffMinutes > 0 ? (int) floor($diffMinutes / 60) : 0;
         }
 
         if ($request->filled('notes')) {

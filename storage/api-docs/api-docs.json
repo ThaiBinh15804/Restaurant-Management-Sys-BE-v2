@@ -4672,6 +4672,26 @@
                 ]
             }
         },
+        "/api/invoices/my-invoices-with-items": {
+            "get": {
+                "tags": [
+                    "Customer Invoice"
+                ],
+                "summary": "Get all customer invoices with items",
+                "description": "Get all invoices history for logged-in customer, including dish details",
+                "operationId": "9d5e84d4ca7d987fa5e1b755de2f5c8d",
+                "responses": {
+                    "200": {
+                        "description": "Invoices with items retrieved successfully"
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/api/invoices": {
             "get": {
                 "tags": [

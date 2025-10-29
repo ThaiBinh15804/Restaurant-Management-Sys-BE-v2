@@ -55,19 +55,18 @@ class PayrollController extends Controller
     public function index(PayrollQueryRequest $request): JsonResponse
     {
         $filters = $request->filters();
+        
+        // Mặc định về năm hiện tại nếu không truyền year
+        $year = $filters['year'] ?? now()->year;
 
         $query = Payroll::with(['employee', 'paidByEmployee'])
             ->orderByDesc('year')
             ->orderByDesc('month')
+            ->where('year', $year)
             ->when(
                 $filters['month'] ?? null,
                 fn($q, $v) =>
                 $q->where('month', $v)
-            )
-            ->when(
-                $filters['year'] ?? null,
-                fn($q, $v) =>
-                $q->where('year', $v)
             )
             ->when(
                 array_key_exists('status', $filters) && $filters['status'] !== null,
@@ -198,6 +197,7 @@ class PayrollController extends Controller
                     'employee_id' => $employee->id,
                     'month' => $month,
                     'year' => $year,
+                    'base_salary' => (float) ($employee->base_salary ?? 0),
                     'worked_hours' => round($workedHours, 2),
                     'overtime_hours' => $summary['overtime_hours'],
                     'hourly_rate' => round($hourlyRate, 2),
@@ -208,8 +208,8 @@ class PayrollController extends Controller
                 $payload = [
                     'month' => $month,
                     'year' => $year,
-                    'base_salary' => 0.0,
-                    'bonus' => $overtimeAmount,
+                    'base_salary' => (float) ($employee->base_salary ?? 0),
+                    'bonus' => 0.0,
                     'deductions' => 0.0,
                     'final_salary' => 0.0,
                     'status' => Payroll::STATUS_DRAFT,
@@ -227,6 +227,7 @@ class PayrollController extends Controller
                     $payroll = Payroll::create($payload);
                 }
 
+                // Tạo/cập nhật PayrollItem: DILIGENCE (lương theo giờ làm thực tế)
                 PayrollItem::updateOrCreate(
                     [
                         'payroll_id' => $payroll->id,
@@ -234,10 +235,30 @@ class PayrollController extends Controller
                     ],
                     [
                         'item_type' => PayrollItem::TYPE_EARNING,
-                        'description' => 'Lương thực tế theo giờ làm (' . round($workedHours, 2) . ' giờ)',
+                        'description' => 'Lương thực tế theo giờ làm (' . round($workedHours, 2) . ' giờ × ' . round($hourlyRate, 2) . ')',
                         'amount' => $diligenceAmount,
                     ]
                 );
+
+                // Tạo/cập nhật PayrollItem: OVERTIME (nếu có)
+                if ($overtimeAmount > 0) {
+                    PayrollItem::updateOrCreate(
+                        [
+                            'payroll_id' => $payroll->id,
+                            'code' => 'OVERTIME',
+                        ],
+                        [
+                            'item_type' => PayrollItem::TYPE_EARNING,
+                            'description' => 'Phụ cấp tăng ca (' . $summary['overtime_hours'] . ' giờ × ' . round($hourlyRate * 2, 2) . ')',
+                            'amount' => $overtimeAmount,
+                        ]
+                    );
+                } else {
+                    // Xóa OVERTIME item nếu không có tăng ca
+                    PayrollItem::where('payroll_id', $payroll->id)
+                        ->where('code', 'OVERTIME')
+                        ->delete();
+                }
 
                 $finalSalary = $this->updatePayrollTotals($payroll);
 
@@ -245,6 +266,7 @@ class PayrollController extends Controller
                 $details[] = [
                     'payroll_id' => $payroll->id,
                     'employee_id' => $employee->id,
+                    'base_salary' => (float) ($employee->base_salary ?? 0),
                     'hours_worked' => round($workedHours, 2),
                     'overtime_hours' => $summary['overtime_hours'],
                     'hourly_rate' => round($hourlyRate, 2),
@@ -511,7 +533,6 @@ class PayrollController extends Controller
         $deductions = (float) ($totals->deductions ?? 0);
 
         $finalSalary = $this->calculateFinalSalary(
-            (float) $payroll->base_salary,
             (float) $payroll->bonus + $earnings,
             (float) $payroll->deductions + $deductions
         );
@@ -534,8 +555,8 @@ class PayrollController extends Controller
         return round($hourlyRate * $overtimeHours * 2, 2);
     }
 
-    private function calculateFinalSalary(float $baseSalary, float $bonus, float $deductions): float
+    private function calculateFinalSalary(float $bonus, float $deductions): float
     {
-        return round(max(0, $baseSalary + $bonus - $deductions), 2);
+        return round(max(0,  $bonus - $deductions), 2);
     }
 }
