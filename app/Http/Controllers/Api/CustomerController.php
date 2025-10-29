@@ -339,6 +339,16 @@ class CustomerController extends Controller
             );
         }
 
+        $user = $customer->user;
+
+        if ($user) {
+            Log::info('Deleting associated user account', [
+                'user_id' => $user->id,
+                'customer_id' => $customer->id,
+            ]);
+            $user->delete();
+        }
+
         try {
             $customer->delete();
 
