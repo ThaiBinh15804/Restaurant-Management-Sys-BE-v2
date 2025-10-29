@@ -78,6 +78,8 @@ class StatisticsController extends Controller
                 'total_orders' => Order::count(),
                 'total_reservations' => Reservation::count(),
                 'active_table_sessions' => TableSession::where('status', 1)->count(),
+                'today_orders' => Order::whereDate('created_at', now()->toDateString())->count(),
+                'active_promotions' => \App\Models\Promotion::where('is_active', true)->count(),
             ];
 
             return $this->successResponse($statistics, 'Statistics retrieved successfully');
