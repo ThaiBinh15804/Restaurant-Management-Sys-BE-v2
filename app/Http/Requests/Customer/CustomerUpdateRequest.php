@@ -35,7 +35,7 @@ class CustomerUpdateRequest extends FormRequest
                 Rule::unique('customers', 'phone')->ignore($customerId),
             ],
 
-            'gender' => ['sometimes', 'nullable', Rule::in(['male', 'female', 'other'])],
+            'gender' => ['sometimes', 'nullable', Rule::in(['Nam', 'Nữ', 'Khác'])],
 
             'address' => ['sometimes', 'nullable', 'string', 'max:500'],
 
